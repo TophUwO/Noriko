@@ -364,3 +364,8 @@ FodyWeavers.xsd
 
 # misc
 interm/
+*.doc
+*.docx
+*.dot
+*.dotx
+*.tmp
