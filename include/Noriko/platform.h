@@ -50,6 +50,13 @@
 #endif
 
 
+/* Make some basic assumptions. */
+static_assert(sizeof(float) == 4, "sizeof(float) must be 4 (four) bytes.");
+static_assert(sizeof(int) == 4, "sizeof(int) must be 4 (four) bytes.");
+static_assert(sizeof(double) == 8, "sizeof(double) must be 4 (four) bytes.");
+static_assert(sizeof(char) == 1, "sizeof(char) must be 1 (one) byte.");
+
+
 /**
  * \struct NkPlatformInformation
  * \brief  target platform and build information
