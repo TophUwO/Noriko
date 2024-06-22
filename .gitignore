@@ -369,3 +369,4 @@ interm/
 *.dot
 *.dotx
 *.tmp
+docs/html/

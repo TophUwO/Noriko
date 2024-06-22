@@ -80,13 +80,14 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation
 } NkPlatformInformation;
 
 /**
- * \brief  query target platform and build information
- * \param  [in,out] buf buffer the target information is written to
- * \return *NkErr_Ok* on success; non-zero if the target platform could not be retrieved
- * \note   If *buf* is *NULL* or *\*buf* is improperly initialized, the function fails.
- * \warn   Before you run this function, initialize the *m_structSize* member variable of
- *         *buf* to the size of the buffer that is being passed to the function. To do
- *         this, use *sizeof(NkPlatformInformation)*.
+ * \brief   queries target platform and build information
+ * \param   [in,out] platformInfoPtr buffer the target information is written to
+ * \return  *NkErr_Ok* on success; non-zero if the target platform could not be retrieved
+ * \note    If *platformInfoPtr* is *NULL* or *platformInfoPtr* is improperly initialized,
+ *          the function fails.
+ * \warning Before you run this function, initialize the *m_structSize* member variable of
+ *          *platformInfoPtr* to the size of the buffer that is being passed to the function.
+ *          To do this, use *sizeof(NkPlatformInformation)*.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr);
 

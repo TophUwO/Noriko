@@ -64,7 +64,7 @@
 /**
  * \def   NK_MESC(x)
  * \brief expands a macro parameter and escapes its expanded value
- * \param macro expression to escape
+ * \param x macro expression to escape
  * \note  The result is encoded as an UTF-8 string.
  */
 #define NK_MESC(x)  NK_ESC(x)
