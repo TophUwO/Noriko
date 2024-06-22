@@ -21,7 +21,6 @@
 
 #pragma once
 
-
 /* Noriko includes */
 #include <include/Noriko/def.h>
 #include <include/Noriko/error.h>
