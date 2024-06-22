@@ -14,10 +14,10 @@
  * \file  noriko.h
  * \brief main public API header of the Noriko engine component
  * 
- * This header is to be used by both the Noriko Runtime (NorikoRt) and Noriko Editor (NorikoEd)
- * component. Thus, it exposes an API that is compatible with both C and C++.
- * This header contains important exported symbols that provide access high-level access to Noriko's
- * internal components.
+ * This header is to be used by both the Noriko Runtime (NorikoRt) and Noriko Editor
+ * (NorikoEd) component. Thus, it exposes an API that is compatible with both C and C++.
+ * This header contains important exported symbols that provide access high-level access
+ * to Noriko's internal components.
  */
 
 

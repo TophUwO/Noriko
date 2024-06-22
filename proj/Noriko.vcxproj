@@ -177,6 +177,7 @@
     <ClInclude Include="..\include\Noriko\platform.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\Noriko\error.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

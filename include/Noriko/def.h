@@ -35,17 +35,24 @@
 #define NK_CALL                     __cdecl
 
 /* Use SALv2 on MSVC platform. */
+/** \cond */
 #if (__has_include(<sal.h>))
     #include <sal.h>
 
-    #define _Return_ok_ _Success_(return == NkErr_Ok)
+    #define _Return_ok_             _Success_(return == NkErr_Ok)
+    #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
 #else
     #define _In_
     #define _Out_
     #define _Inout_
     #define _Field_z_
     #define _Struct_size_bytes_(n)
+    #define _Return_ok_
+    #define _Success_(expr)
+    #define _In_range_(lo, hi)
+    #define _Ecode_range_
 #endif
+/** \endcond */
 
 
 /**
@@ -56,9 +63,34 @@
 #define NK_ESC(...) u8###__VA_ARGS__
 /**
  * \def   NK_MESC(x)
- * \brief expand a macro parameter and escape its expanded value
+ * \brief expands a macro parameter and escapes its expanded value
+ * \param macro expression to escape
  * \note  The result is encoded as an UTF-8 string.
  */
 #define NK_MESC(x)  NK_ESC(x)
+
+/**
+ * \def   NK_INRANGE_INCL(x, lo, hi)
+ * \brief checks whether lo <= x <= hi is *true*
+ * \param x numeric value to compare against *lo* and *hi*
+ * \param lo lower bound of the comparison
+ * \param hi higher bound of the comparison
+ */
+#define NK_INRANGE_INCL(x, lo, hi) (_Bool)((((hi) - (x)) * ((x) - (lo))) >= 0)
+/**
+ * \def   NK_INRANGE_EXCL(x, lo, hi)
+ * \brief checks whether lo < x < hi is *true*
+ * \param x numeric value to compare against *lo* and *hi*
+ * \param lo lower bound of the comparison
+ * \param hi higher bound of the comparison
+ */
+#define NK_INRANGE_EXCL(x, lo, hi) (_Bool)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
+
+/**
+ * \def   NK_ARRAYSIZE(arr)
+ * \brief calculates the size in elements of a static compile-time array
+ * \param arr array to calculate size of
+ */
+#define NK_ARRAYSIZE(arr)          (size_t)(sizeof (arr) / (sizeof *(arr)))
 
 
