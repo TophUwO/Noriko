@@ -23,16 +23,30 @@
 
 /* Annotations for exporting symbols. */
 #if (defined __cplusplus)
-    #define NK_NATIVE extern "C"
+    #define NK_NATIVE               extern "C"
 #else
     #define NK_NATIVE
 #endif
 #if (defined NK_BUILD_ENGINE)
-    #define NK_API extern __declspec(dllexport)
+    #define NK_API                  extern __declspec(dllexport)
 #elif (defined NK_IMPORT_ENGINE)
-    #define NK_API extern __declspec(dllimport)
+    #define NK_API                  extern __declspec(dllimport)
 #endif
-#define NK_CALL __cdecl
+#define NK_CALL                     __cdecl
+
+/* Use SALv2 on MSVC platform. */
+#if (__has_include(<sal.h>))
+    #include <sal.h>
+
+    #define _Return_ok_ _Success_(return == NkErr_Ok)
+#else
+    #define _In_
+    #define _Out_
+    #define _Inout_
+    #define _Field_z_
+    #define _Struct_size_bytes_(n)
+#endif
+
 
 /**
  * \def   NK_ESC(...)

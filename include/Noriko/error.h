@@ -33,7 +33,7 @@
  * \enum  NkErrorCode
  * \brief numeric error code definitions
  */
-typedef enum NkErrorCode {
+typedef _In_range_(NkErr_Ok, __NkErr_Count__) enum NkErrorCode {
     NkErr_Ok,             /**< no error */
     NkErr_Unknown,        /**< unknown error condition */
     
@@ -41,6 +41,8 @@ typedef enum NkErrorCode {
     NkErr_InParameter,    /**< errornous input parameter */
     NkErr_OutParameter,   /**< errornous output parameter */
     NkErr_InOutParameter, /**< errornous input/output parameter */
+
+    __NkErr_Count__       /**< used internally */
 } NkErrorCode;
 
 

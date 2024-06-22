@@ -13,9 +13,9 @@
  **********************************************************************/
 
 /**
-* \file  main.c
-* \brief entrypoint of Noriko's runtime application
-*/
+ * \file  main.c
+ * \brief entrypoint of Noriko's runtime application
+ */
 
 
 /* stdlib includes */

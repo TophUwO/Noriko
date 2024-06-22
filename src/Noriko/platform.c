@@ -78,7 +78,7 @@
 /** @} */
 
 
-NkErrorCode NK_CALL NkQueryPlatformInformation(NkPlatformInformation *const buf) {
+_Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *const buf) {
     /* Parameter validation. */
     if (buf == NULL || buf->m_structSize == 0)
         return NkErr_InOutParameter;
