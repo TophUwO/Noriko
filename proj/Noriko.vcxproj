@@ -175,6 +175,7 @@
     <ClInclude Include="..\include\Noriko\error.h" />
     <ClInclude Include="..\include\Noriko\noriko.h" />
     <ClInclude Include="..\include\Noriko\platform.h" />
+    <ClInclude Include="..\include\Noriko\util.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\error.c" />

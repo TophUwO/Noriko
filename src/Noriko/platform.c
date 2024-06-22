@@ -78,16 +78,27 @@
 /** @} */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *const buf) {
+_Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {
+    /* Initialize static string views. */
+    static NkStringView const gl_c_ProductNameAsView  = NK_MAKE_STRING_VIEW(NK_PRODUCT_NAME);
+    static NkStringView const gl_c_ProdVerAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_VERSION);
+    static NkStringView const gl_c_ProdCpyAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_COPYRIGHT);
+    static NkStringView const gl_c_ProdConfigAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_CONFIGURATION);
+    static NkStringView const gl_c_ProdBToolsAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_BTOOLS);
+    static NkStringView const gl_c_ProdPlatformAsView = NK_MAKE_STRING_VIEW(NK_PRODUCT_PLATFORM);
+    static NkStringView const gl_c_ProdInfoAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_INFOSTR);
+    static NkStringView const gl_c_ProdDateAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE);
+    static NkStringView const gl_c_ProdTimeAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME);
+
     /* Parameter validation. */
-    if (buf == NULL || buf->m_structSize == 0)
+    if (platformInfoPtr == NULL || platformInfoPtr->m_structSize == 0)
         return NkErr_InOutParameter;
 
     /* Calculate actual struct size. */
-    size_t const c_actsize = min(sizeof(NkPlatformInformation), buf->m_structSize);
+    size_t const c_actsize = min(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
     /* Initialize basic *buf* structure with requested target and build information. */
-    *buf = (struct NkPlatformInformation){
+    *platformInfoPtr = (struct NkPlatformInformation){
         .m_structSize       = c_actsize,
         .m_versionMajor     = NK_VER_MAJOR,
         .m_versionMinor     = NK_VER_MINOR,
@@ -95,15 +106,15 @@ _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInf
         .m_versionIteration = NK_VER_ITER,
         .m_platWidth        = NK_PRODUCT_ARCHITECTURE,
         .m_platBToolsVer    = NK_PRODUCT_BTOOLS_VER,
-        .mp_prodName        = NK_PRODUCT_NAME,
-        .mp_prodVersion     = NK_PRODUCT_VERSION,
-        .mp_prodCopyright   = NK_PRODUCT_COPYRIGHT,
-        .mp_prodConfig      = NK_PRODUCT_CONFIGURATION,
-        .mp_prodBuildTools  = NK_PRODUCT_BTOOLS,
-        .mp_prodPlatform    = NK_PRODUCT_PLATFORM,
-        .mp_prodFullInfoStr = NK_PRODUCT_INFOSTR,
-        .mp_buildDate       = NK_PRODUCT_BUILDDATE,
-        .mp_buildTime       = NK_PRODUCT_BUILDTIME
+        .mp_prodName        = (NkStringView *)&gl_c_ProductNameAsView,
+        .mp_prodVersion     = (NkStringView *)&gl_c_ProdVerAsView,
+        .mp_prodCopyright   = (NkStringView *)&gl_c_ProdCpyAsView,
+        .mp_prodConfig      = (NkStringView *)&gl_c_ProdConfigAsView,
+        .mp_prodBuildTools  = (NkStringView *)&gl_c_ProdBToolsAsView,
+        .mp_prodPlatform    = (NkStringView *)&gl_c_ProdPlatformAsView,
+        .mp_prodFullInfoStr = (NkStringView *)&gl_c_ProdInfoAsView,
+        .mp_buildDate       = (NkStringView *)&gl_c_ProdDateAsView,
+        .mp_buildTime       = (NkStringView *)&gl_c_ProdTimeAsView
     };
 
     /* All good. */

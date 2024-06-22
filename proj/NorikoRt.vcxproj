@@ -76,6 +76,7 @@
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>nkrt32d</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -83,6 +84,7 @@
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>nkrt32r</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -90,6 +92,7 @@
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>nkrt64d</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
@@ -97,6 +100,7 @@
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <TargetName>nkrt64r</TargetName>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

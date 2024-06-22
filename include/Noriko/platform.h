@@ -58,25 +58,25 @@
  * Noriko build properties.
  * 
  * \note   All pointer fields within this function are pointers to static
- *         read-only memory.
+ *         read-only memory. Thus, writing to the passed addresses is undefined behavior.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation {
-              size_t  m_structSize;       /**< size of this structure, in bytes */
-              size_t  m_versionMajor;     /**< engine major version component */
-              size_t  m_versionMinor;     /**< engine minor version component */
-              size_t  m_versionPatch;     /**< engine patch version component */
-              size_t  m_versionIteration; /**< engine patch iteration component */
-              size_t  m_platWidth;        /**< target platform width */
-              size_t  m_platBToolsVer;    /**< version of build tools used */
-    _Field_z_ char   *mp_prodName;        /**< name of engine component */
-    _Field_z_ char   *mp_prodVersion;     /**< full engine version string */
-    _Field_z_ char   *mp_prodCopyright;   /**< engine copyright string */
-    _Field_z_ char   *mp_prodConfig;      /**< engine build configuration */
-    _Field_z_ char   *mp_prodBuildTools;  /**< compiler/build tools used for compilation */
-    _Field_z_ char   *mp_prodPlatform;    /**< engine target platform ID */
-    _Field_z_ char   *mp_prodFullInfoStr; /**< full target information string */
-    _Field_z_ char   *mp_buildDate;       /**< local build date (<Month> <Day> <Year>) */
-    _Field_z_ char   *mp_buildTime;       /**< local build time (HH:MM:SS) */
+    size_t        m_structSize;       /**< size of this structure, in bytes */
+    size_t        m_versionMajor;     /**< engine major version component */
+    size_t        m_versionMinor;     /**< engine minor version component */
+    size_t        m_versionPatch;     /**< engine patch version component */
+    size_t        m_versionIteration; /**< engine patch iteration component */
+    size_t        m_platWidth;        /**< target platform width */
+    size_t        m_platBToolsVer;    /**< version of build tools used */
+    NkStringView *mp_prodName;        /**< name of engine component */
+    NkStringView *mp_prodVersion;     /**< full engine version string */
+    NkStringView *mp_prodCopyright;   /**< engine copyright string */
+    NkStringView *mp_prodConfig;      /**< engine build configuration */
+    NkStringView *mp_prodBuildTools;  /**< compiler/build tools used for compilation */
+    NkStringView *mp_prodPlatform;    /**< engine target platform ID */
+    NkStringView *mp_prodFullInfoStr; /**< full target information string */
+    NkStringView *mp_buildDate;       /**< local build date (<Month> <Day> <Year>) */
+    NkStringView *mp_buildTime;       /**< local build time (HH:MM:SS) */
 } NkPlatformInformation;
 
 /**
@@ -88,6 +88,6 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation
  *         *buf* to the size of the buffer that is being passed to the function. To do
  *         this, use *sizeof(NkPlatformInformation)*.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NkQueryPlatformInformation(_Inout_ NkPlatformInformation *const buf);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr);
 
 

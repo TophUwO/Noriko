@@ -33,14 +33,14 @@
  * \brief textual representations for integral error code values
  * \note  The string values in this array are UTF-8-encoded.
  */
-static char const *const gl_c_ErrorCodeStringTable[] = {
-    NK_ESC(NkErr_Ok),
-    NK_ESC(NkErr_Unknown),
+static NkStringView const gl_c_ErrorCodeStringTable[] = {
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Ok)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Unknown)),
 
-    NK_ESC(NkErr_NotImplemented),
-    NK_ESC(NkErr_InParameter),
-    NK_ESC(NkErr_OutParameter),
-    NK_ESC(NkErr_InOutParameter)
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NotImplemented)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InParameter)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_OutParameter)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InOutParameter))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Error code string array mismatch.");
 
@@ -49,34 +49,34 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Err
  *        shown to the user
  * \note  The string values in this array are UTF-8-encoded.
  */
-static char const *const gl_c_ErrorCodeDescriptionTable[] = {
-    u8"not an error",
-    u8"unknown error code or totally unexpected error condition",
+static NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
+    NK_MAKE_STRING_VIEW(u8"not an error"),
+    NK_MAKE_STRING_VIEW(u8"unknown error code or totally unexpected error condition"),
 
-    u8"requested feature is not (yet) implemented",
-    u8"at least one errornous input (read-only) parameter",
-    u8"at least one errornous output (write-only) parameter",
-    u8"at least one errornous input/output parameter"
+    NK_MAKE_STRING_VIEW(u8"requested feature is not (yet) implemented"),
+    NK_MAKE_STRING_VIEW(u8"at least one errornous input (read-only) parameter"),
+    NK_MAKE_STRING_VIEW(u8"at least one errornous output (write-only) parameter"),
+    NK_MAKE_STRING_VIEW(u8"at least one errornous input/output parameter")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, u8"Error code desc array mismatch.");
 
 
-_Return_ok_ char const *NK_CALL NkGetErrorCodeString(_In_ _Ecode_range_ NkErrorCode const ecode) {
+_Return_ok_ NkStringView *const NK_CALL NkGetErrorCodeStr(_In_ _Ecode_range_ NkErrorCode const code) {
     /* Check if parameter is in range. */
-    if (!NK_INRANGE_INCL(ecode, NkErr_Ok, __NkErr_Count__ - 1))
-        return NULL;
+    if (!NK_INRANGE_INCL(code, NkErr_Ok, __NkErr_Count__ - 1))
+        return NkGetErrorCodeStr(NkErr_Unknown);
 
     /* All good. */
-    return gl_c_ErrorCodeStringTable[ecode];
+    return (NkStringView *const)&gl_c_ErrorCodeStringTable[code];
 }
 
-_Return_ok_ char const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode const ecode) {
+_Return_ok_ NkStringView *const NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode const code) {
     /* Check if parameter is in range. */
-    if (!NK_INRANGE_INCL(ecode, NkErr_Ok, __NkErr_Count__ - 1))
-        return NULL;
+    if (!NK_INRANGE_INCL(code, NkErr_Ok, __NkErr_Count__ - 1))
+        return NkGetErrorCodeDesc(NkErr_Unknown);
 
     /* All good. */
-    return gl_c_ErrorCodeDescriptionTable[ecode];
+    return (NkStringView *const)&gl_c_ErrorCodeDescriptionTable[code];
 }
 
 
