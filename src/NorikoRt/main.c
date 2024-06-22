@@ -27,9 +27,7 @@
 
 int main(int argc, char **argv) {
     /* Query target platform properties. */
-    NkPlatformInformation targetPlatformInfo = {
-        .m_structSize = sizeof targetPlatformInfo
-    };
+    NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
     if (NkQueryPlatformInformation(&targetPlatformInfo)) {
         printf("Could not query target platform information.\n");
 

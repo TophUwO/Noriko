@@ -26,9 +26,9 @@
 
 /**
  * \defgroup Noriko Version and Build Information
- * \brief    define and gather target platform and build information
+ * \brief    defines and gathers target platform and build information
  */
-/** @{ */
+/** \{ */
 #define NK_VER_MAJOR                         0
 #define NK_VER_MINOR                         0
 #define NK_VER_PATCH                         1
@@ -60,9 +60,9 @@
 
 /**
  * \defgroup Composite Information Strings
- * \brief    information strings composed from other atomic information strings
+ * \brief    contains information strings composed from other atomic information strings
  */
-/** @{ */
+/** \{ */
 #define NK_PRODUCT_VERSION                        \
     NK_MESC(NK_VER_MAJOR) "."                     \
     NK_MESC(NK_VER_MINOR) "."                     \
@@ -74,8 +74,8 @@
     NK_PRODUCT_PLATFORM              u8" ("       \
     NK_MESC(NK_PRODUCT_ARCHITECTURE) u8"-bit) - " \
     NK_PRODUCT_CONFIGURATION
-/** @} */
-/** @} */
+/** \} */
+/** \} */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {

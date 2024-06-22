@@ -26,7 +26,7 @@
  * \brief represents a compile-time constant string view
  * 
  * This utility structure allows for extra information about the string to be stored
- * directly alongside it, making simple processing simpler and less error-prone.
+ * directly alongside it, making simple string processing simpler and less error-prone.
  */
 NK_NATIVE typedef struct NkStringView {
     char   *mp_dataPtr;    /**< pointer to static string buffer */
