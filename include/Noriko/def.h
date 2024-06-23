@@ -33,6 +33,8 @@
     #define NK_API                  extern __declspec(dllimport)
 #endif
 #define NK_CALL                     __cdecl
+#define NK_PROTOTYPE                extern
+#define NK_INTERNAL                 static
 
 /* Use SALv2 on MSVC platform. */
 /** \cond */
@@ -43,7 +45,9 @@
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
 #else
     #define _In_
+    #define _In_opt_
     #define _Out_
+    #define _Outptr_
     #define _Inout_
     #define _Field_z_
     #define _Struct_size_bytes_(n)
@@ -51,6 +55,12 @@
     #define _Success_(expr)
     #define _In_range_(lo, hi)
     #define _Ecode_range_
+    #define _Pre_notnull_
+    #define _Pre_valid_
+    #define _Post_valid_
+    #define _Deref_pre_valid_
+    #define _Deref_post_null_
+    #define _Deref_post_notnull_
 #endif
 /** \endcond */
 

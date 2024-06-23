@@ -23,6 +23,50 @@
 
 
 /**
+ * \def   NK_ERROR_CODE
+ * \brief defines the name of the function-local error code variable
+ */
+#define NK_ERROR_CODE          errorCode
+/**
+ * \def   NK_DEFINE_ERROR_CODE
+ * \brief defines the function-local error code variable
+ */
+#define NK_DEFINE_ERROR_CODE   NkErrorCode NK_ERROR_CODE = NkErr_Ok;
+/**
+ * \def   NK_SET_ERROR_CODE(v)
+ * \brief updates the value of the function-local error code variable
+ * \param v new numeric error code
+ */
+#define NK_SET_ERROR_CODE(v)   NK_ERROR_CODE = v;
+
+
+/**
+ * \def   NK_ON_ERROR
+ * \brief defines the common error handling section label used by Noriko
+ */
+#define NK_ON_ERROR            lbl_NKONERROR
+/**
+ * \def   NK_GOTO_ERROR()
+ * \brief jumps to the common error handling section
+ */
+#define NK_GOTO_ERROR()        goto NK_ON_ERROR;
+/**
+ * \def   NK_BASIC_ASSERT(e, c)
+ * \brief checks whether *e* evaluates to *true*
+ * 
+ * If *e* does evaluate to *true*, this does nothing, else it sets the function-local
+ * error code variable and jumps to the common error handling section.
+ * 
+ * \param e expression to evaluate
+ * \param c error code that will be set if *e* evaluates to *false*
+ */
+#define NK_BASIC_ASSERT(e, c)  if (!(e)) { NK_SET_ERROR_CODE((c)); NK_GOTO_ERROR(); }
+/**
+ */
+#define NK_FAIL_WITH(c)        NK_BASIC_ASSERT(0, c)
+
+
+/**
  * \brief represents a compile-time constant string view
  * 
  * This utility structure allows for extra information about the string to be stored

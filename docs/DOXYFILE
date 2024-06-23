@@ -2467,7 +2467,11 @@ PREDEFINED             = _Struct_size_bytes_(x)= \
                          _Return_ok_= \
                          NK_NATIVE= \
                          NK_API= \
-                         NK_CALL=
+                         NK_CALL= \
+                         _Pre_valid_= \
+                         _In_opt_= \
+                         _Deref_post_notnull_= \
+                         _Outptr_=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

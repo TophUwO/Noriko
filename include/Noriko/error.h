@@ -35,15 +35,20 @@
  * \brief numeric error code definitions
  */
 typedef _In_range_(NkErr_Ok, __NkErr_Count__ - 1) enum NkErrorCode {
-    NkErr_Ok,             /**< no error */
-    NkErr_Unknown,        /**< unknown error condition */
+    NkErr_Ok,                 /**< no error */
+    NkErr_Unknown,            /**< unknown error condition */
     
-    NkErr_NotImplemented, /**< feature not implemented */
-    NkErr_InParameter,    /**< errornous input parameter */
-    NkErr_OutParameter,   /**< errornous output parameter */
-    NkErr_InOutParameter, /**< errornous input/output parameter */
+    NkErr_NotImplemented,     /**< feature not implemented */
+    NkErr_InParameter,        /**< errornous input parameter */
+    NkErr_OutParameter,       /**< errornous output parameter */
+    NkErr_InOutParameter,     /**< errornous input/output parameter */
+    NkErr_InptrParameter,     /**< errornous input pointer parameter */
+    NkErr_OutptrParameter,    /**< errornous output pointer parameter */
+    NkErr_MemoryAlignment,    /**< invalid memory alignment specified */
+    NkErr_MemoryAllocation,   /**< error during memory allocation */
+    NkErr_MemoryReallocation, /**< error during memory reallocation */
 
-    __NkErr_Count__       /**< used internally */
+    __NkErr_Count__           /**< used internally */
 } NkErrorCode;
 
 
@@ -56,7 +61,7 @@ typedef _In_range_(NkErr_Ok, __NkErr_Count__ - 1) enum NkErrorCode {
  * \note   The resulting string value is generally the identifier of the enum literal
  *         associated with the provided integer error code.
  */
-NK_NATIVE NK_API _Return_ok_ NkStringView *const NK_CALL NkGetErrorCodeStr(_In_ _Ecode_range_ NkErrorCode const code);
+NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeStr(_In_ _Ecode_range_ NkErrorCode code);
 /**
  * \brief  retrieves a brief textual description of the provided integral error code
  * \param  [in] code integer error code to get the associated error description of
@@ -64,6 +69,6 @@ NK_NATIVE NK_API _Return_ok_ NkStringView *const NK_CALL NkGetErrorCodeStr(_In_ 
  *         signifying an error if the error description could not be retrieved
  * \note   The return value of this function is a pointer to static read-only memory.
  */
-NK_NATIVE NK_API _Return_ok_ NkStringView *const NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode const code);
+NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode code);
 
 

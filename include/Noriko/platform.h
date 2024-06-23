@@ -26,9 +26,25 @@
 #include <include/Noriko/error.h>
 
 
+/* Determine build tools. */
+#if (defined _MSC_VER)
+    #define NK_TOOLCHAIN_MSVC
+#else
+    #error Currently, Noriko only supports compilation via MSVC.
+#endif
+
 /* Determine target platform. */
 #if (defined _WIN32) || (defined _WIN64)
     #define NK_TARGET_WINDOWS
+
+    /* Enable memory leak detection of Microsoft Visual Studio in debug builds. */
+    #if (defined NK_TOOLCHAIN_MSVC)
+        #define _CRTDBG_MAP_ALLOC
+        #define NK_USE_MSVC_MEMORY_LEAK_DETECTOR
+
+        #include <stdlib.h>
+        #include <crtdbg.h>
+    #endif
 #else
     #error Noriko's engine component currently only supports Microsoft Windows.
 #endif
@@ -40,13 +56,6 @@
     #define NK_ARCHITECTURE_32BIT
 #else
     #error Unknown target platform architecture.
-#endif
-
-/* Determine build tools. */
-#if (defined _MSC_VER)
-    #define NK_TOOLCHAIN_MSVC
-#else
-    #error Currently, Noriko only supports compilation via MSVC.
 #endif
 
 
@@ -94,7 +103,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation
  *          the function fails.
  * \warning Before you run this function, initialize the *m_structSize* member variable of
  *          *platformInfoPtr* to the size of the buffer that is being passed to the function.
- *          To do this, use *sizeof(NkPlatformInformation)*.
+ *          To do this, use **sizeof(NkPlatformInformation)**.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr);
 

@@ -23,9 +23,15 @@
 
 /* Noriko includes */
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/alloc.h>
 
 
 int main(int argc, char **argv) {
+    /* Enable Visual Studio memory leak detector. */
+#if (defined _DEBUG)
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
+
     /* Query target platform properties. */
     NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
     if (NkQueryPlatformInformation(&targetPlatformInfo)) {
@@ -33,6 +39,8 @@ int main(int argc, char **argv) {
 
         return -1;
     }
+
+    NkAllocatorStateSnapshot 
 
     /* Print target platform information. */
     printf("NorikoRt powered by %s\n", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);
