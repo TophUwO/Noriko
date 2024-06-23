@@ -62,6 +62,10 @@
  */
 #define NK_BASIC_ASSERT(e, c)  if (!(e)) { NK_SET_ERROR_CODE((c)); NK_GOTO_ERROR(); }
 /**
+ * \def   NK_FAIL_WITH(c)
+ * \brief sets the function-local error code to *c* and jumps to common error handling
+ *        section
+ * \param c error-code to set local error variable to
  */
 #define NK_FAIL_WITH(c)        NK_BASIC_ASSERT(0, c)
 
