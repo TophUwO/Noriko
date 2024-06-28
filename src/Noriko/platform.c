@@ -14,6 +14,7 @@
  * \file  platform.c
  * \brief implementation of Noriko's platform and feature detection
  */
+#define NK_NAMESPACE u8"nk::platform"
 
 
 /* stdlib includes */
@@ -22,6 +23,7 @@
 
 /* Noriko includes */
 #include <include/Noriko/platform.h>
+#include <include/Noriko/error.h>
 
 
 /**
@@ -80,20 +82,18 @@
 
 _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {
     /* Initialize static string views. */
-    static NkStringView const gl_c_ProductNameAsView  = NK_MAKE_STRING_VIEW(NK_PRODUCT_NAME);
-    static NkStringView const gl_c_ProdVerAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_VERSION);
-    static NkStringView const gl_c_ProdCpyAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_COPYRIGHT);
-    static NkStringView const gl_c_ProdConfigAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_CONFIGURATION);
-    static NkStringView const gl_c_ProdBToolsAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_BTOOLS);
-    static NkStringView const gl_c_ProdPlatformAsView = NK_MAKE_STRING_VIEW(NK_PRODUCT_PLATFORM);
-    static NkStringView const gl_c_ProdInfoAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_INFOSTR);
-    static NkStringView const gl_c_ProdDateAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE);
-    static NkStringView const gl_c_ProdTimeAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME);
+    NK_INTERNAL NkStringView const gl_c_ProductNameAsView  = NK_MAKE_STRING_VIEW(NK_PRODUCT_NAME);
+    NK_INTERNAL NkStringView const gl_c_ProdVerAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_VERSION);
+    NK_INTERNAL NkStringView const gl_c_ProdCpyAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_COPYRIGHT);
+    NK_INTERNAL NkStringView const gl_c_ProdConfigAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_CONFIGURATION);
+    NK_INTERNAL NkStringView const gl_c_ProdBToolsAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_BTOOLS);
+    NK_INTERNAL NkStringView const gl_c_ProdPlatformAsView = NK_MAKE_STRING_VIEW(NK_PRODUCT_PLATFORM);
+    NK_INTERNAL NkStringView const gl_c_ProdInfoAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_INFOSTR);
+    NK_INTERNAL NkStringView const gl_c_ProdDateAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE);
+    NK_INTERNAL NkStringView const gl_c_ProdTimeAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME);
 
     /* Parameter validation. */
-    if (platformInfoPtr == NULL || platformInfoPtr->m_structSize == 0)
-        return NkErr_InOutParameter;
-
+    NK_ASSERT(platformInfoPtr != NULL && platformInfoPtr->m_structSize ^ 0, NkErr_InOutParameter);
     /* Calculate actual struct size. */
     size_t const c_actsize = min(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
@@ -120,5 +120,8 @@ _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInf
     /* All good. */
     return NkErr_Ok;
 }
+
+
+#undef NK_NAMESPACE
 
 

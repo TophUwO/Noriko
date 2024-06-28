@@ -85,12 +85,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocationContext {
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
     size_t        m_structSize;        /**< size of this structure, in bytes */
     NkStringView *mp_allocatorName;    /**< debug name for this allocator */
-    uint32_t      m_nAllocSucceeded;   /**< current number of succeeded *alloc* requests */
-    uint32_t      m_nAllocFailed;      /**< current number of failed *alloc* requests */
-    uint32_t      m_nReallocSucceeded; /**< current number of succeeded *realloc* calls */
-    uint32_t      m_nReallocFailed;    /**< current number of failed *realloc* requests */
-    uint32_t      m_nFreeSucceeded;    /**< current number of succeeded *free* requests */
-    uint32_t      m_nFreeFailed;       /**< current number of failed *free* requests */
+    NkSize        m_currMemUsage;      /**< current memory usage, in bytes */
     size_t        m_minAllocBytes;     /**< minimum allocation size so far */
     size_t        m_maxAllocBytes;     /**< maximum allocation size so far */
     size_t        m_nBytesAllocated;   /**< number of bytes ever allocated */
@@ -119,10 +114,10 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
  * \see    NkAllocationContext
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
-    _In_opt_                      NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_              size_t sizeInBytes,
-    _In_opt_                      size_t alignInBytes,
-    _Outptr_ _Deref_post_notnull_ void **memPtr
+    _In_opt_         NkAllocationContext const *const allocCxt,
+    _In_ _Pre_valid_ size_t sizeInBytes,
+    _In_opt_         size_t alignInBytes,
+    _Init_ptr_       NkVoid **memPtr
 );
 /**
  * \brief  reallocate a previously-allocated dynamic block of memory
@@ -135,18 +130,15 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
  * \note   If the function fails, the memory is not moved and thus remains valid.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
-    _In_opt_                                        NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_                                size_t newSizeInBytes,
-    _Outptr_ _Deref_pre_valid_ _Deref_post_notnull_ void **memPtr
+    _In_opt_         NkAllocationContext const *const allocCxt,
+    _In_ _Pre_valid_ size_t newSizeInBytes,
+    _Reinit_ptr_     NkVoid **memPtr
 );
 /**
  * \brief  frees dynamically-allocated memory
  * \param  [out] memPtr pointer to the memory address that is to be freed
- * \return *NkErr_Ok* on success, non-zero on failure
- * \note   If the function returns non-zero, the memory pointed to by *memPtr* is kept
- *         intact.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkFreeMemory(_Pre_valid_ _Deref_post_null_ void **memPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkFreeMemory(NkVoid *memPtr);
 
 /**
  * \brief   retrieves the current state for the requested allocator

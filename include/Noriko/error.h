@@ -25,16 +25,69 @@
 
 #pragma once
 
+/* stdlib includes */
+#include <stdint.h>
+
 /* Noriko includes */
 #include <include/Noriko/def.h>
 #include <include/Noriko/util.h>
+
+
+#if (defined NK_CONFIG_DEBUG) || (defined NK_CONFIG_DEBUG_OPTIMIZED)
+    /**
+     * \def   NK_ASSERT_EXTRA(expr, ec, extra)
+     * \brief collects context information and raises a fatal error, resulting in a
+     *        notice to the user and subsequent debugger invocation (if possible)
+     * \param expr expression to check (must evaluate to *true* or else the assertion
+     *        fails)
+     * \param ec error code to propagate to the notice
+     * \param extra (optional) extra text to show, providing additional context
+     *        information
+     * \note  The codebase is stripped of this macro in deploy builds.
+     * \note  The NK_NAMESPACE macro must be defined in each compilation unit this macro
+     *        is used in. NK_NAMESPACE must expand to a plain C-string literal, in UTF-8
+     *        encoding.
+     *        \code{.c}
+     *        #define NK_NAMESPACE u8"nk::utils"
+     *        \endcode
+     */
+    #define NK_ASSERT_EXTRA(expr, ec, extra)                         \
+        do {                                                         \
+            if (!(expr)) {                                           \
+                NkFatalTerminate(&(NkFatalErrorContext){             \
+                    (ec),                                            \
+                    (uint32_t)__LINE__,                              \
+                    (NkStringView)NK_MAKE_STRING_VIEW(#expr),        \
+                    (NkStringView)NK_MAKE_STRING_VIEW(u8##extra),    \
+                    (NkStringView)NK_MAKE_STRING_VIEW(__FILE__),     \
+                    (NkStringView)NK_MAKE_STRING_VIEW(NK_NAMESPACE), \
+                    (NkStringView)NK_MAKE_STRING_VIEW(__func__),     \
+                    NULL                                             \
+                });                                                  \
+            } else { }                                               \
+        } while (0)
+
+    /**
+     * \def   NK_ASSERT(expr, ec)
+     * \brief like NK_ASSERT_EXTRA but omits the *extra* parameter
+     * \param expr expression to check (must evaluate to *true* or else the assertion
+     *        fails)
+     * \param ec error code to propagate to the notice
+     * \note  The codebase is stripped of this macro in deploy builds.
+     * \see   NK_ASSERT_EXTRA
+     */
+    #define NK_ASSERT(expr, ec) NK_ASSERT_EXTRA(expr, ec, "")
+#else
+    #define NK_ASSERT_EXTRA(expr, ec, extra)
+    #define NK_ASSERT(expr, ec)
+#endif
 
 
 /**
  * \enum  NkErrorCode
  * \brief numeric error code definitions
  */
-typedef _In_range_(NkErr_Ok, __NkErr_Count__ - 1) enum NkErrorCode {
+typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_Ok,                 /**< no error */
     NkErr_Unknown,            /**< unknown error condition */
     
@@ -44,12 +97,30 @@ typedef _In_range_(NkErr_Ok, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InOutParameter,     /**< errornous input/output parameter */
     NkErr_InptrParameter,     /**< errornous input pointer parameter */
     NkErr_OutptrParameter,    /**< errornous output pointer parameter */
+    NkErr_CallbackParameter,  /**< errnrous function pointer (callback) parameter */
     NkErr_MemoryAlignment,    /**< invalid memory alignment specified */
     NkErr_MemoryAllocation,   /**< error during memory allocation */
     NkErr_MemoryReallocation, /**< error during memory reallocation */
+    NkErr_NamedItemNotFound,  /**< requested item could not be found */
 
     __NkErr_Count__           /**< used internally */
 } NkErrorCode;
+
+/**
+ * \struct NkFatalErrorContext
+ * \brief  represents additional information passed to fatal error handlers, intended for
+ *         display and/or logging
+ */
+NK_NATIVE typedef struct NkFatalErrorContext {
+    NkErrorCode   m_errorCode;      /**< fatal error code */
+    uint32_t      m_fileLine;       /**< line in the file where the error was raised */
+    NkStringView  m_failedExpr;     /**< string representation of the expression that failed */
+    NkStringView  m_additionalDesc; /**< additional text shown to the user */
+    NkStringView  m_filePath;       /**< file in which the throwing function is located */
+    NkStringView  m_namespaceIdent; /**< namespace identifier of the function */
+    NkStringView  m_functionName;   /**< function in which the error occurred */
+    NkVoid       *mp_reservedPtr;   /**< *reserved for future use* */
+} NkFatalErrorContext;
 
 
 /**
@@ -70,5 +141,18 @@ NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeStr(_In_ 
  * \note   The return value of this function is a pointer to static read-only memory.
  */
 NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode code);
+
+
+/**
+ * \brief terminates the application immediately providing additional information on the
+ *        error that caused the abnormal termination
+ * \param [in] errCxtPtr pointer to a NkFatalErrorContext structure that contains more
+ *             information on the errors
+ * \see   NkFatalErrorContext
+ * \see   NkErrorCode
+ * \note  This function does not return.
+ * \note  Any *atexit()*-handlers will be executed before quitting.
+ */
+NK_NATIVE NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext const *errCxtPtr);
 
 

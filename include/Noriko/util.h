@@ -12,7 +12,8 @@
 
 /**
  * \file  util.h
- * \brief utility functions and data-structures used by multiple of Noriko's components
+ * \brief auxiliary utility functions and **static** data-structures used by multiple of
+ *        Noriko's components
  */
 
 
@@ -23,51 +24,78 @@
 
 
 /**
- * \def   NK_ERROR_CODE
- * \brief defines the name of the function-local error code variable
+ * \def   NK_ESC(...)
+ * \brief escapes all parameters passed into this macro at compile-time
+ * \note  The result is encoded as an UTF-8 string.
  */
-#define NK_ERROR_CODE          errorCode
+#define NK_ESC(...) u8###__VA_ARGS__
 /**
- * \def   NK_DEFINE_ERROR_CODE
- * \brief defines the function-local error code variable
+ * \def   NK_MESC(x)
+ * \brief expands a macro parameter and escapes its expanded value
+ * \param x macro expression to escape
+ * \note  The result is encoded as an UTF-8 string.
  */
-#define NK_DEFINE_ERROR_CODE   NkErrorCode NK_ERROR_CODE = NkErr_Ok;
+#define NK_MESC(x)  NK_ESC(x)
+
 /**
- * \def   NK_SET_ERROR_CODE(v)
- * \brief updates the value of the function-local error code variable
- * \param v new numeric error code
+ * \def   NK_INRANGE_INCL(x, lo, hi)
+ * \brief checks whether lo <= x <= hi is *true*
+ * \param x numeric value to compare against *lo* and *hi*
+ * \param lo lower bound of the comparison
+ * \param hi higher bound of the comparison
  */
-#define NK_SET_ERROR_CODE(v)   NK_ERROR_CODE = v;
+#define NK_INRANGE_INCL(x, lo, hi) (_Bool)((((hi) - (x)) * ((x) - (lo))) >= 0)
+/**
+ * \def   NK_INRANGE_EXCL(x, lo, hi)
+ * \brief checks whether lo < x < hi is *true*
+ * \param x numeric value to compare against *lo* and *hi*
+ * \param lo lower bound of the comparison
+ * \param hi higher bound of the comparison
+ */
+#define NK_INRANGE_EXCL(x, lo, hi) (_Bool)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
+
+/**
+ * \def   NK_ARRAYSIZE(arr)
+ * \brief calculates the size in elements of a static compile-time array
+ * \param arr array to calculate size of
+ */
+#define NK_ARRAYSIZE(arr)          (size_t)(sizeof (arr) / (sizeof *(arr)))
 
 
 /**
- * \def   NK_ON_ERROR
- * \brief defines the common error handling section label used by Noriko
+ * \def   NK_OFFSETOF(st, m)
+ * \brief calculates the offset (in bytes) of the given member relative to the address of
+ *        the first byte of its parent structure
+ * \param st structure type name
+ * \param m name of member variable of which the offset is to be calculated
+ * \see   https://en.wikipedia.org/wiki/Offsetof
  */
-#define NK_ON_ERROR            lbl_NKONERROR
+#define NK_OFFSETOF(st, m)         ((size_t)((char *)&((st *)0)->m - (char *)0))
 /**
- * \def   NK_GOTO_ERROR()
- * \brief jumps to the common error handling section
+ * \def  NK_SIZEOF(st, m)
+ * \todo write docs
  */
-#define NK_GOTO_ERROR()        goto NK_ON_ERROR;
+#define NK_SIZEOF(st, m)           ((size_t)(sizeof ((st *)0)->m))
+
+
 /**
- * \def   NK_BASIC_ASSERT(e, c)
- * \brief checks whether *e* evaluates to *true*
- * 
- * If *e* does evaluate to *true*, this does nothing, else it sets the function-local
- * error code variable and jumps to the common error handling section.
- * 
- * \param e expression to evaluate
- * \param c error code that will be set if *e* evaluates to *false*
+ * \def   NK_TRUE
+ * \brief use *NK_TRUE* instead of just plain *1*
  */
-#define NK_BASIC_ASSERT(e, c)  if (!(e)) { NK_SET_ERROR_CODE((c)); NK_GOTO_ERROR(); }
+#define NK_TRUE  ((NkBoolean)(1))
 /**
- * \def   NK_FAIL_WITH(c)
- * \brief sets the function-local error code to *c* and jumps to common error handling
- *        section
- * \param c error-code to set local error variable to
+ * \def   NK_FALSE
+ * \brief use *NK_FALSE* instead of just plain *0*
  */
-#define NK_FAIL_WITH(c)        NK_BASIC_ASSERT(0, c)
+#define NK_FALSE ((NkBoolean)(0))
+
+
+/**
+ * \def   NK_UNREFERENCED_PARAMETER(p)
+ * \brief suppress "unreferenced parameter 'x'" warnings
+ * \param p name of the parameter
+ */
+#define NK_UNREFERENCED_PARAMETER(p) ((void)(p))
 
 
 /**

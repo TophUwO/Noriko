@@ -24,6 +24,11 @@
 #pragma once
 
 /* Noriko includes */
+#include <include/Noriko/def.h>
+#include <include/Noriko/def.h>
+#include <include/Noriko/util.h>
+#include <include/Noriko/error.h>
 #include <include/Noriko/platform.h>
+#include <include/Noriko/alloc.h>
 
 

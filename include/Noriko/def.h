@@ -35,14 +35,18 @@
 #define NK_CALL                     __cdecl
 #define NK_PROTOTYPE                extern
 #define NK_INTERNAL                 static
+#define NK_NORETURN                 __declspec(noreturn)
 
 /* Use SALv2 on MSVC platform. */
 /** \cond */
 #if (__has_include(<sal.h>))
     #include <sal.h>
 
-    #define _Return_ok_             _Success_(return == NkErr_Ok)
+    #define _Return_ok_             _Check_return_ _Success_(return == NkErr_Ok)
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
+    #define _Init_ptr_              _Outptr_ _Deref_post_notnull_ 
+    #define _Reinit_ptr_            _Init_ptr_ _Deref_pre_valid_
+    #define _Uninit_ptr_            _Deref_post_null_
 #else
     #define _In_
     #define _In_opt_
@@ -61,46 +65,24 @@
     #define _Deref_pre_valid_
     #define _Deref_post_null_
     #define _Deref_post_notnull_
+    #define _Init_ptr_
+    #define _Reinit_ptr_
+    #define _Uninit_ptr_
 #endif
 /** \endcond */
 
 
 /**
- * \def   NK_ESC(...)
- * \brief escapes all parameters passed into this macro at compile-time
- * \note  The result is encoded as an UTF-8 string.
+ * \defgroup Primitive Type Aliases
+ * \brief    makes some primitive standard types conforming to Noriko's naming convention
  */
-#define NK_ESC(...) u8###__VA_ARGS__
-/**
- * \def   NK_MESC(x)
- * \brief expands a macro parameter and escapes its expanded value
- * \param x macro expression to escape
- * \note  The result is encoded as an UTF-8 string.
- */
-#define NK_MESC(x)  NK_ESC(x)
-
-/**
- * \def   NK_INRANGE_INCL(x, lo, hi)
- * \brief checks whether lo <= x <= hi is *true*
- * \param x numeric value to compare against *lo* and *hi*
- * \param lo lower bound of the comparison
- * \param hi higher bound of the comparison
- */
-#define NK_INRANGE_INCL(x, lo, hi) (_Bool)((((hi) - (x)) * ((x) - (lo))) >= 0)
-/**
- * \def   NK_INRANGE_EXCL(x, lo, hi)
- * \brief checks whether lo < x < hi is *true*
- * \param x numeric value to compare against *lo* and *hi*
- * \param lo lower bound of the comparison
- * \param hi higher bound of the comparison
- */
-#define NK_INRANGE_EXCL(x, lo, hi) (_Bool)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
-
-/**
- * \def   NK_ARRAYSIZE(arr)
- * \brief calculates the size in elements of a static compile-time array
- * \param arr array to calculate size of
- */
-#define NK_ARRAYSIZE(arr)          (size_t)(sizeof (arr) / (sizeof *(arr)))
+/** @{ */
+typedef _Bool     NkBoolean;
+typedef void      NkVoid;
+typedef size_t    NkSize;
+typedef ptrdiff_t NkOffset;
+typedef float     NkFloat, NkSingle;
+typedef int       NkInt;
+/** @} */
 
 

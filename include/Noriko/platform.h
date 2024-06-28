@@ -45,6 +45,12 @@
         #include <stdlib.h>
         #include <crtdbg.h>
     #endif
+
+    /* Suppress weird warnings. */
+    #pragma warning (disable: 4668) /* macro not defined; replacing with '0' */
+
+    /* Include windows headers. */
+    #include <windows.h>
 #else
     #error Noriko's engine component currently only supports Microsoft Windows.
 #endif

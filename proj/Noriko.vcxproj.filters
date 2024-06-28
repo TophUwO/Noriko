@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\dstruct">
+      <UniqueIdentifier>{11765efe-bca9-4479-9862-ccbb2080e2cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dstruct">
+      <UniqueIdentifier>{beaad60e-1130-47ee-a372-5aa3c795a4bd}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\noriko.h">

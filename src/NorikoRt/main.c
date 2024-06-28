@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
         printf("Could not query target platform information.\n");
 
         return -1;
-    } 
+    }
 
     /* Print target platform information. */
     printf("NorikoRt powered by %s\n", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);

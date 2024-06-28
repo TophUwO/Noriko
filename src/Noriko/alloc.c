@@ -20,33 +20,41 @@
  * specialized pool-allocators for fixed object sizes requiring frequent allocation and
  * deallocation.
  */
+#define NK_NAMESPACE u8"nk::alloc"
 
 
 /* stdlib includes */
 #include <string.h>
 
 /* Noriko includes */
-#include <include/Noriko/platform.h>
 #include <include/Noriko/alloc.h>
+#include <include/Noriko/platform.h>
+#include <include/Noriko/util.h>
 
 
 /**
  * \brief represents the internal state for the general-purpose memory allocator 
  */
-static NkAllocatorState gl_GPAlloc = {
-    .m_structSize        = sizeof gl_GPAlloc,
-    .mp_allocatorName    = &(NkStringView)NK_MAKE_STRING_VIEW("gp-alloc"),
-    .m_nAllocSucceeded   = 0,
-    .m_nAllocFailed      = 0,
-    .m_nReallocSucceeded = 0,
-    .m_nReallocFailed    = 0,
-    .m_nFreeSucceeded    = 0,
-    .m_nFreeFailed       = 0,
-    .m_minAllocBytes     = 0,
-    .m_maxAllocBytes     = 0,
-    .m_nBytesAllocated   = 0,
-    .m_nBytesFreed       = 0
+NK_NATIVE typedef struct NkGeneralPurposeAllocator {
+    NkAllocatorState m_allocState; /**< allocator state */
+} NkGeneralPurposeAllocator;
+
+
+/**
+ * \brief global general-purpose allocator state 
+ */
+NK_INTERNAL NK_NATIVE NkGeneralPurposeAllocator gl_GPAllocator = {
+    .m_allocState = {
+        .m_structSize        = sizeof gl_GPAllocator,
+        .mp_allocatorName    = &(NkStringView)NK_MAKE_STRING_VIEW("gp-alloc"),
+        .m_currMemUsage      = 0,
+        .m_minAllocBytes     = 0,
+        .m_maxAllocBytes     = 0,
+        .m_nBytesAllocated   = 0,
+        .m_nBytesFreed       = 0
+    }
 };
+NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_allocState;
 
 
 /**
@@ -60,9 +68,10 @@ static NkAllocatorState gl_GPAlloc = {
  * \param  [in] allocCxt allocation context supplied with the requested allocation
  * \param  [in] sizeInBytes size in bytes of the requested allocation
  * \return a pointer to the newly-allocated block, or *NULL* on failure
- * \see    NkFreeMemoryUnaligned_Impl
+ * \see    NkInternalFreeMemoryUnaligned
+ * \see    NkInternalReallocateMemoryUnaligned
  */
-NK_INTERNAL void *NK_CALL NkAllocateMemoryUnaligned_Impl(
+NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ size_t sizeInBytes
 ) {
@@ -81,17 +90,20 @@ NK_INTERNAL void *NK_CALL NkAllocateMemoryUnaligned_Impl(
 /**
  * \brief  invokes the configuration-specific native reallocation function
  * 
- * This function chooses the function similarly to its counterpart *NkAllocateMemoryUnaligned_Impl*.
+ * This function chooses the actual memory management function call similarly to its
+ * counterpart *NkInternalAllocateMemoryUnaligned*.
  * 
  * \param  [in] allocCxt allocation context supplied with the requested allocation
  * \param  [in] newSizeInBytes new size of the memory block, in bytes
  * \param  [in,out] ptr pointer to the memory block that is to be reallocated
  * \return pointer to the (possibly) moved memory block
+ * \see    NkInternalAllocateMemoryUnaligned
+ * \see    NkInternalFreeMemoryUnaligned
  */
-NK_INTERNAL void *NK_CALL NkReallocateMemoryUnaligned_Impl(
+NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ size_t newSizeInBytes,
-    _In_ _Pre_valid_ void *ptr 
+    _In_ _Pre_valid_ NkVoid *ptr 
 ) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     return _realloc_dbg(
@@ -109,14 +121,16 @@ NK_INTERNAL void *NK_CALL NkReallocateMemoryUnaligned_Impl(
 /**
  * \brief invokes the correct configuration-specific native memory free function
  *
- * This function chooses the function similarly to its counterpart *NkAllocateMemoryUnaligned_Impl*.
+ * This function chooses the actual memory management function call similarly to its
+ * counterpart *NkInternalAllocateMemoryUnaligned*.
  * 
  * \param [in] ptr raw pointer to the memory that is to be freed
- * \see   NkAllocateMemoryUnaligned_Impl
+ * \see   NkInternalAllocateMemoryUnaligned
+ * \see   NkInternalReallocateMemoryUnaligned
  */
-NK_INTERNAL void NkFreeMemoryUnaligned_Impl(_In_ _Pre_valid_ void *ptr) {
+NK_INTERNAL NkVoid NkInternalFreeMemoryUnaligned(NkVoid *ptr) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
-    _free_dbg(ptr, _NORMAL_BLOCK);
+    _free_dbg((void *)ptr, _NORMAL_BLOCK);
 #else
     free(ptr);
 #endif
@@ -124,105 +138,77 @@ NK_INTERNAL void NkFreeMemoryUnaligned_Impl(_In_ _Pre_valid_ void *ptr) {
 
 
 _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
-    _In_opt_                      NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_              size_t sizeInBytes,
-    _In_opt_                      size_t alignInBytes,
-    _Outptr_ _Deref_post_notnull_ void **memPtr
-) { NK_DEFINE_ERROR_CODE
+    _In_opt_         NkAllocationContext const *const allocCxt,
+    _In_ _Pre_valid_ size_t sizeInBytes,
+    _In_opt_         size_t alignInBytes,
+    _Init_ptr_       NkVoid **memPtr
+) {
     /* Validate parameters. */
-    NK_BASIC_ASSERT(sizeInBytes ^ 0, NkErr_InParameter);
-    NK_BASIC_ASSERT(alignInBytes == 0, NkErr_NotImplemented);
-    NK_BASIC_ASSERT(memPtr != NULL, NkErr_OutptrParameter);
+    NK_ASSERT(sizeInBytes ^ 0, NkErr_InParameter);
+    NK_ASSERT(alignInBytes == 0, NkErr_NotImplemented);
+    NK_ASSERT(memPtr != NULL, NkErr_OutptrParameter);
 
     /* Allocate memory block. */
-    *memPtr = NkAllocateMemoryUnaligned_Impl(allocCxt, sizeInBytes);
-    NK_BASIC_ASSERT(*memPtr != NULL, NkErr_MemoryAllocation);
-
-    /* Update allocator state. */
-    gl_GPAlloc.m_nBytesAllocated += sizeInBytes;
-    gl_GPAlloc.m_nAllocSucceeded += 1;
-    gl_GPAlloc.m_minAllocBytes    = min(gl_GPAlloc.m_minAllocBytes, sizeInBytes);
-    gl_GPAlloc.m_maxAllocBytes    = max(gl_GPAlloc.m_maxAllocBytes, sizeInBytes);
-    return NkErr_Ok;
-
-NK_ON_ERROR:
-    ++gl_GPAlloc.m_nAllocFailed;
-
-    return NK_ERROR_CODE;
+    return (*memPtr = NkInternalAllocateMemoryUnaligned(allocCxt, sizeInBytes)) != NULL
+        ? NkErr_Ok
+        : NkErr_MemoryAllocation
+    ;
 };
 
 _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
-    _In_opt_                                        NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_                                size_t newSizeInBytes,
-    _Outptr_ _Deref_pre_valid_ _Deref_post_notnull_ void **memPtr
+    _In_opt_         NkAllocationContext const *const allocCxt,
+    _In_ _Pre_valid_ size_t newSizeInBytes,
+    _Reinit_ptr_     NkVoid **memPtr
 ) {
-    NK_DEFINE_ERROR_CODE
     /* Parameter validation. */
-    NK_BASIC_ASSERT(memPtr != NULL && *memPtr != NULL, NkErr_InptrParameter);
-    NK_BASIC_ASSERT(newSizeInBytes ^ 0, NkErr_InParameter);
+    NK_ASSERT(memPtr != NULL && *memPtr != NULL, NkErr_InptrParameter);
+    NK_ASSERT(newSizeInBytes ^ 0, NkErr_InParameter);
 
     /* Try to reallocate memory. */
-    void *newMemPtr = NkReallocateMemoryUnaligned_Impl(allocCxt, newSizeInBytes, *memPtr);
-    NK_BASIC_ASSERT(newMemPtr != NULL, NkErr_MemoryReallocation);
+    NkVoid *newMemPtr = NkInternalReallocateMemoryUnaligned(allocCxt, newSizeInBytes, *memPtr);
+    if (newMemPtr == NULL)
+        return NkErr_MemoryReallocation;
 
-    /* Update current pointer and allocator state. */
+    /* Update current pointer. */
     *memPtr = newMemPtr;
-    gl_GPAlloc.m_nReallocSucceeded += 1;
-    gl_GPAlloc.m_minAllocBytes      = min(gl_GPAlloc.m_minAllocBytes, newSizeInBytes);
-    gl_GPAlloc.m_maxAllocBytes      = max(gl_GPAlloc.m_maxAllocBytes, newSizeInBytes);
     return NkErr_Ok;
-
-NK_ON_ERROR:
-    ++gl_GPAlloc.m_nReallocFailed;
-
-    return NK_ERROR_CODE;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkFreeMemory(_Pre_valid_ _Deref_post_null_ void **memPtr) { NK_DEFINE_ERROR_CODE
+NkVoid NK_CALL NkFreeMemory(NkVoid *memPtr) {
     /* Parameter validation. */
-    NK_BASIC_ASSERT(memPtr != NULL, NkErr_InParameter);
-    
+    if (memPtr == NULL)
+        return;
+
     /* Free memory. */
-    NkFreeMemoryUnaligned_Impl(*memPtr);
-    *memPtr = NULL;
-
-    /* Update allocator state. */
-    gl_GPAlloc.m_nFreeSucceeded += 1;
-    gl_GPAlloc.m_nBytesFreed    += 0;
-    return NkErr_Ok;
-
-NK_ON_ERROR:
-    ++gl_GPAlloc.m_nFreeFailed;
-
-    return NK_ERROR_CODE;
+    NkInternalFreeMemoryUnaligned(memPtr);
 }
 
 
 _Return_ok_ NkErrorCode NK_CALL NkGetAllocatorState(
     _In_ _Pre_valid_                 NkStringView const *const debugName,
     _Out_ _Pre_notnull_ _Post_valid_ NkAllocatorState *const bufferPtr
-) { NK_DEFINE_ERROR_CODE
+) {
     /* Parameter validation. */
-    NK_BASIC_ASSERT(debugName != NULL, NkErr_InParameter);
-    NK_BASIC_ASSERT(bufferPtr != NULL, NkErr_OutParameter);
+    NK_ASSERT(debugName != NULL, NkErr_InParameter);
+    NK_ASSERT(bufferPtr != NULL, NkErr_OutParameter);
 
     /*
      * Copy requested allocator state into buffer. If the allocator with the given debug
      * name could not be found, return error.
      */
-    if (!strcmp(debugName->mp_dataPtr, gl_GPAlloc.mp_allocatorName->mp_dataPtr))
-        memcpy(bufferPtr, &gl_GPAlloc, bufferPtr->m_structSize);
-    else
-        NK_FAIL_WITH(NkErr_InParameter);
+    if (!strcmp(debugName->mp_dataPtr, gl_GPAState->mp_allocatorName->mp_dataPtr))
+        memcpy(bufferPtr, gl_GPAState, bufferPtr->m_structSize);
+    else {
+        memset(bufferPtr, 0, bufferPtr->m_structSize);
+
+        return NkErr_NamedItemNotFound;
+    }
 
     /* Everything went well. */
     return NkErr_Ok;
-
-NK_ON_ERROR:
-    if (bufferPtr != NULL)
-        memset(bufferPtr, 0, bufferPtr->m_structSize);
-
-    return NK_ERROR_CODE;
 }
+
+
+#undef NK_NAMESPACE
 
 
