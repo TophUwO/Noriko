@@ -45,13 +45,15 @@ NK_NATIVE typedef struct NkGeneralPurposeAllocator {
  */
 NK_INTERNAL NK_NATIVE NkGeneralPurposeAllocator gl_GPAllocator = {
     .m_allocState = {
-        .m_structSize        = sizeof gl_GPAllocator,
-        .mp_allocatorName    = &(NkStringView)NK_MAKE_STRING_VIEW("gp-alloc"),
-        .m_currMemUsage      = 0,
-        .m_minAllocBytes     = 0,
-        .m_maxAllocBytes     = 0,
-        .m_nBytesAllocated   = 0,
-        .m_nBytesFreed       = 0
+        .m_structSize         = sizeof gl_GPAllocator,
+        .mp_allocatorName     = &(NkStringView)NK_MAKE_STRING_VIEW("gp-alloc"),
+        .m_currMemUsage       = 0,
+        .m_minAllocBytes      = 0,
+        .m_maxAllocBytes      = 0,
+        .m_nBytesAllocated    = 0,
+        .m_nBytesFreed        = 0,
+        .m_nAllocationsActive = 0,
+        .m_nAllocationsFreed  = 0
     }
 };
 NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_allocState;
@@ -73,7 +75,7 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
  */
 NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t sizeInBytes
+    _In_ _Pre_valid_ NkSize sizeInBytes
 ) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     return _malloc_dbg(
@@ -102,7 +104,7 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
  */
 NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t newSizeInBytes,
+    _In_ _Pre_valid_ NkSize newSizeInBytes,
     _In_ _Pre_valid_ NkVoid *ptr 
 ) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
@@ -139,8 +141,8 @@ NK_INTERNAL NkVoid NkInternalFreeMemoryUnaligned(NkVoid *ptr) {
 
 _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t sizeInBytes,
-    _In_opt_         size_t alignInBytes,
+    _In_ _Pre_valid_ NkSize sizeInBytes,
+    _In_opt_         NkSize alignInBytes,
     _Init_ptr_       NkVoid **memPtr
 ) {
     /* Validate parameters. */
@@ -157,7 +159,7 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
 
 _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t newSizeInBytes,
+    _In_ _Pre_valid_ NkSize newSizeInBytes,
     _Reinit_ptr_     NkVoid **memPtr
 ) {
     /* Parameter validation. */

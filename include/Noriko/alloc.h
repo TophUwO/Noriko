@@ -31,6 +31,7 @@
 #include <include/Noriko/error.h>
 #include <include/Noriko/util.h>
 
+
 /* Only use allocation contexts in debug builds. */
 #if (!defined NK_CONFIG_DEPLOY)
     /**
@@ -65,7 +66,7 @@
  * passed is shared across threads, the behavior is undefined.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocationContext {
-    size_t        m_structSize;        /**< size of this structure, in bytes */
+    NkSize        m_structSize;        /**< size of this structure, in bytes */
     NkStringView *mp_filePath;         /**< path of the file */
     NkStringView *mp_namespaceIdent;   /**< namespace the function belongs to */
     NkStringView *mp_functionName;     /**< name of the function */
@@ -83,13 +84,15 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocationContext {
  *        requeried for up-to-date information.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
-    size_t        m_structSize;        /**< size of this structure, in bytes */
-    NkStringView *mp_allocatorName;    /**< debug name for this allocator */
-    NkSize        m_currMemUsage;      /**< current memory usage, in bytes */
-    size_t        m_minAllocBytes;     /**< minimum allocation size so far */
-    size_t        m_maxAllocBytes;     /**< maximum allocation size so far */
-    size_t        m_nBytesAllocated;   /**< number of bytes ever allocated */
-    size_t        m_nBytesFreed;       /**< number of bytes ever freed */
+    NkSize        m_structSize;         /**< size of this structure, in bytes */
+    NkStringView *mp_allocatorName;     /**< debug name for this allocator */
+    NkSize        m_currMemUsage;       /**< current memory usage, in bytes */
+    NkSize        m_minAllocBytes;      /**< minimum allocation size so far */
+    NkSize        m_maxAllocBytes;      /**< maximum allocation size so far */
+    NkSize        m_nBytesAllocated;    /**< number of bytes ever allocated */
+    NkSize        m_nBytesFreed;        /**< number of bytes ever freed */
+    NkSize        m_nAllocationsActive; /**< number of currently allocated blocks */
+    NkSize        m_nAllocationsFreed;  /**< number of previously allocated blocks that have been freed already */
 } NkAllocatorState;
 
 
@@ -111,12 +114,13 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
  * \note   *alignInBytes* must be a power of two.
  * \note   Aligned allocation is currently not supported.
  * \todo   Implement *aligned allocation*.
+ * \todo   Implement *zeroed memory allocation*.
  * \see    NkAllocationContext
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t sizeInBytes,
-    _In_opt_         size_t alignInBytes,
+    _In_ _Pre_valid_ NkSize sizeInBytes,
+    _In_opt_         NkSize alignInBytes,
     _Init_ptr_       NkVoid **memPtr
 );
 /**
@@ -124,14 +128,14 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
  * \param  [in] allocCxt allocation context for debugging
  * \param  [in] newSizeInBytes new size of the block, in bytes
  * \param  [in,out] memPtr pointer to the block of memory that is to be reallocated;
- *         the contents of the block are moved to the new location and the old block is 
+ *         the contents of the block are moved to the new location and the old block is
  *         then freed
  * \return *NkErr_Ok* on success, non-zero on failure
  * \note   If the function fails, the memory is not moved and thus remains valid.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ size_t newSizeInBytes,
+    _In_ _Pre_valid_ NkSize newSizeInBytes,
     _Reinit_ptr_     NkVoid **memPtr
 );
 /**

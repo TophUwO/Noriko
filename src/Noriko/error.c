@@ -40,6 +40,8 @@
 static NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Ok)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Unknown)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NoOperation)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ManuallyAborted)),
 
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NotImplemented)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InParameter)),
@@ -51,7 +53,12 @@ static NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_MemoryAlignment)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_MemoryAllocation)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_MemoryReallocation)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NamedItemNotFound))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NamedItemNotFound)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ArrayOutOfBounds)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ArrayElemOutOfBounds)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvalidRange)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnsignedWrapAround)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CapLimitExceeded))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Error code string array mismatch.");
 
@@ -63,18 +70,25 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Err
 static NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW(u8"not an error"),
     NK_MAKE_STRING_VIEW(u8"unknown error code or totally unexpected error condition"),
+    NK_MAKE_STRING_VIEW(u8"no operation was carried out"),
+    NK_MAKE_STRING_VIEW(u8"operation was manually aborted by user or callback"),
 
     NK_MAKE_STRING_VIEW(u8"requested feature is not (yet) implemented"),
-    NK_MAKE_STRING_VIEW(u8"at least one errornous input (read-only) parameter (e.g., int, char *)"),
-    NK_MAKE_STRING_VIEW(u8"at least one errornous output (write-only) parameter (e.g., void *)"),
-    NK_MAKE_STRING_VIEW(u8"at least one errornous input/output parameter (e.g., void *)"),
-    NK_MAKE_STRING_VIEW(u8"at least one errornous input pointer parameter (e.g., void **)"),
-    NK_MAKE_STRING_VIEW(u8"at least one errorous output pointer parameter (e.g., void **)"),
+    NK_MAKE_STRING_VIEW(u8"at least one erroneous input (read-only) parameter (e.g., int, char *)"),
+    NK_MAKE_STRING_VIEW(u8"at least one erroneous output (write-only) parameter (e.g., void *)"),
+    NK_MAKE_STRING_VIEW(u8"at least one erroneous input/output parameter (e.g., void *)"),
+    NK_MAKE_STRING_VIEW(u8"at least one erroneous input pointer parameter (e.g., void **)"),
+    NK_MAKE_STRING_VIEW(u8"at least one erroneous output pointer parameter (e.g., void **)"),
     NK_MAKE_STRING_VIEW(u8"invalid callback function pointer passed (must be non-NULL)"),
     NK_MAKE_STRING_VIEW(u8"invalid memory alignment (must be a power of two)"),
     NK_MAKE_STRING_VIEW(u8"could not allocate memory block (likely out of memory or too much fragmentation)"),
     NK_MAKE_STRING_VIEW(u8"could not reallocate memory block (likely out of memory or too much fragmentation)"),
-    NK_MAKE_STRING_VIEW(u8"could not find requested named item")
+    NK_MAKE_STRING_VIEW(u8"could not find requested named item"),
+    NK_MAKE_STRING_VIEW(u8"array index out of (buffer) bounds"),
+    NK_MAKE_STRING_VIEW(u8"array index out of (element) bounds"),
+    NK_MAKE_STRING_VIEW(u8"erroneous array interval [x, y]"),
+    NK_MAKE_STRING_VIEW(u8"operation caused unsigned integer wrap-around (values passed too big?)"),
+    NK_MAKE_STRING_VIEW(u8"exceeded container capacity limit")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, u8"Error code desc array mismatch.");
 

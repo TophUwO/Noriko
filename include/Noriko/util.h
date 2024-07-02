@@ -53,13 +53,27 @@
  * \param hi higher bound of the comparison
  */
 #define NK_INRANGE_EXCL(x, lo, hi) (_Bool)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
+/**
+ * \def   NK_MIN(x, y)
+ * \brief expands to the maximum of the numeric values \c x and \c y
+ * \param x first value
+ * \param y second value
+ */
+#define NK_MIN(x, y)               (((x) > (y)) ? (y) : (x))
+/**
+ * \def   NK_MAX(x, y)
+ * \brief expands to the minimum of the numeric values \c x and \c y
+ * \param x first value
+ * \param y second value
+ */
+#define NK_MAX(x, y)               (((x) > (y)) ? (x) : (y))
 
 /**
  * \def   NK_ARRAYSIZE(arr)
  * \brief calculates the size in elements of a static compile-time array
  * \param arr array to calculate size of
  */
-#define NK_ARRAYSIZE(arr)          (size_t)(sizeof (arr) / (sizeof *(arr)))
+#define NK_ARRAYSIZE(arr)          (NkSize)(sizeof (arr) / (sizeof *(arr)))
 
 
 /**
@@ -70,12 +84,15 @@
  * \param m name of member variable of which the offset is to be calculated
  * \see   https://en.wikipedia.org/wiki/Offsetof
  */
-#define NK_OFFSETOF(st, m)         ((size_t)((char *)&((st *)0)->m - (char *)0))
+#define NK_OFFSETOF(st, m)         ((NkSize)((char *)&((st *)0)->m - (char *)0))
 /**
- * \def  NK_SIZEOF(st, m)
- * \todo write docs
+ * \def   NK_SIZEOF(st, m)
+ * \brief returns the size in bytes of the member \c m of data-structure \c st, i.e.
+ *        <tt>sizeof st.m</tt>
+ * \param st type name of the data-structure
+ * \param m identifier of the member
  */
-#define NK_SIZEOF(st, m)           ((size_t)(sizeof ((st *)0)->m))
+#define NK_SIZEOF(st, m)           ((NkSize)(sizeof ((st *)0)->m))
 
 
 /**
@@ -106,7 +123,7 @@
  */
 NK_NATIVE typedef struct NkStringView {
     char   *mp_dataPtr;    /**< pointer to static string buffer */
-    size_t  m_sizeInBytes; /**< size of buffer, in bytes */
+    NkSize  m_sizeInBytes; /**< size of buffer, in bytes */
 } NkStringView;
 
 /**

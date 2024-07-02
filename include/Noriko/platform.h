@@ -46,8 +46,9 @@
         #include <crtdbg.h>
     #endif
 
-    /* Suppress weird warnings. */
+    /* Suppress some non-important warnings. */
     #pragma warning (disable: 4668) /* macro not defined; replacing with '0' */
+    #pragma warning (disable: 5045) /* spectre migitation for memory loads */
 
     /* Include windows headers. */
     #include <windows.h>
@@ -83,13 +84,13 @@ static_assert(sizeof(char) == 1, "sizeof(char) must be 1 (one) byte.");
  *         read-only memory. Thus, writing to the passed addresses is undefined behavior.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation {
-    size_t        m_structSize;       /**< size of this structure, in bytes */
-    size_t        m_versionMajor;     /**< engine major version component */
-    size_t        m_versionMinor;     /**< engine minor version component */
-    size_t        m_versionPatch;     /**< engine patch version component */
-    size_t        m_versionIteration; /**< engine patch iteration component */
-    size_t        m_platWidth;        /**< target platform width */
-    size_t        m_platBToolsVer;    /**< version of build tools used */
+    NkSize        m_structSize;       /**< size of this structure, in bytes */
+    NkSize        m_versionMajor;     /**< engine major version component */
+    NkSize        m_versionMinor;     /**< engine minor version component */
+    NkSize        m_versionPatch;     /**< engine patch version component */
+    NkSize        m_versionIteration; /**< engine patch iteration component */
+    NkSize        m_platWidth;        /**< target platform width */
+    NkSize        m_platBToolsVer;    /**< version of build tools used */
     NkStringView *mp_prodName;        /**< name of engine component */
     NkStringView *mp_prodVersion;     /**< full engine version string */
     NkStringView *mp_prodCopyright;   /**< engine copyright string */

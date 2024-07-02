@@ -33,7 +33,7 @@
 #include <include/Noriko/util.h>
 
 
-#if (defined NK_CONFIG_DEBUG) || (defined NK_CONFIG_DEBUG_OPTIMIZED)
+#if (defined NK_CONFIG_DEBUG) || (defined NK_CONFIG_DEBUG_OPTIMIZED) || (defined NK_USE_ASSERTIONS)
     /**
      * \def   NK_ASSERT_EXTRA(expr, ec, extra)
      * \brief collects context information and raises a fatal error, resulting in a
@@ -43,10 +43,12 @@
      * \param ec error code to propagate to the notice
      * \param extra (optional) extra text to show, providing additional context
      *        information
-     * \note  The codebase is stripped of this macro in deploy builds.
-     * \note  The NK_NAMESPACE macro must be defined in each compilation unit this macro
-     *        is used in. NK_NAMESPACE must expand to a plain C-string literal, in UTF-8
-     *        encoding.
+     * \see   NK_ASSERT
+     * \note  The codebase is stripped of this macro in deploy builds, unless the
+     *        **NK_USE_ASSERTIONS** macro is defined.
+     * \note  The **NK_NAMESPACE** macro must be defined in each compilation unit this
+     *        macro is used in. **NK_NAMESPACE** must expand to a plain C-string literal,
+     *        UTF-8 encoded.
      *        \code{.c}
      *        #define NK_NAMESPACE u8"nk::utils"
      *        \endcode
@@ -88,22 +90,29 @@
  * \brief numeric error code definitions
  */
 typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
-    NkErr_Ok,                 /**< no error */
-    NkErr_Unknown,            /**< unknown error condition */
-    
-    NkErr_NotImplemented,     /**< feature not implemented */
-    NkErr_InParameter,        /**< errornous input parameter */
-    NkErr_OutParameter,       /**< errornous output parameter */
-    NkErr_InOutParameter,     /**< errornous input/output parameter */
-    NkErr_InptrParameter,     /**< errornous input pointer parameter */
-    NkErr_OutptrParameter,    /**< errornous output pointer parameter */
-    NkErr_CallbackParameter,  /**< errnrous function pointer (callback) parameter */
-    NkErr_MemoryAlignment,    /**< invalid memory alignment specified */
-    NkErr_MemoryAllocation,   /**< error during memory allocation */
-    NkErr_MemoryReallocation, /**< error during memory reallocation */
-    NkErr_NamedItemNotFound,  /**< requested item could not be found */
+    NkErr_Ok,                   /**< no error */
+    NkErr_Unknown,              /**< unknown error condition */
+    NkErr_NoOperation,          /**< function did nothing */
+    NkErr_ManuallyAborted,      /**< operation was manually aborted by user or callback */
 
-    __NkErr_Count__           /**< used internally */
+    NkErr_NotImplemented,       /**< feature not implemented */
+    NkErr_InParameter,          /**< erroneous input parameter */
+    NkErr_OutParameter,         /**< erroneous output parameter */
+    NkErr_InOutParameter,       /**< erroneous input/output parameter */
+    NkErr_InptrParameter,       /**< erroneous input pointer parameter */
+    NkErr_OutptrParameter,      /**< errornous output pointer parameter */
+    NkErr_CallbackParameter,    /**< erroneous function pointer (callback) parameter */
+    NkErr_MemoryAlignment,      /**< invalid memory alignment specified */
+    NkErr_MemoryAllocation,     /**< error during memory allocation */
+    NkErr_MemoryReallocation,   /**< error during memory reallocation */
+    NkErr_NamedItemNotFound,    /**< requested item could not be found */
+    NkErr_ArrayOutOfBounds,     /**< array index out of buffer bounds */
+    NkErr_ArrayElemOutOfBounds, /**< array index out of element bounds */
+    NkErr_InvalidRange,         /**< invalid range tuple */
+    NkErr_UnsignedWrapAround,   /**< operation caused unsigned wrap-around */
+    NkErr_CapLimitExceeded,     /**< container capacity limit exceeded */
+
+    __NkErr_Count__             /**< used internally */
 } NkErrorCode;
 
 /**

@@ -36,6 +36,7 @@
 #define NK_PROTOTYPE                extern
 #define NK_INTERNAL                 static
 #define NK_NORETURN                 __declspec(noreturn)
+#define NK_INLINE                   inline
 
 /* Use SALv2 on MSVC platform. */
 /** \cond */
@@ -46,7 +47,11 @@
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
     #define _Init_ptr_              _Outptr_ _Deref_post_notnull_ 
     #define _Reinit_ptr_            _Init_ptr_ _Deref_pre_valid_
-    #define _Uninit_ptr_            _Deref_post_null_
+    #define _Uninit_ptr_            _Deref_pre_notnull_ _Deref_post_null_
+    #define _Init_ptr_mbnull_       _Outptr_opt_result_maybenull_
+    #define _I_array_(s)            _In_reads_(s)
+    #define _O_array_(s)            _Out_writes_(s)
+    #define _O_array_opt_(s)        _Out_writes_opt_(s)
 #else
     #define _In_
     #define _In_opt_
@@ -68,6 +73,12 @@
     #define _Init_ptr_
     #define _Reinit_ptr_
     #define _Uninit_ptr_
+    #define _In_reads_(s)
+    #define _Out_writes_(s)
+    #define _Init_ptr_mbnull_
+    #define _I_array_(s)
+    #define _O_array_(s)
+    #define _O_array_opt_(s)
 #endif
 /** \endcond */
 
@@ -82,7 +93,10 @@ typedef void      NkVoid;
 typedef size_t    NkSize;
 typedef ptrdiff_t NkOffset;
 typedef float     NkFloat, NkSingle;
-typedef int       NkInt;
+typedef double    NkDouble;
+typedef long      NkInt32;
+typedef long long NkInt64;
+
 /** @} */
 
 

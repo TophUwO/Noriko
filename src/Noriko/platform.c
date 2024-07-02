@@ -95,7 +95,7 @@ _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInf
     /* Parameter validation. */
     NK_ASSERT(platformInfoPtr != NULL && platformInfoPtr->m_structSize ^ 0, NkErr_InOutParameter);
     /* Calculate actual struct size. */
-    size_t const c_actsize = min(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
+    NkSize const c_actsize = min(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
     /* Initialize basic *buf* structure with requested target and build information. */
     *platformInfoPtr = (struct NkPlatformInformation){
