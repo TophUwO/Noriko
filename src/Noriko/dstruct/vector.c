@@ -473,7 +473,16 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorFilter(
 }
 
 NkVoid NK_CALL NkVectorReverse(_Inout_ NkVector *vecPtr, _In_opt_ NkSize sInd, _In_opt_ NkSize eInd) {
-    /** \todo Implement NkVectorReverse() */
+    NK_ASSERT(vecPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(sInd <= eInd, NkErr_InvalidRange);
+    NK_ASSERT(eInd < vecPtr->m_elemCount, NkErr_ArrayElemOutOfBounds);
+
+    for (NkSize i = sInd, j = eInd; i ^ j; i++, j--) {
+        NkVoid const *tmpPtr = vecPtr->mp_dataPtr[i];
+
+        vecPtr->mp_dataPtr[i] = vecPtr->mp_dataPtr[j];
+        vecPtr->mp_dataPtr[j] = tmpPtr;
+    }
 }
 
 NkVoid NK_CALL NkVectorSort(
