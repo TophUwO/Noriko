@@ -271,6 +271,7 @@
     <ClInclude Include="..\include\Noriko\error.h" />
     <ClInclude Include="..\include\Noriko\noriko.h" />
     <ClInclude Include="..\include\Noriko\platform.h" />
+    <ClInclude Include="..\include\Noriko\sort.h" />
     <ClInclude Include="..\include\Noriko\util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -278,6 +279,7 @@
     <ClCompile Include="..\src\Noriko\dstruct\vector.c" />
     <ClCompile Include="..\src\Noriko\error.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
+    <ClCompile Include="..\src\Noriko\sort.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -23,7 +23,6 @@
 
 /* Noriko includes */
 #include <include/Noriko/noriko.h>
-#include <include/Noriko/alloc.h>
 
 
 int main(int argc, char **argv) {

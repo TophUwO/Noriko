@@ -26,6 +26,7 @@
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/util.h>
 #include <include/Noriko/platform.h>
+#include <include/Noriko/sort.h>
 
 #include <include/Noriko/dstruct/vector.h>
 
@@ -40,17 +41,18 @@ struct NkVector {
     NkVectorProperties m_vecProps;                     /**< vector properties */
     NkVoid             (NK_CALL *mp_fnDest)(NkVoid *); /**< custom element destructor */
 
-    /**< raw pointer to the internal array */
-    NkVoid **mp_dataPtr;
+    NkVoid **mp_dataPtr; /**< raw pointer to the internal array */
 };
 
 
 /**
+ * \internal
  * \brief  default predicate for the NkVectorFind method
  * \param  [in] elemPtr pointer to the current element
  * \param  [in] extraParam extra parameter to be passed to the predicate callback
  * \param  [in] currIndex index of the current item in the internal array
  * \return NK_TRUE if the predicate is satisfied by *elemPtr*, NK_FALSE if not
+ * \endinternal
  */
 NK_INTERNAL NK_INLINE NkBoolean NK_CALL NkInternalVectorDefaultPred(
     _In_     NkVoid const *elemPtr,
@@ -64,11 +66,13 @@ NK_INTERNAL NK_INLINE NkBoolean NK_CALL NkInternalVectorDefaultPred(
 }
 
 /**
+ * \internal 
  * \brief  runs validation on the passed vector properties
  * \param  [in] vecPropsPtr pointer to the NkVectorProperties structure that is to be
  *              validated
  * \return NK_TRUE if the given vector properties are valid, NK_FALSE if not
  * \note   This function only validates the properties in **non-deploy** builds.
+ * \endinternal
  */
 NK_INTERNAL NK_INLINE NkBoolean NK_CALL NkInternalVectorValidateProperties(_In_ NkVectorProperties const *vecPropsPtr) {
 /** \cond */
@@ -95,6 +99,7 @@ NK_INTERNAL NK_INLINE NkBoolean NK_CALL NkInternalVectorValidateProperties(_In_ 
 }
 
 /**
+ * \internal
  * \brief  attempts to destroy all objects in the ranged denoted by <tt>[sInd, eInd]</tt>
  *
  * This function "fails" when the range is empty, that is, <tt>sInd == eInd</tt>, or if
@@ -107,6 +112,7 @@ NK_INTERNAL NK_INLINE NkBoolean NK_CALL NkInternalVectorValidateProperties(_In_ 
  * \return \c NkErr_Ok if everything went according to plan; if the function did nothing,
  *         \c NkErr_NoOperation is returned
  * \see    NkErrorCode
+ * \endinternal
  */
 NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorTryFreeRange(
     _In_     NkVector const *vecPtr,
@@ -125,18 +131,21 @@ NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorTryFreeRange(
 }
 
 /**
+ * \internal
  * \brief  resizes the internal buffer
  * \param  [in,out] vecPtr pointer to the NkVector data-structure of which the internal
  *                  buffer is to be reallocated
  * \param  [in] newCap new capacity of the internal buffer
  * \return see return codes of NkReallocateMemory
  * \see    NkReallocateMemory
+ * \endinternal
  */
 NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorResizeBuffer(_Inout_ NkVector *vecPtr, _In_ NkSize newCap) {
     return NkReallocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), newCap * sizeof(NkVoid *), (NkVoid *)&vecPtr->mp_dataPtr);
 }
 
 /**
+ * \internal 
  * \brief  shifts the internal buffer's contents at a given index by \c positions to make
  *         space for elements or to erase an existing element
  * \param  [in,out] vecPtr pointer to the NkVector data-structure of which the internal
@@ -148,6 +157,7 @@ NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorResizeBuffer(_Inout_ NkVector *v
  * \return \c NkErr_Ok on success, \c NkErr_UnsignedWrapAround if the operation could not
  *         be carried out due to an unsigned wrap-around having occurred (i.e., shifting
  *         distance exceeded array boundaries)
+ * \endinternal
  */
 NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorShiftBuffer(
     _Inout_ NkVector *vecPtr,
@@ -168,6 +178,7 @@ NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorShiftBuffer(
 }
 
 /**
+ * \internal
  * \brief  copy array of elements into internal buffer
  * \param  [in,out] vecPtr pointer to the NkVector data-structure of which the internal
  *                  buffer is to be modified
@@ -177,6 +188,7 @@ NK_INTERNAL NkErrorCode NK_CALL NkInternalVectorShiftBuffer(
  * \note   This function is most often used in conjunction with the internal function
  *         NkInternalVectorShiftBuffer
  * \see    NkInternalVectorShiftBuffer
+ * \endinternal
  */
 NK_INTERNAL NkVoid NK_CALL NkInternalVectorCopyBuffer(
     _In_ NkVector *vecPtr,
@@ -478,7 +490,7 @@ NkVoid NK_CALL NkVectorReverse(_Inout_ NkVector *vecPtr, _In_opt_ NkSize sInd, _
     NK_ASSERT(eInd < vecPtr->m_elemCount, NkErr_ArrayElemOutOfBounds);
 
     for (NkSize i = sInd, j = eInd; i ^ j; i++, j--) {
-        NkVoid const *tmpPtr = vecPtr->mp_dataPtr[i];
+        NkVoid *tmpPtr = vecPtr->mp_dataPtr[i];
 
         vecPtr->mp_dataPtr[i] = vecPtr->mp_dataPtr[j];
         vecPtr->mp_dataPtr[j] = tmpPtr;
@@ -491,7 +503,12 @@ NkVoid NK_CALL NkVectorSort(
     _In_opt_ NkSize eInd,
     _In_     NkInt32 (NK_CALL *fnPred)(NkVoid const *, NkVoid const *)
 ) {
-    /** \todo Implement NkVectorSort() */
+    NK_ASSERT(vecPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(sInd <= eInd, NkErr_InvalidRange);
+    NK_ASSERT(eInd < vecPtr->m_elemCount, NkErr_ArrayElemOutOfBounds);
+    NK_ASSERT(fnPred != NULL, NkErr_CallbackParameter);
+
+    NK_IGNORE_RETURN_VALUE(NkQuicksortPointers(vecPtr->mp_dataPtr, sInd, eInd, fnPred));
 }
 
 NkVoid *NK_CALL NkVectorAt(_In_ NkVector const *vecPtr, _In_ NkSize index) {

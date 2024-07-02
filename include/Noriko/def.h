@@ -21,6 +21,10 @@
 
 #pragma once
 
+/* stdlib includes */
+#include <stdint.h>
+
+
 /* Annotations for exporting symbols. */
 #if (defined __cplusplus)
     #define NK_NATIVE               extern "C"

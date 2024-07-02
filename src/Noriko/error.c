@@ -34,10 +34,12 @@
 
 
 /**
+ * \internal
  * \brief textual representations for integral error code values
  * \note  The string values in this array are UTF-8-encoded.
+ * \endinternal
  */
-static NkStringView const gl_c_ErrorCodeStringTable[] = {
+NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Ok)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_Unknown)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NoOperation)),
@@ -63,11 +65,13 @@ static NkStringView const gl_c_ErrorCodeStringTable[] = {
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Error code string array mismatch.");
 
 /**
+ * \internal
  * \brief brief descriptions for error codes for use in error messages that are to be
  *        shown to the user
  * \note  The string values in this array are UTF-8-encoded.
+ * \endinternal
  */
-static NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
+NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW(u8"not an error"),
     NK_MAKE_STRING_VIEW(u8"unknown error code or totally unexpected error condition"),
     NK_MAKE_STRING_VIEW(u8"no operation was carried out"),
@@ -94,11 +98,13 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, u
 
 
 /**
+ * \internal
  * \brief  formats the fatal error message that is then shown to the user
  * \param  [in] errCxtPtr pointer to a NkFatalErrorContext structure containing additional
  *              information on the error (used for formatting)
  * \return pointer to the formatted string buffer (*NUL*-terminated)
  * \see    NkFatalErrorContext
+ * \endinternal
  */
 NK_INTERNAL char const *NK_CALL NkInternalFormatFatalErrorMessage(_In_ NkFatalErrorContext const *errCxtPtr) {
     NK_INTERNAL char               gl_int_FormatBuffer[2 << 12] = { 0x00 };

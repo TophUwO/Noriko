@@ -33,7 +33,9 @@
 
 
 /**
- * \brief represents the internal state for the general-purpose memory allocator 
+ * \internal
+ * \brief represents the internal state for the general-purpose memory allocator
+ * \endinternal
  */
 NK_NATIVE typedef struct NkGeneralPurposeAllocator {
     NkAllocatorState m_allocState; /**< allocator state */
@@ -41,7 +43,9 @@ NK_NATIVE typedef struct NkGeneralPurposeAllocator {
 
 
 /**
- * \brief global general-purpose allocator state 
+ * \internal
+ * \brief global general-purpose allocator state
+ * \endinternal
  */
 NK_INTERNAL NK_NATIVE NkGeneralPurposeAllocator gl_GPAllocator = {
     .m_allocState = {
@@ -60,6 +64,7 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
 
 
 /**
+ * \internal
  * \brief  invokes the configuration-specific native allocation function
  * 
  * This function chooses the right allocation function based on current configuration
@@ -72,6 +77,7 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
  * \return a pointer to the newly-allocated block, or *NULL* on failure
  * \see    NkInternalFreeMemoryUnaligned
  * \see    NkInternalReallocateMemoryUnaligned
+ * \endinternal
  */
 NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
@@ -90,6 +96,7 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
 }
 
 /**
+ * \internal 
  * \brief  invokes the configuration-specific native reallocation function
  * 
  * This function chooses the actual memory management function call similarly to its
@@ -101,6 +108,7 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
  * \return pointer to the (possibly) moved memory block
  * \see    NkInternalAllocateMemoryUnaligned
  * \see    NkInternalFreeMemoryUnaligned
+ * \endinternal
  */
 NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
@@ -121,6 +129,7 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
 }
 
 /**
+ * \internal 
  * \brief invokes the correct configuration-specific native memory free function
  *
  * This function chooses the actual memory management function call similarly to its
@@ -129,6 +138,7 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
  * \param [in] ptr raw pointer to the memory that is to be freed
  * \see   NkInternalAllocateMemoryUnaligned
  * \see   NkInternalReallocateMemoryUnaligned
+ * \endinternal
  */
 NK_INTERNAL NkVoid NkInternalFreeMemoryUnaligned(NkVoid *ptr) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)

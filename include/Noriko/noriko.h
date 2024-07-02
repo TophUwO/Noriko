@@ -29,6 +29,7 @@
 #include <include/Noriko/error.h>
 #include <include/Noriko/platform.h>
 #include <include/Noriko/alloc.h>
+#include <include/Noriko/sort.h>
 
 #include <include/Noriko/dstruct/vector.h>
 

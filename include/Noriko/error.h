@@ -25,9 +25,6 @@
 
 #pragma once
 
-/* stdlib includes */
-#include <stdint.h>
-
 /* Noriko includes */
 #include <include/Noriko/def.h>
 #include <include/Noriko/util.h>

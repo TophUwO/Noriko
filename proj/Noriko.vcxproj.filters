@@ -42,6 +42,9 @@
     <ClInclude Include="..\include\Noriko\dstruct\vector.h">
       <Filter>Header Files\dstruct</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Noriko\sort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\platform.c">
@@ -55,6 +58,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Noriko\dstruct\vector.c">
       <Filter>Source Files\dstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\sort.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

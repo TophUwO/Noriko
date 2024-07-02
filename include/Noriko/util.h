@@ -113,6 +113,13 @@
  * \param p name of the parameter
  */
 #define NK_UNREFERENCED_PARAMETER(p) ((void)(p))
+/**
+ * \def   NK_IGNORE_RETURN_VALUE(e)
+ * \brief macro to wrap function calls in of which the return value is intentionally not
+ *        examined
+ * \param e expression to ignore return value of
+ */
+#define NK_IGNORE_RETURN_VALUE(e)    NK_UNREFERENCED_PARAMETER(e)
 
 
 /**
