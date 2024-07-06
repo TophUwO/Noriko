@@ -44,7 +44,7 @@
  * \param lo lower bound of the comparison
  * \param hi higher bound of the comparison
  */
-#define NK_INRANGE_INCL(x, lo, hi) (_Bool)((((hi) - (x)) * ((x) - (lo))) >= 0)
+#define NK_INRANGE_INCL(x, lo, hi) (NkBoolean)((((hi) - (x)) * ((x) - (lo))) >= 0)
 /**
  * \def   NK_INRANGE_EXCL(x, lo, hi)
  * \brief checks whether lo < x < hi is *true*
@@ -52,7 +52,7 @@
  * \param lo lower bound of the comparison
  * \param hi higher bound of the comparison
  */
-#define NK_INRANGE_EXCL(x, lo, hi) (_Bool)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
+#define NK_INRANGE_EXCL(x, lo, hi) (NkBoolean)(NK_INRANGE_INCL(x, (lo) + 1, (hi) - 1))
 /**
  * \def   NK_MIN(x, y)
  * \brief expands to the maximum of the numeric values \c x and \c y
@@ -138,6 +138,13 @@ NK_NATIVE typedef struct NkStringView {
  * \brief generates a compile-time string view to a static string
  * \param str string literal to create string view for
  */
-#define NK_MAKE_STRING_VIEW(str) { .mp_dataPtr = str, .m_sizeInBytes = sizeof str }
+#define NK_MAKE_STRING_VIEW(str)     { .mp_dataPtr = str, .m_sizeInBytes = sizeof str }
+/**
+ * \def   NK_MAKE_STRING_VIEW_PTR(str)
+ * \brief like NK_MAKE_STRING_VIEW but it includes the code for turning the string view
+ *        into an inline pointer
+ * \param str string literal to create string view for
+ */
+#define NK_MAKE_STRING_VIEW_PTR(str) &(NkStringView)NK_MAKE_STRING_VIEW(str)
 
 

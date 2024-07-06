@@ -211,11 +211,11 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorCreate(
 
     /* Allocate memory for parent structure. */
     NkErrorCode errorCode = NkErr_Ok;
-    if ((errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 0, vecPtr)) != NkErr_Ok)
+    if ((errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 0, NK_FALSE, vecPtr)) != NkErr_Ok)
         return errorCode;
     /* Allocate memory for internal buffer. */
     NkSize const initCap = sizeof *vecPtr * vecPropsPtr->m_initialCapacity;
-    errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), initCap, 0, (NkVoid **)&(*vecPtr)->mp_dataPtr);
+    errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), initCap, NK_FALSE, 0, (NkVoid **)&(*vecPtr)->mp_dataPtr);
     if (errorCode != NkErr_Ok) {
         NkFreeMemory(*vecPtr);
 
@@ -549,13 +549,13 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorForEach(
     _In_        NkErrorCode (NK_CALL *fnCallback)(NkVoid *, NkVoid *, NkSize),
     _Inout_opt_ NkVoid *extraParam
 ) {
-    NK_ASSERT(vecPtr != NULL, NkErr_InParameter);
-    NK_ASSERT(sInd <= maxN, NkErr_InvalidRange);
-    NK_ASSERT(maxN < vecPtr->m_elemCount, NkErr_ArrayElemOutOfBounds);
-    NK_ASSERT(fnCallback != NULL, NkErr_CallbackParameter);
-    
     NkErrorCode errorCode = NkErr_Ok;
-    for (NkSize i = sInd; i <= maxN; i++) {
+    NK_ASSERT(vecPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(sInd < vecPtr->m_elemCount, NkErr_InvalidRange);
+    NK_ASSERT(fnCallback != NULL, NkErr_CallbackParameter);
+
+    NkSize const realCount = NK_MIN(maxN, vecPtr->m_elemCount - sInd);
+    for (NkSize i = sInd; i <= sInd + realCount; i++) {
         NkVoid *elemPtr = vecPtr->mp_dataPtr[i];
 
         /* Run callback on each element; return if the callback returns non-zero. */

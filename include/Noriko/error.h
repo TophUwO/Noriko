@@ -108,6 +108,9 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InvalidRange,         /**< invalid range tuple */
     NkErr_UnsignedWrapAround,   /**< operation caused unsigned wrap-around */
     NkErr_CapLimitExceeded,     /**< container capacity limit exceeded */
+    NkErr_ComponentState,       /**< invalid component state */
+    NkErr_ObjectType,           /**< invalid object type */
+    NkErr_ObjectState,          /**< invalid object state (function precond not met) */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;

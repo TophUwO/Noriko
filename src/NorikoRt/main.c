@@ -25,22 +25,27 @@
 #include <include/Noriko/noriko.h>
 
 
-int main(int argc, char **argv) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine, int nCmdShow) {
     /* Enable Visual Studio memory leak detector. */
 #if (defined _DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
+    if (NkLogInitialize() != NkErr_Ok)
+        return -1;
+
     /* Query target platform properties. */
     NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
     if (NkQueryPlatformInformation(&targetPlatformInfo)) {
-        printf("Could not query target platform information.\n");
+        NK_LOG_ERROR("Could not query target platform information.\n");
 
         return -1;
     }
 
     /* Print target platform information. */
-    printf("NorikoRt powered by %s\n", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);
+    NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);
+    getchar();
+    NkLogUninitialize();
     return 0;
 }
 

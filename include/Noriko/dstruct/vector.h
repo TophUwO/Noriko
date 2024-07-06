@@ -103,6 +103,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkVectorCreate(
  *        created the instance pointed to by \c vecPtr was <tt>NULL</tt>, this function
  *        assumes the vector's elements to be managed by an external component and thus
  *        won't try to destruct them.
+ * \todo  Specify destructors to do a no-op if NULL ptr
  */
 NK_NATIVE NK_API NkVoid NK_CALL NkVectorDestroy(_Uninit_ptr_ NkVector **vecPtr);
 /**

@@ -51,11 +51,12 @@
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
     #define _Init_ptr_              _Outptr_ _Deref_post_notnull_ 
     #define _Reinit_ptr_            _Init_ptr_ _Deref_pre_valid_
-    #define _Uninit_ptr_            _Deref_pre_notnull_ _Deref_post_null_
+    #define _Uninit_ptr_            _Pre_valid_ _Deref_post_null_
     #define _Init_ptr_mbnull_       _Outptr_opt_result_maybenull_
     #define _I_array_(s)            _In_reads_(s)
     #define _O_array_(s)            _Out_writes_(s)
     #define _O_array_opt_(s)        _Out_writes_opt_(s)
+    #define _Format_str_            _Printf_format_string_
 #else
     #define _In_
     #define _In_opt_
@@ -83,6 +84,7 @@
     #define _I_array_(s)
     #define _O_array_(s)
     #define _O_array_opt_(s)
+    #define _Format_str_
 #endif
 /** \endcond */
 
@@ -98,8 +100,9 @@ typedef size_t    NkSize;
 typedef ptrdiff_t NkOffset;
 typedef float     NkFloat, NkSingle;
 typedef double    NkDouble;
-typedef long      NkInt32;
-typedef long long NkInt64;
+typedef int32_t   NkInt32;
+typedef int64_t   NkInt64;
+typedef uint64_t  NkUint64, NkFlags;
 
 /** @} */
 
