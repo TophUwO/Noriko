@@ -60,9 +60,12 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ArrayElemOutOfBounds)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvalidRange)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnsignedWrapAround)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CapLimitExceeded))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CapLimitExceeded)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ComponentState)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ObjectType)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ObjectState))
 };
-static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Error code string array mismatch.");
+static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, u8"Error code string array mismatch!");
 
 /**
  * \internal
@@ -92,9 +95,12 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW(u8"array index out of (element) bounds"),
     NK_MAKE_STRING_VIEW(u8"erroneous array interval [x, y]"),
     NK_MAKE_STRING_VIEW(u8"operation caused unsigned integer wrap-around (values passed too big?)"),
-    NK_MAKE_STRING_VIEW(u8"exceeded container capacity limit")
+    NK_MAKE_STRING_VIEW(u8"exceeded container capacity limit"),
+    NK_MAKE_STRING_VIEW(u8"invalid component state (not yet initialized? already uninitialized?)"),
+    NK_MAKE_STRING_VIEW(u8"invalid internal object type"),
+    NK_MAKE_STRING_VIEW(u8"invalid object state (likely due to function pre-condition being not satisfied)")
 };
-static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, u8"Error code desc array mismatch.");
+static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, u8"Error code desc array mismatch!");
 
 
 /**

@@ -103,6 +103,8 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
  * \param  [in] allocCxt allocation context for debugging
  * \param  [in] sizeInBytes size of the memory block, in bytes
  * \param  [in] alignInBytes alignment requirement of the memory block, in bytes
+ * \param  [in] isZeroed whether or not the newly-allocated memory should be
+ *              pre-initialized with all zeroes
  * \param  [out] memPtr address of a pointer that will receive the starting address of
  *         the new memory block
  * \return *NkErr_Ok* on success, non-zero on failure
@@ -111,13 +113,13 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
  * \note   *alignInBytes* must be a power of two.
  * \note   Aligned allocation is currently not supported.
  * \todo   Implement *aligned allocation*.
- * \todo   Implement *zeroed memory allocation*.
  * \see    NkAllocationContext
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ NkSize sizeInBytes,
     _In_opt_         NkSize alignInBytes,
+    _In_opt_         NkBoolean isZeroed,
     _Init_ptr_       NkVoid **memPtr
 );
 /**

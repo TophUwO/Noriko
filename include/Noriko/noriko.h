@@ -30,6 +30,8 @@
 #include <include/Noriko/platform.h>
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/sort.h>
+#include <include/Noriko/timer.h>
+#include <include/Noriko/log.h>
 
 #include <include/Noriko/dstruct/vector.h>
 

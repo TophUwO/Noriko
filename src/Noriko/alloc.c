@@ -81,17 +81,24 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
  */
 NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
-    _In_ _Pre_valid_ NkSize sizeInBytes
+    _In_ _Pre_valid_ NkSize sizeInBytes,
+    _In_opt_         NkBoolean isZeroed
 ) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
-    return _malloc_dbg(
-        sizeInBytes,
-        _NORMAL_BLOCK,
-        allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
-        allocCxt ? allocCxt->m_lineInFile : 0
-    );
+    if (isZeroed)
+        return _calloc_dbg(1, sizeInBytes, _NORMAL_BLOCK,
+            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
+            allocCxt ? allocCxt->m_lineInFile : 0
+        );
+    else
+        return _malloc_dbg(
+            sizeInBytes,
+            _NORMAL_BLOCK,
+            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
+            allocCxt ? allocCxt->m_lineInFile : 0
+        );
 #else
-    return malloc(sizeInBytes);
+    return isZeroed ? calloc(1, sizeInBytes) : malloc(sizeInBytes);
 #endif
 }
 
@@ -153,6 +160,7 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ NkSize sizeInBytes,
     _In_opt_         NkSize alignInBytes,
+    _In_opt_         NkBoolean isZeroed,
     _Init_ptr_       NkVoid **memPtr
 ) {
     /* Validate parameters. */
@@ -161,7 +169,7 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     NK_ASSERT(memPtr != NULL, NkErr_OutptrParameter);
 
     /* Allocate memory block. */
-    return (*memPtr = NkInternalAllocateMemoryUnaligned(allocCxt, sizeInBytes)) != NULL
+    return (*memPtr = NkInternalAllocateMemoryUnaligned(allocCxt, sizeInBytes, isZeroed)) != NULL
         ? NkErr_Ok
         : NkErr_MemoryAllocation
     ;
