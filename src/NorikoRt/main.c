@@ -44,7 +44,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 
     /* Print target platform information. */
     NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);
-    getchar();
+
+    system("pause");
     NkLogUninitialize();
     return 0;
 }

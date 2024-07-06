@@ -94,7 +94,11 @@
  * \brief    makes some primitive standard types conforming to Noriko's naming convention
  */
 /** @{ */
-typedef _Bool     NkBoolean;
+#if (defined __cplusplus)
+    typedef bool  NkBoolean;
+#else
+    typedef _Bool NkBoolean;
+#endif
 typedef void      NkVoid;
 typedef size_t    NkSize;
 typedef ptrdiff_t NkOffset;

@@ -370,3 +370,4 @@ interm/
 *.dotx
 *.tmp
 docs/html/
+*.i
