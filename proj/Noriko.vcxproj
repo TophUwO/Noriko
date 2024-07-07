@@ -267,6 +267,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\alloc.h" />
     <ClInclude Include="..\include\Noriko\def.h" />
+    <ClInclude Include="..\include\Noriko\diag.h" />
     <ClInclude Include="..\include\Noriko\dstruct\vector.h" />
     <ClInclude Include="..\include\Noriko\error.h" />
     <ClInclude Include="..\include\Noriko\log.h" />
