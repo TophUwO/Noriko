@@ -54,6 +54,12 @@
     <ClInclude Include="..\include\Noriko\diag.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Noriko\dstruct\htable.h">
+      <Filter>Header Files\dstruct</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Noriko\component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\platform.c">
@@ -75,6 +81,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Noriko\timer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\dstruct\htable.c">
+      <Filter>Source Files\dstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

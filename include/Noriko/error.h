@@ -41,13 +41,13 @@
      * \param extra (optional) extra text to show, providing additional context
      *        information
      * \see   NK_ASSERT
-     * \note  The codebase is stripped of this macro in deploy builds, unless the
-     *        **NK_USE_ASSERTIONS** macro is defined.
-     * \note  The **NK_NAMESPACE** macro must be defined in each compilation unit this
-     *        macro is used in. **NK_NAMESPACE** must expand to a plain C-string literal,
-     *        UTF-8 encoded.
+     * \note  \li The codebase is stripped of this macro in deploy builds, unless the
+     *            **NK_USE_ASSERTIONS** macro is defined.
+     * \note  \li The **NK_NAMESPACE** macro must be defined in each compilation unit
+     *            this macro is used in. **NK_NAMESPACE** must expand to a plain C-string
+     *            literal.
      *        \code{.c}
-     *        #define NK_NAMESPACE u8"nk::utils"
+     *        #define NK_NAMESPACE "nk::utils"
      *        \endcode
      */
     #define NK_ASSERT_EXTRA(expr, ec, extra)                         \
@@ -55,9 +55,9 @@
             if (!(expr)) {                                           \
                 NkFatalTerminate(&(NkFatalErrorContext){             \
                     (ec),                                            \
-                    (uint32_t)__LINE__,                              \
+                    (NkUint32)__LINE__,                              \
                     (NkStringView)NK_MAKE_STRING_VIEW(#expr),        \
-                    (NkStringView)NK_MAKE_STRING_VIEW(u8##extra),    \
+                    (NkStringView)NK_MAKE_STRING_VIEW(extra),        \
                     (NkStringView)NK_MAKE_STRING_VIEW(__FILE__),     \
                     (NkStringView)NK_MAKE_STRING_VIEW(NK_NAMESPACE), \
                     (NkStringView)NK_MAKE_STRING_VIEW(__func__),     \
@@ -72,8 +72,8 @@
      * \param expr expression to check (must evaluate to *true* or else the assertion
      *        fails)
      * \param ec error code to propagate to the notice
-     * \note  The codebase is stripped of this macro in deploy builds.
      * \see   NK_ASSERT_EXTRA
+     * \note  The codebase is stripped of this macro in deploy builds.
      */
     #define NK_ASSERT(expr, ec) NK_ASSERT_EXTRA(expr, ec, "")
 #else
@@ -97,12 +97,12 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_OutParameter,         /**< erroneous output parameter */
     NkErr_InOutParameter,       /**< erroneous input/output parameter */
     NkErr_InptrParameter,       /**< erroneous input pointer parameter */
-    NkErr_OutptrParameter,      /**< errornous output pointer parameter */
+    NkErr_OutptrParameter,      /**< erroneous output pointer parameter */
     NkErr_CallbackParameter,    /**< erroneous function pointer (callback) parameter */
     NkErr_MemoryAlignment,      /**< invalid memory alignment specified */
     NkErr_MemoryAllocation,     /**< error during memory allocation */
     NkErr_MemoryReallocation,   /**< error during memory reallocation */
-    NkErr_NamedItemNotFound,    /**< requested item could not be found */
+    NkErr_ItemNotFound,         /**< requested item could not be found */
     NkErr_ArrayOutOfBounds,     /**< array index out of buffer bounds */
     NkErr_ArrayElemOutOfBounds, /**< array index out of element bounds */
     NkErr_InvalidRange,         /**< invalid range tuple */
@@ -111,6 +111,7 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_ComponentState,       /**< invalid component state */
     NkErr_ObjectType,           /**< invalid object type */
     NkErr_ObjectState,          /**< invalid object state (function precond not met) */
+    NkErr_SynchInit,            /**< error while initializing synchronization object */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;
@@ -122,7 +123,7 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
  */
 NK_NATIVE typedef struct NkFatalErrorContext {
     NkErrorCode   m_errorCode;      /**< fatal error code */
-    uint32_t      m_fileLine;       /**< line in the file where the error was raised */
+    NkUint32      m_fileLine;       /**< line in the file where the error was raised */
     NkStringView  m_failedExpr;     /**< string representation of the expression that failed */
     NkStringView  m_additionalDesc; /**< additional text shown to the user */
     NkStringView  m_filePath;       /**< file in which the throwing function is located */
@@ -135,18 +136,18 @@ NK_NATIVE typedef struct NkFatalErrorContext {
 /**
  * \brief  retrieves the textual representation of the provided integral error code
  * \param  [in] code integer error code to get string representation of
- * \return textual representation of error code, as UTF-8 C-string view, or a string view
- *         signifying an error if the error code representation could not be retrieved
- * \note   The return value of this function is a pointer to static read-only memory.
- * \note   The resulting string value is generally the identifier of the enum literal
- *         associated with the provided integer error code.
+ * \return textual representation of error code or a string view signifying an error if
+ *         the error code representation could not be retrieved
+ * \note   \li The return value of this function is a pointer to static read-only memory.
+ * \note   \li The resulting string value is generally the identifier of the enum literal
+ *             associated with the provided integer error code.
  */
 NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeStr(_In_ _Ecode_range_ NkErrorCode code);
 /**
  * \brief  retrieves a brief textual description of the provided integral error code
  * \param  [in] code integer error code to get the associated error description of
- * \return textual representation of error code, as UTF-8 C-string view, or a string view
- *         signifying an error if the error description could not be retrieved
+ * \return textual representation of error code or a string view signifying an error if
+ *         the error description could not be retrieved
  * \note   The return value of this function is a pointer to static read-only memory.
  */
 NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode code);
@@ -159,8 +160,8 @@ NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_
  *             information on the errors
  * \see   NkFatalErrorContext
  * \see   NkErrorCode
- * \note  This function does not return.
- * \note  Any *atexit()*-handlers will be executed before quitting.
+ * \note  \li This function does not return.
+ * \note  \li Any *atexit()*-handlers will be executed before quitting.
  */
 NK_NATIVE NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext const *errCxtPtr);
 

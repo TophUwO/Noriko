@@ -18,7 +18,7 @@
  * declared in this file never diverge from the algorithm used in the function's initial
  * implementation.
  */
-#define NK_NAMESPACE u8"nk::sort"
+#define NK_NAMESPACE "nk::util"
 
 
 /* Noriko includes */
@@ -27,17 +27,16 @@
 #include <include/Noriko/platform.h>
 
 
+/** \cond INTERNAL */
 /**
- * \internal
  * \brief  implements the splitting algorithm for \c QuickSort
  * \param  [in,out] ptrArray
  * \param  [in] left first index in the sorting range (relative to left-most element)
  * \param  [in] right last index in the sorting range (relative to left-most element)
  * \param  [in] fnPred predicate callback used for sorting
  * \return index of the pivot element, <tt>[left <= x <= right]</tt>
- * \endinternal
  */
-NK_INTERNAL NkSize NK_CALL __NkInternal_QuicksortSplit(
+NK_INTERNAL NkSize __NkInt_QuicksortSplit(
     _Inout_ NkVoid **ptrArray,
     _In_    NkSize left,
     _In_    NkSize right,
@@ -76,6 +75,7 @@ NK_INTERNAL NkSize NK_CALL __NkInternal_QuicksortSplit(
 
     return i;
 }
+/** \endcond */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkQuicksortPointers(
@@ -93,7 +93,7 @@ _Return_ok_ NkErrorCode NK_CALL NkQuicksortPointers(
 
     /* Sort the array. */
     if (sInd < eInd) {
-        NkSize split = __NkInternal_QuicksortSplit(ptrArray, sInd, eInd, fnPred);
+        NkSize split = __NkInt_QuicksortSplit(ptrArray, sInd, eInd, fnPred);
 
         NK_IGNORE_RETURN_VALUE(NkQuicksortPointers(ptrArray, sInd, split - 1, fnPred));
         NK_IGNORE_RETURN_VALUE(NkQuicksortPointers(ptrArray, split + 1, eInd, fnPred));

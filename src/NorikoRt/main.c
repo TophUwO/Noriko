@@ -33,6 +33,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 
     if (NkLogInitialize() != NkErr_Ok)
         return -1;
+    NkPRNGInit();
 
     /* Query target platform properties. */
     NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
@@ -43,9 +44,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
     }
 
     /* Print target platform information. */
-    NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.mp_prodFullInfoStr->mp_dataPtr);
+    //NkFatalTerminate(&(NkFatalErrorContext){ NkErr_ArrayElemOutOfBounds, __LINE__, NK_MAKE_STRING_VIEW(u8"fuck you"), NK_MAKE_STRING_VIEW(""), NK_MAKE_STRING_VIEW(__FILE__), NK_MAKE_STRING_VIEW("nk"), NK_MAKE_STRING_VIEW(__func__)  });
+    NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.m_prodFullInfoStr.mp_dataPtr);
+
+    NkUuid uuid1, uuid2;
+    for (int i = 0; i < 32; i++) {
+        NkUuidGenerate(&uuid1);
+
+        char buf[100];
+        NkUuidToString(&uuid1, buf);
+        NK_LOG_DEBUG("%s", buf);
+    }
+
+    char buffer[100];
+    char *uuid = "8e6f941b-7d40-4b91-8752-cce70d22671f";
+    NkUuidFromString(uuid, &uuid2);
+    NkUuidToString(&uuid2, buffer);
+    NK_LOG_CRITICAL("%s", buffer);
 
     system("pause");
+    NkPRNGUninit();
     NkLogUninitialize();
     return 0;
 }

@@ -48,6 +48,7 @@
     #include <sal.h>
 
     #define _Return_ok_             _Check_return_ _Success_(return == NkErr_Ok)
+    #define _Return_false_          _Check_return_ _Success_(return == NK_FALSE)
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
     #define _Init_ptr_              _Outptr_ _Deref_post_notnull_ 
     #define _Reinit_ptr_            _Init_ptr_ _Deref_pre_valid_
@@ -56,7 +57,11 @@
     #define _I_array_(s)            _In_reads_(s)
     #define _O_array_(s)            _Out_writes_(s)
     #define _O_array_opt_(s)        _Out_writes_opt_(s)
+    #define _I_bytes_(s)            _In_reads_bytes_(s)
+    #define _O_bytes_(s)            _Out_writes_bytes_(s)
+    #define _O_bytes_opt_(s)        _Out_writes_bytes_opt_(s)
     #define _Format_str_            _Printf_format_string_
+    #define _Maybe_reinit_          _Init_ptr_ _Deref_pre_opt_valid_
 #else
     #define _In_
     #define _In_opt_
@@ -66,6 +71,7 @@
     #define _Field_z_
     #define _Struct_size_bytes_(n)
     #define _Return_ok_
+    #define _Return_false_
     #define _Success_(expr)
     #define _In_range_(lo, hi)
     #define _Ecode_range_
@@ -84,30 +90,35 @@
     #define _I_array_(s)
     #define _O_array_(s)
     #define _O_array_opt_(s)
+    #define _I_bytes_(s)
+    #define _O_bytes_(s)
+    #define _O_bytes_opt_(s) 
     #define _Format_str_
+    #define _Maybe_reinit_
 #endif
 /** \endcond */
 
 
 /**
- * \defgroup Primitive Type Aliases
+ * \defgroup Aliases
  * \brief    makes some primitive standard types conforming to Noriko's naming convention
  */
 /** @{ */
 #if (defined __cplusplus)
-    typedef bool  NkBoolean;
+    NK_NATIVE typedef bool  NkBoolean;
 #else
-    typedef _Bool NkBoolean;
+    NK_NATIVE typedef _Bool NkBoolean;
 #endif
-typedef void      NkVoid;
-typedef size_t    NkSize;
-typedef ptrdiff_t NkOffset;
-typedef float     NkFloat, NkSingle;
-typedef double    NkDouble;
-typedef int32_t   NkInt32;
-typedef int64_t   NkInt64;
-typedef uint64_t  NkUint64, NkFlags;
-
+NK_NATIVE typedef void      NkVoid;
+NK_NATIVE typedef size_t    NkSize;
+NK_NATIVE typedef ptrdiff_t NkOffset;
+NK_NATIVE typedef float     NkFloat, NkSingle;
+NK_NATIVE typedef double    NkDouble;
+NK_NATIVE typedef uint8_t   NkByte;
+NK_NATIVE typedef int32_t   NkInt32;
+NK_NATIVE typedef int64_t   NkInt64;
+NK_NATIVE typedef uint32_t  NkUint32;
+NK_NATIVE typedef uint64_t  NkUint64, NkFlags;
 /** @} */
 
 
