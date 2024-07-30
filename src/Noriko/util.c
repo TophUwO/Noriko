@@ -81,7 +81,7 @@ NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGNextNoLock(_Out_ NkUint64 *dstPtr) {
 /** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkPRNGInit(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
     NK_ENSURE_NOT_INITIALIZED(gl_RandContext);
     
     /* Initialize mutex. */
@@ -101,7 +101,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGInit(NkVoid) {
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkPRNGUninit(NkVoid) {
+NkVoid NK_CALL NkPRNGUninitialize(NkVoid) {
     NK_ENSURE_INITIALIZED_VOID(gl_RandContext);
     NK_UNINITIALIZE(gl_RandContext);
 

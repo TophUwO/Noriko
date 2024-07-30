@@ -22,7 +22,6 @@
 #pragma once
 
 /* stdlib includes */
-#define NK_TARGET_MULTITHREADED
 #if (defined NK_TARGET_MULTITHREADED)
     #include <threads.h>
     #include <stdatomic.h>

@@ -51,9 +51,6 @@
     <ClInclude Include="..\include\Noriko\timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Noriko\diag.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\Noriko\dstruct\htable.h">
       <Filter>Header Files\dstruct</Filter>
     </ClInclude>

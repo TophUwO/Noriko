@@ -33,12 +33,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
 
     if (NkLogInitialize() != NkErr_Ok)
         return -1;
-    NkPRNGInit();
+    NkPRNGInitialize();
 
     /* Query target platform properties. */
     NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
     if (NkQueryPlatformInformation(&targetPlatformInfo)) {
-        NK_LOG_ERROR("Could not query target platform information.\n");
+        NK_LOG_ERROR("Could not query target platform information.");
 
         return -1;
     }
@@ -63,7 +63,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR pCmdLine,
     NK_LOG_CRITICAL("%s", buffer);
 
     system("pause");
-    NkPRNGUninit();
+    NkPRNGUninitialize();
     NkLogUninitialize();
     return 0;
 }
