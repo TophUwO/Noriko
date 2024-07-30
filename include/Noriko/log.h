@@ -17,6 +17,7 @@
  * The logger is designed as a singleton that is fully modular. Rather than implementing
  * all features directly, the logger defers the implementation of the "sinks" to modules
  * that use its API.
+ * \todo make segmented logging possible.
  */
 
 
@@ -27,31 +28,6 @@
 #include <include/Noriko/util.h>
 #include <include/Noriko/platform.h>
 
-/**
- * \defgroup Logging Macros
- * \brief    contains shortcuts for conveniently logging messages without having to
- *           specify the log level every time
- * \note     The infix \c C means 'context'. That is, when using <tt>C</tt> macros, a
- *           caller context will be created. This can make logging slightly slower when
- *           high throughput is desired. Use <tt>C</tt>-macros primarily for debugging,
- *           or for other messages where additional context such as file, function, etc.
- *           is desirable.
- */
-/** @{ */
-#define NK_LOG_TRACE(msg, ...)     NkLog(NULL, NkLogLvl_Trace, msg, ##__VA_ARGS__)
-#define NK_LOG_DEBUG(msg, ...)     NkLog(NULL, NkLogLvl_Debug, msg, ##__VA_ARGS__)
-#define NK_LOG_INFO(msg, ...)      NkLog(NULL, NkLogLvl_Info, msg, ##__VA_ARGS__)
-#define NK_LOG_WARNING(msg, ...)   NkLog(NULL, NkLogLvl_Warn, msg, ##__VA_ARGS__)
-#define NK_LOG_ERROR(msg, ...)     NkLog(NULL, NkLogLvl_Error, msg, ##__VA_ARGS__)
-#define NK_LOG_CRITICAL(msg, ...)  NkLog(NULL, NkLogLvl_Critical, msg, ##__VA_ARGS__)
-
-#define NK_LOG_CTRACE(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Trace, msg, ##__VA_ARGS__)
-#define NK_LOG_CDEBUG(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Debug, msg, ##__VA_ARGS__)
-#define NK_LOG_CINFO(msg, ...)     NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Info, msg, ##__VA_ARGS__)
-#define NK_LOG_CWARNING(msg, ...)  NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Warn, msg, ##__VA_ARGS__)
-#define NK_LOG_CERROR(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Error, msg, ##__VA_ARGS__)
-#define NK_LOG_CCRITICAL(msg, ...) NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Critical, msg, ##__VA_ARGS__)
-/** @} */
 
 /**
  * \def   NK_MAKE_LOG_FRAME()
@@ -65,11 +41,89 @@
         NK_MAKE_STRING_VIEW_PTR(__func__)      \
     }
 
+/**
+ * \defgroup Macros
+ * \brief    contains shortcuts for conveniently logging messages without having to
+ *           specify the log level every time
+ * \note     The infix \c C means 'context'. That is, when using <tt>C</tt> macros, a
+ *           caller context will be created. This can make logging slightly slower when
+ *           high throughput is desired. Use <tt>C</tt>-macros primarily for debugging,
+ *           or for other messages where additional context such as file, function, etc.
+ *           is desirable.
+ */
+/** @{ */
+#define NK_LOG_NONE(msg, ...)      NkLog(NULL, NkLogLvl_None, msg, ##__VA_ARGS__)
+#define NK_LOG_TRACE(msg, ...)     NkLog(NULL, NkLogLvl_Trace, msg, ##__VA_ARGS__)
+#define NK_LOG_DEBUG(msg, ...)     NkLog(NULL, NkLogLvl_Debug, msg, ##__VA_ARGS__)
+#define NK_LOG_INFO(msg, ...)      NkLog(NULL, NkLogLvl_Info, msg, ##__VA_ARGS__)
+#define NK_LOG_WARNING(msg, ...)   NkLog(NULL, NkLogLvl_Warn, msg, ##__VA_ARGS__)
+#define NK_LOG_ERROR(msg, ...)     NkLog(NULL, NkLogLvl_Error, msg, ##__VA_ARGS__)
+#define NK_LOG_CRITICAL(msg, ...)  NkLog(NULL, NkLogLvl_Critical, msg, ##__VA_ARGS__)
+
+#define NK_LOG_CNONE(msg, ...)     NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_None, msg, ##__VA_ARGS__)
+#define NK_LOG_CTRACE(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Trace, msg, ##__VA_ARGS__)
+#define NK_LOG_CDEBUG(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Debug, msg, ##__VA_ARGS__)
+#define NK_LOG_CINFO(msg, ...)     NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Info, msg, ##__VA_ARGS__)
+#define NK_LOG_CWARNING(msg, ...)  NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Warn, msg, ##__VA_ARGS__)
+#define NK_LOG_CERROR(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Error, msg, ##__VA_ARGS__)
+#define NK_LOG_CCRITICAL(msg, ...) NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Critical, msg, ##__VA_ARGS__)
+/** @} */
+
 
 /**
  * \brief handle used for sink management
  */
-NK_NATIVE typedef NkInt32 NkLogSinkHandle;
+NK_NATIVE typedef        NkInt32             NkLogSinkHandle;
+NK_NATIVE typedef struct NkLogSinkProperties NkLogSinkProperties;
+NK_NATIVE typedef struct NkLogFrame          NkLogFrame;
+
+/**
+ * \brief  is invoked after the sink was registered
+ * \param  [in] sinkHandle handle of the new sink
+ * \param  [in,out] sinkPropsPtr pointer to the sink properties
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li Returning non-zero will result in the sink not being added.
+ * \note   \li Only implement this function if you need to some something special
+ *             directly before the sink is added.
+ */
+NK_NATIVE typedef NkErrorCode (NK_CALL *NkLogSinkInitFn)(
+    _In_    NkLogSinkHandle sinkHandle,
+    _Inout_ NkLogSinkProperties *sinkPropsPtr
+);
+/**
+ * \brief  is invoked directly before the sink is unregistered
+ * \param  [in] sinkHandle handle of the sink
+ * \param  [in,out] sinkPropsPtr pointer to the sink properties
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li Returning non-zero will result in the sink not being removed.
+ * \note   \li Only implement this function if you need to some something special
+ *             directly before the sink is unregistered.
+ */
+NK_NATIVE typedef NkErrorCode (NK_CALL *NkLogSinkUninitFn)(
+    _In_    NkLogSinkHandle sinkHandle,
+    _Inout_ NkLogSinkProperties *sinkPropsPtr
+);
+/**
+ * \brief is invoked for each log message and sink individually
+ * \param [in] sinkHandle numeric sink handle
+ * \param [in] lvlId numeric ID of the logging level used for this message
+ * \param [in] tsPtr pointer to the formatted timestamp string
+ * \param [in] fmtMsgPtr pointer to the formatted log message
+ * \param [in] framePtr pointer to additional log context data; may be \c NULL
+ * \param [in,out] sinkPropsPtr pointer to the sink this callback belongs to; can be
+ *                 modified from this callback on each log message event
+ * \note  The \c sinkPropsPtr is not constant. This can be used to alter sink
+ *        configuration. The config will take effect automatically when the next
+ *        message is logged.
+ */
+NK_NATIVE typedef NkVoid (NK_CALL *NkLogSinkWriteFn)(
+    _In_     NkLogSinkHandle sinkHandle, 
+    _In_     enum NkLogLevel lvlId,
+    _In_     NkStringView const *tsPtr,
+    _In_     NkStringView const *fmtMsgPtr,
+    _In_opt_ NkLogFrame const *framePtr,
+    _Inout_  NkLogSinkProperties *sinkPropsPtr
+);
 
 /**
  * \enum  NkLogLevel
@@ -88,19 +142,8 @@ NK_NATIVE typedef _In_range_(0, __NkLogLvl_Count__ - 1) enum NkLogLevel {
     NkLogLvl_Error,    /**< error log level; used when an operation was cancelled by an error but the system is still alright */
     NkLogLvl_Critical, /**< fatal log level; used when the system cannot continue working due to a catastophic failure */
 
-    __NkLogLvl_Count__ /*< *only used intenally* */
+    __NkLogLvl_Count__ /**< *only used internally* */
 } NkLogLevel;
-
-/**
- * \enum  NkLogSinkFlags
- * \brief additional flags for logging sinks
- */
-NK_NATIVE typedef _Enum_is_bitflag_ enum NkLogSinkFlags {
-    NkLogSF_None    = (1 << 0), /**< no flags set */
-
-    NkLogSF_Default = (1 << 1), /**< use global defaults (overwrites all other flags) */
-    NkLogSF_Pretty  = (1 << 2)  /**< use pretty formatting for log output (colors, etc.) */
-} NkLogSinkFlags;
 
 /**
  * \struct NkLogFrame
@@ -123,55 +166,16 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogFrame {
  * 
  * The logger uses the data in this struct to propagate the correct log messages to the
  * respective sinks.
- * 
- * \todo Allow onInit/onUninit handlers to return eerror value to stop them from being added
- * to the registry.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogSinkProperties {
-    NkSize        m_structSize; /**< size of this struct, in bytes */
-    NkStringView  m_sinkIdent;  /**< string identifier for this sink */
-    NkLogLevel    m_minLevel;   /**< global minimum log level */
-    NkLogLevel    m_maxLevel;   /**< global maximum log level */
-    NkVoid       *mp_extraCxt;  /**< extra context to be passed to  */
-    NkFlags       m_sinkFlags;  /**< extra flags for this sink */
-
-    /**
-     * \brief is invoked after the sink was registered
-     * \param [in] sinkHandle handle of the new sink
-     * \param [in] extraCxtPtr pointer to the extra context passed when the sink was
-     *             created
-     * \note  Only implement this function if you need to some something special directly
-     *        after the sink has been added. Should not be necessary in most cases.
-     */
-    NkVoid (NK_CALL *mp_fnOnRegister)(NkLogSinkHandle sinkHandle, NkVoid *extraCxtPtr);
-    /**
-     * \brief is invoked directly before the sink is unregistered
-     * \param [in] sinkHandle handle of the sink
-     * \param [in] extraCxtPtr pointer to the extra context passed when the sink was
-     *             created
-     * \note  Only implement this function if you need to some something special directly
-     *        before the sink is unregistered. Should not be necessary in most cases.
-     */
-    NkVoid (NK_CALL *mp_fnOnUnregister)(NkLogSinkHandle sinkHandle, NkVoid *extraCxtPtr);
-    /**
-     * \brief is invoked for each log message individually
-     * \param [in] lvlId numeric ID of the logging level used for this message
-     * \param [in] framePtr pointer to additional log context data; may be \c NULL
-     * \param [in] tsPtr pointer to the formatted timestamp string; UTF-8
-     * \param [in] fmtMsgPtr pointer to the formatted log message; UTF-8
-     * \param [in,out] sinkPropsPtr pointer to the sink this callback belongs to; can be
-     *                 modified from this callback on each log message event
-     * \note  The \c sinkPropsPtr is not constant. This can be used to alter sink
-     *        configuration. The config will take effect automatically when the next
-     *        message is logged.
-     */
-    NkVoid (NK_CALL *mp_fnOnLog)(
-        NkLogLevel lvlId,
-        NkLogFrame const *framePtr,
-        NkStringView const *tsPtr,
-        NkStringView const *fmtMsgPtr,
-        struct NkLogSinkProperties *sinkPropsPtr
-    );
+    NkSize             m_structSize;      /**< size of this struct, in bytes */
+    NkStringView       m_sinkIdent;       /**< string identifier for this sink */
+    NkLogLevel         m_minLevel;        /**< global minimum log level */
+    NkLogLevel         m_maxLevel;        /**< global maximum log level */
+    NkVoid            *mp_extraCxt;       /**< extra context to be passed to  */
+    NkLogSinkInitFn    mp_fnOnSinkInit;   /**< virtual \c OnInit callback */
+    NkLogSinkUninitFn  mp_fnOnSinkUninit; /**< virtual \c onUninit callback */
+    NkLogSinkWriteFn   mp_fnOnSinkWrite;  /**< virtual \c OnLog callback */
 } NkLogSinkProperties;
 
 /**
@@ -196,6 +200,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogContext {
      */
     struct NkLogLevelProperties {
         NkInt32       m_nSpace;     /**< number of spaces needed for proper alignment */
+        NkRgbaColor   m_rgbaCol;    /**< color as RGB(A) value */
         NkStringView *mp_lvlStrRep; /**< string representation of the level */
         NkStringView *mp_lvlFmtStr; /**< format used for level (for virtual terminal) */
     };
@@ -232,7 +237,7 @@ NK_NATIVE NK_API NkVoid NK_CALL NkLogQueryContext(_Out_ NkLogContext *cxtStructP
 
 /**
  * \brief   registers a new log sink
- * \param   [in] sinkPropsPtr properties of the new sink
+ * \param   [in,out] sinkPropsPtr properties of the new sink
  * \param   [out] sinkHandlePtr pointer to a NkLogSinkHandle variable that will receive
  *                the handle to the new sink
  * \return  \c NkErr_Ok on success, non-zero on failure.
@@ -243,12 +248,12 @@ NK_NATIVE NK_API NkVoid NK_CALL NkLogQueryContext(_Out_ NkLogContext *cxtStructP
  *              is undefined behavior.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
-    _In_  NkLogSinkProperties const *sinkPropsPtr,
-    _Out_ NkLogSinkHandle *sinkHandlePtr
+    _Inout_ NkLogSinkProperties *sinkPropsPtr,
+    _Out_   NkLogSinkHandle *sinkHandlePtr
 );
 /**
  * \brief   unregisters a previously registered sink
- * \param   [in,out] sinkHandlePtr
+ * \param   [in,out] sinkHandlePtr pointer to the log sink handle
  * \return  \c NkErr_Ok on success, non-zero on failure
  * \note    \li If the function succeeds, \c sinkHandlePtr will be set to <tt>-1</tt>.
  * \note    \li If the function fails, \c sinkHandlePtr will not be modified.

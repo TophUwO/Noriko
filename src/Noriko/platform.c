@@ -14,7 +14,7 @@
  * \file  platform.c
  * \brief implementation of Noriko's platform and feature detection
  */
-#define NK_NAMESPACE u8"nk::platform"
+#define NK_NAMESPACE "nk::platform"
 
 
 /* stdlib includes */
@@ -36,21 +36,21 @@
 #define NK_VER_PATCH                         1
 #define NK_VER_ITER                          1
 
-#define NK_PRODUCT_NAME                      u8"Noriko"
-#define NK_PRODUCT_COPYRIGHT                 u8"(c) TophUwO <tophuwo01@gmail.com>"
+#define NK_PRODUCT_NAME                      "Noriko"
+#define NK_PRODUCT_COPYRIGHT                 "(c) TophUwO <tophuwo01@gmail.com>"
 #if (defined NK_CONFIG_DEBUG)                
-    #define NK_PRODUCT_CONFIGURATION         u8"Debug"
+    #define NK_PRODUCT_CONFIGURATION         "Debug"
 #elif (defined NK_CONFIG_DEBUG_OPTIMIZED)
-    #define NK_PRODUCT_CONFIGURATION         u8"Debug Optimized"
+    #define NK_PRODUCT_CONFIGURATION         "Debug Optimized"
 #elif (defined NK_CONFIG_DEPLOY)             
-    #define NK_PRODUCT_CONFIGURATION         u8"Deploy"
+    #define NK_PRODUCT_CONFIGURATION         "Deploy"
 #endif                                       
 #if (defined NK_TOOLCHAIN_MSVC)              
-    #define NK_PRODUCT_BTOOLS                u8"Microsoft Visual C v" NK_MESC(NK_PRODUCT_BTOOLS_VER)
+    #define NK_PRODUCT_BTOOLS                "Microsoft Visual C v" NK_MESC(NK_PRODUCT_BTOOLS_VER)
     #define NK_PRODUCT_BTOOLS_VER            _MSC_VER
 #endif                                       
 #if (defined NK_TARGET_WINDOWS)              
-    #define NK_PRODUCT_PLATFORM              u8"Microsoft Windows"
+    #define NK_PRODUCT_PLATFORM              "Microsoft Windows"
 #endif                                       
 #if (defined NK_ARCHITECTURE_64BIT)          
     #define NK_PRODUCT_ARCHITECTURE          64
@@ -65,58 +65,52 @@
  * \brief    information strings composed from other atomic information strings
  */
 /** @{ */
-#define NK_PRODUCT_VERSION                        \
-    NK_MESC(NK_VER_MAJOR) "."                     \
-    NK_MESC(NK_VER_MINOR) "."                     \
+#define NK_PRODUCT_VERSION                         \
+    NK_MESC(NK_VER_MAJOR) "."                      \
+    NK_MESC(NK_VER_MINOR) "."                      \
     NK_MESC(NK_VER_PATCH) "-" NK_MESC(NK_VER_ITER)
 
-#define NK_PRODUCT_INFOSTR                        \
-    NK_PRODUCT_NAME                  u8" "        \
-    NK_PRODUCT_VERSION               u8" :: "     \
-    NK_PRODUCT_PLATFORM              u8" ("       \
-    NK_MESC(NK_PRODUCT_ARCHITECTURE) u8"-bit) - " \
+#define NK_PRODUCT_INFOSTR                         \
+    NK_PRODUCT_NAME                    " "         \
+    NK_PRODUCT_VERSION                 " :: "      \
+    NK_PRODUCT_PLATFORM                " ("        \
+    NK_MESC(NK_PRODUCT_ARCHITECTURE)   "-bit) - "  \
     NK_PRODUCT_CONFIGURATION
 /** @} */
 /** @} */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {
-    /* Initialize static string views. */
-    NK_INTERNAL NkStringView const gl_c_ProductNameAsView  = NK_MAKE_STRING_VIEW(NK_PRODUCT_NAME);
-    NK_INTERNAL NkStringView const gl_c_ProdVerAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_VERSION);
-    NK_INTERNAL NkStringView const gl_c_ProdCpyAsView      = NK_MAKE_STRING_VIEW(NK_PRODUCT_COPYRIGHT);
-    NK_INTERNAL NkStringView const gl_c_ProdConfigAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_CONFIGURATION);
-    NK_INTERNAL NkStringView const gl_c_ProdBToolsAsView   = NK_MAKE_STRING_VIEW(NK_PRODUCT_BTOOLS);
-    NK_INTERNAL NkStringView const gl_c_ProdPlatformAsView = NK_MAKE_STRING_VIEW(NK_PRODUCT_PLATFORM);
-    NK_INTERNAL NkStringView const gl_c_ProdInfoAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_INFOSTR);
-    NK_INTERNAL NkStringView const gl_c_ProdDateAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE);
-    NK_INTERNAL NkStringView const gl_c_ProdTimeAsView     = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME);
-
     /* Parameter validation. */
     NK_ASSERT(platformInfoPtr != NULL && platformInfoPtr->m_structSize ^ 0, NkErr_InOutParameter);
-    /* Calculate actual struct size. */
-    NkSize const c_actsize = min(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
-    /* Initialize basic *buf* structure with requested target and build information. */
-    *platformInfoPtr = (struct NkPlatformInformation){
-        .m_structSize       = c_actsize,
+    /**
+     * \brief represents the static platform information for the current target
+     */
+    NK_INTERNAL NkPlatformInformation const gl_PlatformInfo = {
+        .m_structSize       = sizeof gl_PlatformInfo,
         .m_versionMajor     = NK_VER_MAJOR,
         .m_versionMinor     = NK_VER_MINOR,
         .m_versionPatch     = NK_VER_PATCH,
         .m_versionIteration = NK_VER_ITER,
         .m_platWidth        = NK_PRODUCT_ARCHITECTURE,
         .m_platBToolsVer    = NK_PRODUCT_BTOOLS_VER,
-        .mp_prodName        = (NkStringView *)&gl_c_ProductNameAsView,
-        .mp_prodVersion     = (NkStringView *)&gl_c_ProdVerAsView,
-        .mp_prodCopyright   = (NkStringView *)&gl_c_ProdCpyAsView,
-        .mp_prodConfig      = (NkStringView *)&gl_c_ProdConfigAsView,
-        .mp_prodBuildTools  = (NkStringView *)&gl_c_ProdBToolsAsView,
-        .mp_prodPlatform    = (NkStringView *)&gl_c_ProdPlatformAsView,
-        .mp_prodFullInfoStr = (NkStringView *)&gl_c_ProdInfoAsView,
-        .mp_buildDate       = (NkStringView *)&gl_c_ProdDateAsView,
-        .mp_buildTime       = (NkStringView *)&gl_c_ProdTimeAsView
+        .m_prodName         = NK_MAKE_STRING_VIEW(NK_PRODUCT_NAME),
+        .m_prodVersion      = NK_MAKE_STRING_VIEW(NK_PRODUCT_VERSION),
+        .m_prodCopyright    = NK_MAKE_STRING_VIEW(NK_PRODUCT_COPYRIGHT),
+        .m_prodConfig       = NK_MAKE_STRING_VIEW(NK_PRODUCT_CONFIGURATION),
+        .m_prodBuildTools   = NK_MAKE_STRING_VIEW(NK_PRODUCT_BTOOLS),
+        .m_prodPlatform     = NK_MAKE_STRING_VIEW(NK_PRODUCT_PLATFORM),
+        .m_prodFullInfoStr  = NK_MAKE_STRING_VIEW(NK_PRODUCT_INFOSTR),
+        .m_buildDate        = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE),
+        .m_buildTime        = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME)
     };
+    /* Calculate actual struct size. */
+    NkSize const actSize = NK_MIN(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
+    /* Initialize basic *buf* structure with requested target and build information. */
+    memcpy(platformInfoPtr, &gl_PlatformInfo, actSize);
+    platformInfoPtr->m_structSize = actSize;
     /* All good. */
     return NkErr_Ok;
 }

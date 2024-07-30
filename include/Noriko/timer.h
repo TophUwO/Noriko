@@ -53,11 +53,6 @@ NK_NATIVE typedef enum NkTimerPrecision {
  *         \c timer.h 
  */
 NK_NATIVE typedef struct NkTimer NkTimer;
-/**
- * \struct NkElapsedTimer
- * \brief  forward-declaration of Noriko's elapsed timer implementations
- */
-NK_NATIVE typedef struct NkElapsedTimer NkElapsedTimer;
 
 
 /**
@@ -76,9 +71,9 @@ NK_NATIVE typedef struct NkElapsedTimer NkElapsedTimer;
  * \warning If \c tiPtr is <tt>NULL</tt>, the behavior is undefined.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerCreate(
-    _In_                             NkTimerType tiType,
-    _In_opt_                         NkBoolean isAutoStart,
-    _Init_ptr_ _Deref_pre_opt_valid_ NkTimer **tiPtr
+    _In_           NkTimerType tiType,
+    _In_opt_       NkBoolean isAutoStart,
+    _Maybe_reinit_ NkTimer **tiPtr
 );
 /**
  * \brief   destroys the given timing device
@@ -134,6 +129,6 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkTimerRestart(_Inout_ NkTimer *tiPtr)
  * \warning If \c tiPtr is <tt>NULL</tt> or \c tiPtr is not a timer of type
             <tt>NkTiType_Elapsed</tt>, the behavior is undefined.
  */
-NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkElapsedTimer const *tiPtr, _In_ NkTimerPrecision precId);
+NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrecision precId);
 
 

@@ -13,6 +13,8 @@
 /**
  * \file  vector.h
  * \brief global definitions for Noriko's vector data-structure
+ * 
+ * \todo make callbacks fn pointer typedefs etc.
  */
 
 
@@ -23,7 +25,7 @@
 #include <include/Noriko/error.h>
 
 /**
- * \defgroup Static Vector Indices
+ * \defgroup Macros
  * \brief    defines some constant vector indices pointing to the first (NK_VECTOR_BEGIN)
  *           and after the last element (NK_VECTOR_END)
  */
@@ -37,20 +39,20 @@
  * \struct NkVector
  * \brief  forward-declaration of opaque vector type
  */
-typedef struct NkVector NkVector;
+NK_NATIVE typedef struct NkVector NkVector;
 
 /**
  * \struct NkVectorProperties
  * \brief  holds configuration properties for the vector container type
  * \note   A fixed-size array can be simulated by setting, for example,
- *         <tt>m_initialCapacity = m_minCapacity = m_maxCapacity</tt>.
+ *         <tt>m_initialCap = m_minCap = m_maxCap</tt>.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkVectorProperties {
-    NkSize  m_structSize;      /**< [\c x > 0] size of this structure, in bytes */
-    NkSize  m_initialCapacity; /**< [\c m_minCapacity <= \c x <= <tt>m_maxCapacity</tt>] initial capacity of vector [def: <tt>16</tt>] */
-    NkSize  m_minCapacity;     /**< [\c < \c x <= <tt>m_maxCapacity</tt>] minimum capacity, in elements (cannot shrink below) [def: <tt>8</tt>] */
-    NkSize  m_maxCapacity;     /**< [\c m_minCapacity <= \c x < <tt>SIZE_MAX</tt>] maximum capacity, in elements (cannot grow beyond) [def: <tt>SIZE_MAX - 1</tt>] */
-    NkFloat m_growFactor;      /**< [\c x > <tt>1.0</tt>] resize factor when growing array [def: <tt>1.5</tt>] */
+    NkSize  m_structSize; /**< [\c x > 0] size of this structure, in bytes */
+    NkSize  m_initialCap; /**< [\c m_minCap <= \c x <= <tt>m_maxCap</tt>] initial capacity of vector [def: <tt>16</tt>] */
+    NkSize  m_minCap;     /**< [\c < \c x <= <tt>m_maxCap</tt>] minimum capacity, in elements (cannot shrink below) [def: <tt>8</tt>] */
+    NkSize  m_maxCap;     /**< [\c m_minCap <= \c x < <tt>SIZE_MAX</tt>] maximum capacity, in elements (cannot grow beyond) [def: <tt>SIZE_MAX - 1</tt>] */
+    NkFloat m_growFactor; /**< [\c x > <tt>1.0</tt>] resize factor when growing array [def: <tt>1.5</tt>] */
 } NkVectorProperties;
 
 
@@ -208,7 +210,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
  *               erased
  * \param   [in,out] extraParam extra parameter to be passed into \c fnPred()
  * \return  \c NkErr_Ok on success, \c NkErr_NoOperation if no elements were erased, or
- *           non-zero if there was an error
+ *          non-zero if there was an error
  * \see     NkVectorFindIf
  * \note    For an example of a compliant predicate, see <tt>NkVectorFindIf</tt>'s
  *          \c fnPred parameter.
@@ -430,7 +432,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkVectorAtMulti(
  *         // Does not make a whole lot of sense, but whatever ...
  *         cxt->n = index;
  *         cxt->k = n + index << 2;
- *     } else if (!strcmp(ptr->c, u8"end")) return NkErr_ManuallyAborted;
+ *     } else if (!strcmp(ptr->c, "end")) return NkErr_ManuallyAborted;
  * 
  *     return NkErr_Ok;
  * }
@@ -476,6 +478,6 @@ NK_NATIVE NK_API NK_INLINE NkSize NK_CALL NkVectorGetCapacity(_In_ NkVector cons
  *         dynamic arrays (vectors)
  * \note   The pointer returned is a pointer to static and constant memory.
  */
-NK_NATIVE NK_API NK_INLINE NkVectorProperties const *NkVectorDefaultProperties(NkVoid);
+NK_NATIVE NK_API NK_INLINE NkVectorProperties const *NK_CALL NkVectorDefaultProperties(NkVoid);
 
 

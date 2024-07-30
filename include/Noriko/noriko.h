@@ -32,7 +32,9 @@
 #include <include/Noriko/sort.h>
 #include <include/Noriko/timer.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/component.h>
 
 #include <include/Noriko/dstruct/vector.h>
+#include <include/Noriko/dstruct/htable.h>
 
 

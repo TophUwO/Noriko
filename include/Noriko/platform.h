@@ -21,6 +21,12 @@
 
 #pragma once
 
+/* stdlib includes */
+#if (defined NK_TARGET_MULTITHREADED)
+    #include <threads.h>
+    #include <stdatomic.h>
+#endif
+
 /* Noriko includes */
 #include <include/Noriko/def.h>
 #include <include/Noriko/error.h>
@@ -42,6 +48,7 @@
         #define _CRTDBG_MAP_ALLOC
         #define NK_USE_MSVC_MEMORY_LEAK_DETECTOR
 
+        #define _CRT_RAND_S /* use Microsoft-specific "rand_s()" function */
         #include <stdlib.h>
         #include <crtdbg.h>
     #endif
@@ -49,6 +56,12 @@
     /* Suppress some non-important warnings. */
     #pragma warning (disable: 4668) /* macro not defined; replacing with '0' */
     #pragma warning (disable: 5045) /* spectre migitation for memory loads */
+    #pragma warning (disable: 4061) /* enumerator not explicitly handled in switch-case */
+    #pragma warning (disable: 4062) /* enumerator not handled in switch-case */
+    #pragma warning (disable: 4065) /* switch-case contains default but no case labels */
+    #pragma warning (disable: 4710) /* function not inlined */
+    #pragma warning (disable: 4711) /* function selected for inline expansion */
+    #pragma warning (disable: 4115) /* named type definition in parentheses */
 
     /* Include windows headers. */
     #include <windows.h>
@@ -67,10 +80,10 @@
 
 
 /* Make some basic assumptions. */
-static_assert(sizeof(float) == 4, "sizeof(float) must be 4 (four) bytes.");
-static_assert(sizeof(int) == 4, "sizeof(int) must be 4 (four) bytes.");
+static_assert(sizeof(float)  == 4, "sizeof(float) must be 4 (four)bytes.");
+static_assert(sizeof(int)    == 4, "sizeof(int) must be 4 (four) bytes.");
 static_assert(sizeof(double) == 8, "sizeof(double) must be 4 (four) bytes.");
-static_assert(sizeof(char) == 1, "sizeof(char) must be 1 (one) byte.");
+static_assert(sizeof(char)   == 1, "sizeof(char) must be 1 (one) byte.");
 
 
 /**
@@ -80,38 +93,39 @@ static_assert(sizeof(char) == 1, "sizeof(char) must be 1 (one) byte.");
  * This structure can be used to query target platform properties as well as
  * Noriko build properties.
  * 
- * \note   All pointer fields within this function are pointers to static
+ * \note   All pointers that are part of this data-structure are pointers to static
  *         read-only memory. Thus, writing to the passed addresses is undefined behavior.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation {
-    NkSize        m_structSize;       /**< size of this structure, in bytes */
-    NkSize        m_versionMajor;     /**< engine major version component */
-    NkSize        m_versionMinor;     /**< engine minor version component */
-    NkSize        m_versionPatch;     /**< engine patch version component */
-    NkSize        m_versionIteration; /**< engine patch iteration component */
-    NkSize        m_platWidth;        /**< target platform width */
-    NkSize        m_platBToolsVer;    /**< version of build tools used */
-    NkStringView *mp_prodName;        /**< name of engine component */
-    NkStringView *mp_prodVersion;     /**< full engine version string */
-    NkStringView *mp_prodCopyright;   /**< engine copyright string */
-    NkStringView *mp_prodConfig;      /**< engine build configuration */
-    NkStringView *mp_prodBuildTools;  /**< compiler/build tools used for compilation */
-    NkStringView *mp_prodPlatform;    /**< engine target platform ID */
-    NkStringView *mp_prodFullInfoStr; /**< full target information string */
-    NkStringView *mp_buildDate;       /**< local build date (<Month> <Day> <Year>) */
-    NkStringView *mp_buildTime;       /**< local build time (HH:MM:SS) */
+    NkSize       m_structSize;       /**< size of this structure, in bytes */
+    NkInt32      m_versionMajor;     /**< engine major version component */
+    NkInt32      m_versionMinor;     /**< engine minor version component */
+    NkInt32      m_versionPatch;     /**< engine patch version component */
+    NkInt32      m_versionIteration; /**< engine patch iteration component */
+    NkInt32      m_platWidth;        /**< target platform width */
+    NkInt32      m_platBToolsVer;    /**< version of build tools used */
+    NkStringView m_prodName;         /**< name of engine component */
+    NkStringView m_prodVersion;      /**< full engine version string */
+    NkStringView m_prodCopyright;    /**< engine copyright string */
+    NkStringView m_prodConfig;       /**< engine build configuration */
+    NkStringView m_prodBuildTools;   /**< compiler/build tools used for compilation */
+    NkStringView m_prodPlatform;     /**< engine target platform ID */
+    NkStringView m_prodFullInfoStr;  /**< full target information string */
+    NkStringView m_buildDate;        /**< local build date (<Month> <Day> <Year>) */
+    NkStringView m_buildTime;        /**< local build time (HH:MM:SS) */
 } NkPlatformInformation;
 
 /**
  * \brief   queries target platform and build information
- * \param   [in,out] platformInfoPtr buffer the target information is written to
- * \return  *NkErr_Ok* on success; non-zero if the target platform could not be retrieved
- * \note    If *platformInfoPtr* is *NULL* or *platformInfoPtr* is improperly initialized,
+ * \param   [in,out] pfInfoPtr buffer the target information is written to
+ * \return  \c NkErr_Ok on success; non-zero if the target platform could not be
+ *          retrieved
+ * \note    If \c pfInfoPtr is \c NULL or \c pfInfoPtr is improperly initialized,
  *          the function fails.
- * \warning Before you run this function, initialize the *m_structSize* member variable of
- *          *platformInfoPtr* to the size of the buffer that is being passed to the function.
- *          To do this, use **sizeof(NkPlatformInformation)**.
+ * \warning Before you run this function, initialize the \c m_structSize member variable
+ *          of \c pfInfoPtr to the size of the buffer that is being passed to the
+ *          function. To do this, use <tt>sizeof(NkPlatformInformation)</tt>.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *pfInfoPtr);
 
 

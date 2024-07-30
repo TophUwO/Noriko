@@ -20,7 +20,7 @@
  * specialized pool-allocators for fixed object sizes requiring frequent allocation and
  * deallocation.
  */
-#define NK_NAMESPACE u8"nk::alloc"
+#define NK_NAMESPACE "nk::alloc"
 
 
 /* stdlib includes */
@@ -32,22 +32,20 @@
 #include <include/Noriko/util.h>
 
 
+/** \cond INTERNAL */
 /**
- * \internal
- * \brief represents the internal state for the general-purpose memory allocator
- * \endinternal
+ * \struct __NkInt_GPAllocatorContext;
+ * \brief  represents the internal state for the general-purpose memory allocator
  */
-NK_NATIVE typedef struct NkGeneralPurposeAllocator {
+NK_NATIVE typedef struct __NkInt_GPAllocatorContext {
     NkAllocatorState m_allocState; /**< allocator state */
-} NkGeneralPurposeAllocator;
+} __NkInt_GPAllocatorContext;
 
 
 /**
- * \internal
  * \brief global general-purpose allocator state
- * \endinternal
  */
-NK_INTERNAL NK_NATIVE NkGeneralPurposeAllocator gl_GPAllocator = {
+NK_INTERNAL NK_NATIVE __NkInt_GPAllocatorContext gl_GPAllocator = {
     .m_allocState = {
         .m_structSize         = sizeof gl_GPAllocator,
         .mp_allocatorName     = &(NkStringView)NK_MAKE_STRING_VIEW("gp-alloc"),
@@ -64,7 +62,6 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
 
 
 /**
- * \internal
  * \brief  invokes the configuration-specific native allocation function
  * 
  * This function chooses the right allocation function based on current configuration
@@ -74,27 +71,30 @@ NK_INTERNAL NK_NATIVE NkAllocatorState *const gl_GPAState = &gl_GPAllocator.m_al
  * 
  * \param  [in] allocCxt allocation context supplied with the requested allocation
  * \param  [in] sizeInBytes size in bytes of the requested allocation
+ * \param  [in] isZeroed whether or not the newly-allocated memory should be
+ *              pre-initialized with all zeroes
  * \return a pointer to the newly-allocated block, or *NULL* on failure
- * \see    NkInternalFreeMemoryUnaligned
- * \see    NkInternalReallocateMemoryUnaligned
- * \endinternal
+ * \see    __NkInt_FreeMemoryUnaligned
+ * \see    __NkInt_ReallocateMemoryUnaligned
  */
-NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
+NK_INTERNAL NkVoid *__NkInt_AllocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ NkSize sizeInBytes,
     _In_opt_         NkBoolean isZeroed
 ) {
+    NK_UNREFERENCED_PARAMETER(allocCxt);
+
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     if (isZeroed)
         return _calloc_dbg(1, sizeInBytes, _NORMAL_BLOCK,
-            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
+            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : "n/a",
             allocCxt ? allocCxt->m_lineInFile : 0
         );
     else
         return _malloc_dbg(
             sizeInBytes,
             _NORMAL_BLOCK,
-            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
+            allocCxt ? allocCxt->mp_filePath->mp_dataPtr : "n/a",
             allocCxt ? allocCxt->m_lineInFile : 0
         );
 #else
@@ -103,31 +103,31 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalAllocateMemoryUnaligned(
 }
 
 /**
- * \internal 
  * \brief  invokes the configuration-specific native reallocation function
  * 
  * This function chooses the actual memory management function call similarly to its
- * counterpart *NkInternalAllocateMemoryUnaligned*.
+ * counterpart *__NkInt_AllocateMemoryUnaligned*.
  * 
  * \param  [in] allocCxt allocation context supplied with the requested allocation
  * \param  [in] newSizeInBytes new size of the memory block, in bytes
  * \param  [in,out] ptr pointer to the memory block that is to be reallocated
  * \return pointer to the (possibly) moved memory block
- * \see    NkInternalAllocateMemoryUnaligned
- * \see    NkInternalFreeMemoryUnaligned
- * \endinternal
+ * \see    __NkInt_AllocateMemoryUnaligned
+ * \see    __NkInt_FreeMemoryUnaligned
  */
-NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
+NK_INTERNAL NkVoid *__NkInt_ReallocateMemoryUnaligned(
     _In_opt_         NkAllocationContext const *const allocCxt,
     _In_ _Pre_valid_ NkSize newSizeInBytes,
     _In_ _Pre_valid_ NkVoid *ptr 
 ) {
+    NK_UNREFERENCED_PARAMETER(allocCxt);
+
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     return _realloc_dbg(
         ptr,
         newSizeInBytes,
         _NORMAL_BLOCK,
-        allocCxt ? allocCxt->mp_filePath->mp_dataPtr : u8"n/a",
+        allocCxt ? allocCxt->mp_filePath->mp_dataPtr : "n/a",
         allocCxt ? allocCxt->m_lineInFile : 0
     );
 #else
@@ -136,24 +136,23 @@ NK_INTERNAL NkVoid *NK_CALL NkInternalReallocateMemoryUnaligned(
 }
 
 /**
- * \internal 
  * \brief invokes the correct configuration-specific native memory free function
  *
  * This function chooses the actual memory management function call similarly to its
- * counterpart *NkInternalAllocateMemoryUnaligned*.
+ * counterpart *__NkInt_AllocateMemoryUnaligned*.
  * 
  * \param [in] ptr raw pointer to the memory that is to be freed
- * \see   NkInternalAllocateMemoryUnaligned
- * \see   NkInternalReallocateMemoryUnaligned
- * \endinternal
+ * \see   __NkInt_AllocateMemoryUnaligned
+ * \see   __NkInt_ReallocateMemoryUnaligned
  */
-NK_INTERNAL NkVoid NkInternalFreeMemoryUnaligned(NkVoid *ptr) {
+NK_INTERNAL NkVoid __NkInt_FreeMemoryUnaligned(NkVoid *ptr) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     _free_dbg((void *)ptr, _NORMAL_BLOCK);
 #else
     free(ptr);
 #endif
 }
+/** \endcond */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
@@ -169,7 +168,7 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
     NK_ASSERT(memPtr != NULL, NkErr_OutptrParameter);
 
     /* Allocate memory block. */
-    return (*memPtr = NkInternalAllocateMemoryUnaligned(allocCxt, sizeInBytes, isZeroed)) != NULL
+    return (*memPtr = __NkInt_AllocateMemoryUnaligned(allocCxt, sizeInBytes, isZeroed)) != NULL
         ? NkErr_Ok
         : NkErr_MemoryAllocation
     ;
@@ -185,7 +184,7 @@ _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
     NK_ASSERT(newSizeInBytes ^ 0, NkErr_InParameter);
 
     /* Try to reallocate memory. */
-    NkVoid *newMemPtr = NkInternalReallocateMemoryUnaligned(allocCxt, newSizeInBytes, *memPtr);
+    NkVoid *newMemPtr = __NkInt_ReallocateMemoryUnaligned(allocCxt, newSizeInBytes, *memPtr);
     if (newMemPtr == NULL)
         return NkErr_MemoryReallocation;
 
@@ -200,7 +199,7 @@ NkVoid NK_CALL NkFreeMemory(NkVoid *memPtr) {
         return;
 
     /* Free memory. */
-    NkInternalFreeMemoryUnaligned(memPtr);
+    __NkInt_FreeMemoryUnaligned(memPtr);
 }
 
 
@@ -221,7 +220,7 @@ _Return_ok_ NkErrorCode NK_CALL NkGetAllocatorState(
     else {
         memset(bufferPtr, 0, bufferPtr->m_structSize);
 
-        return NkErr_NamedItemNotFound;
+        return NkErr_ItemNotFound;
     }
 
     /* Everything went well. */
