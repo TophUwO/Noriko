@@ -57,6 +57,9 @@
     <ClInclude Include="..\include\Noriko\component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Noriko\cmdline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\platform.c">
