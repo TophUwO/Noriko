@@ -18,10 +18,17 @@
 #define NK_NAMESPACE "nk::util"
 
 
+/* stdlib includes */
+#include <stdarg.h>
+#include <string.h>
+
 /* Noriko includes */
-#include <include/Noriko/component.h>
 #include <include/Noriko/util.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/timer.h>
+
+#include <include/Noriko/dstruct/vector.h>
+#include <include/Noriko/dstruct/htable.h>
 
 
 /** \cond INTERNAL */
@@ -30,7 +37,6 @@
  * \brief  represents the pseudo-random number context
  */
 NK_NATIVE typedef struct __NkInt_RandomNumberGeneratorContext {
-    NkComponent;             /**< component structure */
     NK_DECL_LOCK(m_mtxLock); /**< mutex lock instance */
 
     /**
@@ -38,12 +44,52 @@ NK_NATIVE typedef struct __NkInt_RandomNumberGeneratorContext {
      * \note  This fields needs to be aligned so that its pointer can be cast to a
      *        pointer of a type of an alignment requirement of 4 safely.
      */
-    _Alignas(_Alignof(NkUint64)) uint8_t m_seedArr[4 * sizeof(NkUint64)];
+    _Alignas(_Alignof(NkUint64)) NkByte m_seedArr[4 * sizeof(NkUint64)];
 } __NkInt_RandomNumberGeneratorContext;
 /**
  * \brief actual instance of the random number generator context 
  */
 NK_INTERNAL __NkInt_RandomNumberGeneratorContext gl_RandContext;
+
+/**
+ * \struct __NkInt_Variant
+ * \brief  provides the internal implementation of the variant type
+ */
+NK_NATIVE typedef struct __NkInt_Variant {
+    NkVariantType m_type;     /**< ID of the underlying type */
+    NkUint32      m_reserved; /**< prevent compiler from inserting padding here */
+
+    union {
+        NkBoolean     m_boolVal;
+        char          m_chVal;
+        NkInt8        m_i8Val;
+        NkInt16       m_i16Val;
+        NkInt32       m_i32Val;
+        NkInt64       m_i64Val;
+        NkUint8       m_u8Val;
+        NkUint16      m_u16Val;
+        NkUint32      m_u32Val;
+        NkUint64      m_u64Val;
+        NkFloat       m_floatVal;
+        NkDouble      m_dblVal;
+        NkErrorCode   m_ecVal;
+        NkStringView  m_svVal;
+        NkUuid        m_uuidVal;
+        NkVoid       *mp_ptrVal;
+        NkVector     *mp_vecVal;
+        NkHashtable  *mp_htVal;
+        NkTimer      *mp_tVal;
+    } m_val;
+} __NkInt_Variant;
+/*
+ * Since the public type is just a placeholder for the internal type defined here, we
+ * must make sure that the internal type and the public type are compatible, that is,
+ * they adhere to the same size and alignment requirements.
+ */
+static_assert(
+    sizeof(NkVariant) == sizeof(__NkInt_Variant) && _Alignof(NkVariant) == _Alignof(__NkInt_Variant),
+    "Size or alignment mismatch between \"NkVariant\" and \"__NkInt_Variant\". Check definitions."
+);
 
 
 /**
@@ -78,12 +124,82 @@ NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGXoshiro256(_Out_ NkUint64 *dstPtr) {
 NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGNextNoLock(_Out_ NkUint64 *dstPtr) {
     __NkInt_PRNGXoshiro256(dstPtr);
 }
+
+/**
+ * \brief   retrieves the size in bytes of the underlying type for the given variant type
+ *          ID
+ * \param   [in] varType type ID of the variant
+ * \return  size of the underlying type, in bytes
+ * \warning Passing invalid (that is, out of range) values for \c varType results in
+ *          undefined behavior.
+ */
+NK_INTERNAL NK_INLINE NkSize __NkInt_VariantGetTypeSize(_In_ NkVariantType varType) {
+    /**
+     * \brief static table of variant value sizes
+     */
+    NK_INTERNAL NkSize const gl_VarTypeSizes[] = {
+        [NkVarTy_Boolean]    = sizeof(NkBoolean),
+        [NkVarTy_Char]       = sizeof(char),
+        [NkVarTy_Int8]       = sizeof(NkInt8),
+        [NkVarTy_Int16]      = sizeof(NkInt16),
+        [NkVarTy_Int32]      = sizeof(NkInt32),
+        [NkVarTy_Int64]      = sizeof(NkInt64),      
+        [NkVarTy_Uint8]      = sizeof(NkUint8),      
+        [NkVarTy_Uint16]     = sizeof(NkUint16),     
+        [NkVarTy_Uint32]     = sizeof(NkUint32),     
+        [NkVarTy_Uint64]     = sizeof(NkUint64),     
+        [NkVarTy_Float]      = sizeof(NkFloat),      
+        [NkVarTy_Double]     = sizeof(NkDouble),     
+        [NkVarTy_ErrorCode]  = sizeof(NkErrorCode),  
+        [NkVarTy_StringView] = sizeof(NkStringView),
+        [NkVarTy_Uuid]       = sizeof(NkUuid),       
+        [NkVarTy_Pointer]    = sizeof(NkVoid *),     
+        [NkVarTy_Vector]     = sizeof(NkVector *),   
+        [NkVarTy_Hashtable]  = sizeof(NkHashtable *),
+        [NkVarTy_Timer]      = sizeof(NkTimer *)
+    };
+
+    return gl_VarTypeSizes[varType];
+}
 /** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
-    NK_ENSURE_NOT_INITIALIZED(gl_RandContext);
+NkStringView *NK_CALL NkStringViewSet(_In_z_ char const *strPtr, _Out_ NkStringView *resPtr) {
+    NK_ASSERT(strPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
     
+    *resPtr = (NkStringView){ .mp_dataPtr = (char *)strPtr, .m_sizeInBytes = (NkSize)strlen(strPtr) };
+    return resPtr;
+}
+
+NkInt32 NK_CALL NkStringViewCompare(_In_ NkStringView const *sv1Ptr, _In_ NkStringView const *sv2Ptr) {
+    NK_ASSERT(sv1Ptr != NULL, NkErr_InParameter);
+    NK_ASSERT(sv2Ptr != NULL, NkErr_InParameter);
+
+    if (sv1Ptr == sv2Ptr || sv1Ptr->m_sizeInBytes == sv2Ptr->m_sizeInBytes) {
+        /*
+         * If two string wie pointers are equal, their data pointers will also be the
+         * same. If the pointers are unequal but the sizes are the same, due to
+         * short-circuit evaluation, their data pointers will differ, too.
+         */
+        if (sv1Ptr->mp_dataPtr == sv2Ptr->mp_dataPtr)
+            return 0;
+
+        return (NkInt32)strncmp(sv1Ptr->mp_dataPtr, sv2Ptr->mp_dataPtr, sv1Ptr->m_sizeInBytes);
+    }
+
+    return 1;
+}
+
+NkVoid NK_CALL NkStringViewCopy(_In_ NkStringView const *srcPtr, _Out_ NkStringView *dstPtr) {
+    NK_ASSERT(srcPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(dstPtr != NULL, NkErr_OutParameter);
+
+    memcpy_s(dstPtr, sizeof *dstPtr, srcPtr, sizeof *srcPtr);
+}
+
+
+_Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
     /* Initialize mutex. */
     NK_INITLOCK(gl_RandContext.m_mtxLock);
 
@@ -97,14 +213,10 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
 #endif
     
     NK_LOG_INFO("init: PRNG");
-    NK_INITIALIZE(gl_RandContext);
     return NkErr_Ok;
 }
 
 NkVoid NK_CALL NkPRNGUninitialize(NkVoid) {
-    NK_ENSURE_INITIALIZED_VOID(gl_RandContext);
-    NK_UNINITIALIZE(gl_RandContext);
-
     /* Destroy mutex. */
     NK_DESTROYLOCK(gl_RandContext.m_mtxLock);
 
@@ -113,7 +225,6 @@ NkVoid NK_CALL NkPRNGUninitialize(NkVoid) {
 
 _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {
     NK_ASSERT(outPtr != NULL, NkErr_OutParameter);
-    NK_ENSURE_INITIALIZED(gl_RandContext);
 
     /* Get next random number. */
     NK_SYNCHRONIZED(gl_RandContext.m_mtxLock, __NkInt_PRNGNextNoLock(outPtr));
@@ -121,10 +232,8 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {
 }
 
 
-
 _Return_ok_ NkErrorCode NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr) {
     NK_ASSERT(uuidPtr != NULL, NkErr_OutParameter);
-    NK_ENSURE_INITIALIZED(gl_RandContext);
 
     /* Generate two random numbers. */
     NK_SYNCHRONIZED(gl_RandContext.m_mtxLock, {
@@ -191,6 +300,159 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_by
     *strBuf = 0x00;
 
     return NkErr_Ok;
+}
+
+
+NkVoid NK_CALL NkVariantGet(_In_ NkVariant const *varPtr, _Out_opt_ NkVariantType *tyPtr, _Out_opt_ NkVoid *valPtr) {
+    NK_ASSERT(varPtr != NULL, NkErr_InParameter);
+
+    __NkInt_Variant const *intVarPtr = (__NkInt_Variant const *)varPtr;
+    NK_ASSERT(NK_INRANGE_EXCL(intVarPtr->m_type, NkVarTy_None, __NkVarTy_Count__), NkErr_ObjectState);
+
+    if (tyPtr != NULL) *tyPtr = intVarPtr->m_type;
+    if (valPtr != NULL)
+        memcpy(valPtr, &intVarPtr->m_val, __NkInt_VariantGetTypeSize(intVarPtr->m_type));
+}
+
+NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVariantType valType, ...) {
+    NK_ASSERT(varPtr != NULL, NkErr_InOutParameter);
+    NK_ASSERT(NK_INRANGE_EXCL(valType, NkVarTy_None, __NkVarTy_Count__), NkErr_InvalidRange);
+
+    __NkInt_Variant *vPtr = (__NkInt_Variant *)varPtr;
+
+    va_list vlArg;
+    va_start(vlArg, valType);
+
+    switch (valType) {
+        case NkVarTy_Boolean:    vPtr->m_val.m_boolVal = va_arg(vlArg, NkBoolean); break;
+        case NkVarTy_Char:       vPtr->m_val.m_chVal   = va_arg(vlArg, char);      break;
+        case NkVarTy_Int8:       vPtr->m_val.m_i8Val   = va_arg(vlArg, NkInt8);    break;
+        case NkVarTy_Int16:      vPtr->m_val.m_i16Val  = va_arg(vlArg, NkInt16);   break;
+        case NkVarTy_Int32:      vPtr->m_val.m_i32Val  = va_arg(vlArg, NkInt32);   break;
+        case NkVarTy_Int64:      vPtr->m_val.m_i64Val  = va_arg(vlArg, NkInt64);   break;
+        case NkVarTy_Uint8:      vPtr->m_val.m_u8Val   = va_arg(vlArg, NkUint8);   break;
+        case NkVarTy_Uint16:     vPtr->m_val.m_u16Val  = va_arg(vlArg, NkUint16);  break;
+        case NkVarTy_Uint32:     vPtr->m_val.m_u32Val  = va_arg(vlArg, NkUint32);  break;
+        case NkVarTy_Uint64:     vPtr->m_val.m_u64Val  = va_arg(vlArg, NkUint64);  break;
+        case NkVarTy_Float:
+            /*
+             * Variadic function parameters passed as float are automatically promoted to
+             * double and thus must explicitly converted back.
+             */
+            vPtr->m_val.m_floatVal = (NkFloat)va_arg(vlArg, NkDouble);
+            
+            break;
+        case NkVarTy_Double:     vPtr->m_val.m_dblVal  = va_arg(vlArg, NkDouble);    break;
+        case NkVarTy_ErrorCode:  vPtr->m_val.m_ecVal   = va_arg(vlArg, NkErrorCode); break;
+        case NkVarTy_StringView:
+            memcpy(&vPtr->m_val.m_svVal, va_arg(vlArg, NkStringView *), sizeof(NkStringView));
+
+            break;
+        case NkVarTy_Uuid:
+            memcpy(&vPtr->m_val.m_uuidVal, va_arg(vlArg, NkUuid *), sizeof(NkUuid));
+
+            break;
+        case NkVarTy_Pointer:
+        case NkVarTy_Vector:
+        case NkVarTy_Hashtable:
+        case NkVarTy_Timer:
+            vPtr->m_val.mp_ptrVal = va_arg(vlArg, NkVoid *);
+
+            break;
+    }
+
+    vPtr->m_type = valType;
+    va_end(vlArg);
+}
+
+NkVoid NK_CALL NkVariantCopy(_In_ NkVariant const *srcPtr, _Out_ NkVariant *dstPtr) {
+    NK_ASSERT(srcPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(dstPtr != NULL, NkErr_OutParameter);
+
+    memcpy_s(dstPtr, sizeof *dstPtr, srcPtr, sizeof *srcPtr);
+}
+
+
+NkVoid NK_CALL NkRawStringTrim(
+    _In_z_ char const *strPtr,
+    _In_   NkSize maxChars,
+    _In_z_ char const *keyPtr,
+    _Out_  NkStringView *resPtr
+) {
+    NK_ASSERT(strPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(keyPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
+
+    /* Trim leading characters that are to be trimmed. */
+    char *modPtr = (char *)strPtr;
+    resPtr->mp_dataPtr = modPtr;
+    while (strpbrk(resPtr->mp_dataPtr, keyPtr) == resPtr->mp_dataPtr)
+        ++resPtr->mp_dataPtr;
+    resPtr->mp_dataPtr = NK_MIN(resPtr->mp_dataPtr, modPtr + maxChars);
+
+    /* Trim characters from the end. */
+    char *endPtr = strchr(resPtr->mp_dataPtr, '\0');
+    if (endPtr == NULL) {
+        *resPtr = (NkStringView){ .mp_dataPtr = NULL, .m_sizeInBytes = 0 };
+
+        return;
+    }
+    endPtr = NK_MIN(endPtr, modPtr + maxChars);
+
+    NkSize const keyLen = (NkSize const)strlen(keyPtr);
+lbl_NEXTCHAR:
+    while (endPtr >= resPtr->mp_dataPtr) {
+        /*
+         * Implement a reverse 'strpbrk' clone that searches until none of the characters
+         * in *keyStr* matches the current end pointer.
+         */
+        for (NkSize i = 0; i < keyLen; i++)
+            if (*endPtr == keyPtr[i]) {
+                --endPtr;
+
+                goto lbl_NEXTCHAR;
+            }
+
+        break;
+    }
+
+    /* Calculate size of string (excl. NUL). */
+    *resPtr = (NkStringView){ .mp_dataPtr = resPtr->mp_dataPtr, .m_sizeInBytes = endPtr - resPtr->mp_dataPtr };
+}
+
+NkVoid NK_CALL NkRawStringSplit(
+    _In_z_ char const *strPtr,
+    _In_z_ char const *ctrlChs,
+    _Out_  NkStringView *str1Ptr,
+    _Out_  NkStringView *str2Ptr
+) {
+    NK_ASSERT(strPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(ctrlChs != NULL, NkErr_InParameter);
+    NK_ASSERT(str1Ptr != NULL, NkErr_OutParameter);
+    NK_ASSERT(str2Ptr != NULL, NkErr_OutParameter);
+
+    /* Determine delimiter and string end position. */
+    char   *modPtr   = (char *)strPtr;
+    NkSize  strSz    = strlen(strPtr);
+    char   *delimPos = strpbrk(strPtr, ctrlChs);
+    char   *endPtr   = strchr(strPtr, '\0');
+    endPtr           = NK_CLAMP(endPtr, modPtr, modPtr + strSz);
+    delimPos         = delimPos == NULL ? endPtr : delimPos;
+
+    /* Calculate ranges. */
+    *str1Ptr = (NkStringView){ modPtr, (NkSize)(NK_MAX(delimPos, modPtr) - modPtr) };
+    *str2Ptr = (NkStringView){ NK_MIN(delimPos + 1, endPtr), (NkSize)(endPtr - NK_MIN(delimPos + 1, endPtr)) };
+}
+
+
+NkSize NK_CALL NkArrayGetDynCount(_In_to_null_ NkVoid const **ptrArray) {
+    if (ptrArray == NULL)
+        return 0;
+
+    NkSize elemCount = 0;
+    while (ptrArray[elemCount] != NULL && ++elemCount);
+
+    return elemCount;
 }
 
 

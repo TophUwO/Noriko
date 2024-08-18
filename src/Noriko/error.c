@@ -63,7 +63,10 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ComponentState)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ObjectType)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ObjectState)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_SynchInit))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_SynchInit)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnexpectedCharacter)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvalidIdentifier)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClosingTokenNotFound))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -93,10 +96,13 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("erroneous array interval [x, y]"),
     NK_MAKE_STRING_VIEW("operation caused unsigned integer wrap-around (values passed too big?)"),
     NK_MAKE_STRING_VIEW("exceeded container capacity limit"),
-    NK_MAKE_STRING_VIEW("invalid component state (not yet initialized? already uninitialized?)"),
+    NK_MAKE_STRING_VIEW("invalid component state (not yet initialized/already uninitialized?)"),
     NK_MAKE_STRING_VIEW("invalid internal object type"),
     NK_MAKE_STRING_VIEW("invalid object state (likely due to function pre-condition being not satisfied)"),
-    NK_MAKE_STRING_VIEW("error while initializing synchronization object (mtx, ...)")
+    NK_MAKE_STRING_VIEW("error while initializing synchronization object (mtx, ...)"),
+    NK_MAKE_STRING_VIEW("unexpected character during string parsing"),
+    NK_MAKE_STRING_VIEW("invalid/empty identifier during string parsing"),
+    NK_MAKE_STRING_VIEW("closing token for compound literal not found")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

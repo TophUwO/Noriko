@@ -28,7 +28,7 @@
  * \param [in,out] keyPtr pointer to the key
  * \param [in,out] valPtr pointer to the value
  */
-typedef NkVoid (NK_CALL *NkHashtableFreeFn)(NkVoid *keyPtr, NkVoid *valPtr);
+typedef NkVoid (NK_CALL *NkHashtableFreeFn)(struct NkHashtableKey *keyPtr, NkVoid *valPtr);
 /**
  * \brief  callback definition for when the implementation iterates over a range of
  *         elements
@@ -45,12 +45,13 @@ typedef NkErrorCode (NK_CALL *NkHashtableIterFn)(struct NkHashtablePair *pairPtr
  *        adding and matching keys
  */
 NK_NATIVE typedef _In_range_(0, __NkHtKeyTy_Count__ - 1) enum NkHashtableKeyType {
-    NkHtKeyTy_Int64,    /**< type ID for 64-bit signed integer key */
-    NkHtKeyTy_Uint64,   /**< type ID for 64-bit unsigned integer key */
-    NkHtKeyTy_String,   /**< type ID for string key */
-    NkHtKeyTy_Pointer,  /**< type ID for generic pointer key */
+    NkHtKeyTy_Int64,      /**< type ID for 64-bit signed integer key */
+    NkHtKeyTy_Uint64,     /**< type ID for 64-bit unsigned integer key */
+    NkHtKeyTy_String,     /**< type ID for string key */
+    NkHtKeyTy_StringView, /**< type ID for string view key */
+    NkHtKeyTy_Pointer,    /**< type ID for generic pointer key */
 
-    __NkHtKeyTy_Count__ /**< *only used internally* */
+    __NkHtKeyTy_Count__   /**< *only used internally* */
 } NkHashtableKeyType;
 
 /**
@@ -73,10 +74,11 @@ NK_NATIVE typedef struct NkHashtable NkHashtable;
  *          behavior.
  */
 NK_NATIVE typedef union NkHashtableKey {
-    NkInt64   m_int64Key;  /**< signed 64-bit integer key */
-    NkUint64  m_uint64Key; /**< unsigned 64-bit integer key */
-    char     *mp_strKey;   /**< string value key */
-    NkVoid   *mp_ptrKey;   /**< pointer value key */
+    NkInt64       m_int64Key;  /**< signed 64-bit integer key */
+    NkUint64      m_uint64Key; /**< unsigned 64-bit integer key */
+    char         *mp_strKey;   /**< string value key */
+    NkStringView *mp_svKey;    /**< string view key */
+    NkVoid       *mp_ptrKey;   /**< pointer value key */
 } NkHashtableKey;
 
 /**
@@ -100,12 +102,12 @@ NK_NATIVE typedef struct NkHashtablePair {
  *         fields that do require manual cleanup).
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkHashtableProperties {
-    NkUint32             m_structSize;  /**< size of this struct, in bytes */
-    NkUint32             m_initCap;     /**< initial capacity of hash table, in elements */
-    NkUint32             m_minCap;      /**< minimum capacity of hash table, in elements */
-    NkUint32             m_maxCap;      /**< maximum capacity of hash table, in elements */
-    NkHashtableKeyType   m_keyType;     /**< type ID of key */
-    NkHashtableFreeFn    mp_fnElemFree; /**< element free function callback (may be NULL) */
+    NkUint32           m_structSize;  /**< size of this struct, in bytes */
+    NkUint32           m_initCap;     /**< initial capacity of hash table, in elements */
+    NkUint32           m_minCap;      /**< minimum capacity of hash table, in elements */
+    NkUint32           m_maxCap;      /**< maximum capacity of hash table, in elements */
+    NkHashtableKeyType m_keyType;     /**< type ID of key */
+    NkHashtableFreeFn  mp_fnElemFree; /**< element free function callback (may be NULL) */
 } NkHashtableProperties;
 
 
@@ -164,6 +166,9 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableInsert(
  * \note   \li If the hash table does not fit and cannot be resized to fit all elements,
  *         the function fails and no elements are inserted. The hash table state is no
  *         changed.
+ * \note   \li Duplicates inside the pair array are not added to the hash table. The hash
+ *         table is still enlarged by the required amount as if no duplicates were
+ *         submitted if such a reallocation is determined to be necessary.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableInsertMulti(
     _Inout_           NkHashtable *htPtr,
@@ -183,6 +188,13 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableInsertMulti(
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableErase(
     _Inout_ NkHashtable *htPtr,
     _In_    NkHashtableKey const *keyPtr
+);
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableAt(
+    _In_     NkHashtable const *htPtr,
+    _In_     NkHashtableKey const *keyPtr,
+    _Outptr_ NkVoid **valPtr
 );
 /**
  * \brief  extracts (i.e., erases without deleting) the given element from the hash table

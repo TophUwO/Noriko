@@ -119,7 +119,7 @@
  * \brief suppress "unreferenced parameter 'x'" warnings
  * \param p name of the parameter
  */
-#define NK_UNREFERENCED_PARAMETER(p) ((void)(p))
+#define NK_UNREFERENCED_PARAMETER(p) ((NkVoid)(p))
 /**
  * \def   NK_IGNORE_RETURN_VALUE(e)
  * \brief macro to wrap function calls in of which the return value is intentionally not
@@ -190,6 +190,9 @@
  * 
  * This utility structure allows for extra information about the string to be stored
  * directly alongside it, making simple processing simpler and less error-prone.
+ * 
+ * \note  The \c m_sizeInBytes field represents the length in bytes of the string value
+ *        WITHOUT the <tt>NUL</tt>-terminator.
  */
 NK_NATIVE typedef struct NkStringView {
     char   *mp_dataPtr;    /**< pointer to static string buffer */
@@ -201,7 +204,7 @@ NK_NATIVE typedef struct NkStringView {
  * \brief generates a compile-time string view to a static string
  * \param str string literal to create string view for
  */
-#define NK_MAKE_STRING_VIEW(str)     { .mp_dataPtr = str, .m_sizeInBytes = sizeof str }
+#define NK_MAKE_STRING_VIEW(str)     { .mp_dataPtr = str, .m_sizeInBytes = sizeof str - 1 }
 /**
  * \def   NK_MAKE_STRING_VIEW_PTR(str)
  * \brief like NK_MAKE_STRING_VIEW but it includes the code for turning the string view
@@ -209,6 +212,38 @@ NK_NATIVE typedef struct NkStringView {
  * \param str string literal to create string view for
  */
 #define NK_MAKE_STRING_VIEW_PTR(str) &(NkStringView)NK_MAKE_STRING_VIEW(str)
+
+/**
+ * \brief  initializes a string view from a raw C-string
+ * \param  [in] strPtr pointer to the source (<tt>NUL</tt>-terminated) C-string
+ * \param  [out] resPtr pointer to the NkStringView instance that will be initialized
+ *               with the C-string
+ * \return the given pointer, a.k.a. \c resPtr
+ * \note   \li This function is UTF-8-aware.
+ * \note   \li If \c strPtr is not <tt>NUL</tt>-terminated, the behavior is undefined.
+ */
+NK_NATIVE NK_API NK_INLINE NkStringView *NK_CALL NkStringViewSet(_In_z_ char const *strPtr, _Out_ NkStringView *resPtr);
+/**
+ * \brief  compares two string views
+ * \param  [in] sv1Ptr pointer to the left NkStringView instance
+ * \param  [in] sv2Ptr pointer to the right NkStringView instance
+ * \return zero if both string views are equal, otherwise non-zero
+ * \note   Two string views are equivalent if
+ *          (1) their pointers match
+ *          (2) their length is equal AND all bytes from [0] up to the length are equal
+ */
+NK_NATIVE NK_API NK_INLINE NkInt32 NK_CALL NkStringViewCompare(
+    _In_ NkStringView const *sv1Ptr,
+    _In_ NkStringView const *sv2Ptr
+);
+/**
+ * \brief copies the string view into another one
+ * \param [in] srcPtr pointer to the NkStringView instance that is to be duplicated
+ * \param [out] dstPtr pointer to an NkStringView instance that will receive the
+ *              duplicated string view value
+ * \note  The raw string value is not duplicated.
+ */
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkStringViewCopy(_In_ NkStringView const *srcPtr, _Out_ NkStringView *dstPtr);
 
 
 /**
@@ -415,5 +450,136 @@ NK_NATIVE NK_API NK_INLINE _Return_ok_ enum NkErrorCode NK_CALL NkUuidToString(
     _In_          NkUuid const *uuidPtr,
     _O_bytes_(37) char *strBuf
 );
+
+
+/**
+ * \enum  NkVariantType
+ * \brief contains numeric variant type IDs
+ */
+NK_NATIVE typedef _In_range_(NkVarTy_None + 1, __NkVarTy_Count__ - 1) enum NkVariantType {
+    NkVarTy_None,       /**< no type saved (= not initialized) */
+
+    NkVarTy_Boolean,
+    NkVarTy_Char,
+    NkVarTy_Int8,
+    NkVarTy_Int16,
+    NkVarTy_Int32,
+    NkVarTy_Int64,
+    NkVarTy_Uint8,
+    NkVarTy_Uint16,
+    NkVarTy_Uint32,
+    NkVarTy_Uint64,
+    NkVarTy_Float,
+    NkVarTy_Double,
+    NkVarTy_ErrorCode,
+    NkVarTy_StringView,
+    NkVarTy_Uuid,
+    NkVarTy_Pointer,
+    NkVarTy_Vector,
+    NkVarTy_Hashtable,
+    NkVarTy_Timer,
+
+    __NkVarTy_Count__   /**< *only used internally* */
+} NkVariantType;
+
+/**
+ * \struct  NkVariant
+ * \brief   represents the container for a data-structure that can hold a host of
+ *          different types
+ * \warning The state of \c m_reserved is implementation-defined. Thus, do never access
+ *          or manipulate it directly.
+ */
+NK_NATIVE typedef struct NkVariant {
+    _Alignas(NkInt64) NkByte const m_reserved[24]; /**< placeholder for the internal structure */
+} NkVariant;
+
+/**
+ * \brief retrieves a copy of the value currently held by the variant
+ * \param [in] varPtr pointer to the NkVariant instance of which the value is to be
+ *             retrieved
+ * \param [out] tyPtr pointer to a variable that will receive type information of the
+ *              contained value
+ * \param [out] valPtr pointer to a variable that will receive the copy of the contained
+ *              value
+ * \note  The memory pointed to by \c valPtr and \c tyPtr need to satisfy the alignment
+ *        requirements of the underlying type. Passing misaligned memory is undefined
+ *        behavior.
+ */
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantGet(
+    _In_      NkVariant const *varPtr,
+    _Out_opt_ NkVariantType *tyPtr,
+    _Out_opt_ NkVoid *valPtr
+);
+/**
+ * \brief   sets the variant's internal type to the given type and updates the underlying
+ *          value with the one given as the first variadic parameter
+ * \param   [in,out] varPtr pointer to the NkVariant instance that is to be updated
+ * \param   [in] valType numeric type ID of the new underlying type
+ * \note    The function expects exactly one variadic parameter that satisfies the type
+ *          requirements imposed by <tt>valType</tt>.
+ * \warning If no variadic parameter is given, the type ID is invalid, or the actual type
+ *          of the provided variadic parameter does not adhere to the requirements
+ *          imposed by <tt>valType</tt>, the behavior is undefined.
+ */
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantSet(
+    _Pre_maybevalid_ _Out_ NkVariant *varPtr,
+    _In_                   NkVariantType valType,
+                           ...
+);
+/**
+ * \brief   makes a (possibly shallow) copy of the given variant
+ * \param   [in] srcPtr pointer to the NkVariant a copy is to be made of
+ * \param   [out] dstPtr pointer to the NkVariant instance that will receive the copy of
+ *                \c srcPtr
+ * \warning If \c srcPtr holds a non-pointer value, the copy is deep, otherwise shallow
+ *          as the only the pointer is copied, not the memory pointed to by it.
+ */
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantCopy(_In_ NkVariant const *srcPtr, _Out_ NkVariant *dstPtr);
+
+
+/**
+ * \brief trims the given characters from the string, both left and right
+ * \param [in] strPtr pointer to the C-string that is to be trimmed
+ * \param [in] maxChars maximum number (relative to <tt>strPtr</tt>) of characters to
+ *             consider
+ * \param [in] keyPtr collection of characters that are to be trimmed
+ * \param [out] resPtr pointer to an NkStringView instance that will receive the pointer
+ *              to trimmed portion
+ * \note  This function is not UTF-8-aware.
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkRawStringTrim(
+    _In_z_ char const *strPtr,
+    _In_   NkSize maxChars,
+    _In_z_ char const *keyPtr,
+    _Out_  NkStringView *resPtr
+);
+/**
+ * \brief splits the given C-string into two sections separated by a collection of
+ *        characters
+ * \param [in] strPtr pointer to a (<tt>NUL</tt>-terminated) C-string instance
+ * \param [in] ctrlChs list of possible delimiter characters
+ * \param [out] str1Ptr pointer to an NkStringView instance that will receive the portion
+ *              of the string before the delimiter
+ * \param [out] str2Ptr pointer to an NkStringView instance that will receive the portion
+ *              of the string after the delimiter
+ * \note  \li This function is not UTF-8-aware.
+ * \note  \li The string will be split in accordance with the first delimiter found.
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkRawStringSplit(
+    _In_z_ char const *strPtr,
+    _In_z_ char const *ctrlChs,
+    _Out_  NkStringView *str1Ptr,
+    _Out_  NkStringView *str2Ptr
+);
+
+
+/**
+ * \brief  gets the number of elements in the given array of pointers until the first
+ *         \c NULL is encountered
+ * \param  [in] ptrArray array of pointers
+ * \return size in elements
+ * \note   If \c ptrArray is <tt>NULL</tt>, the function returns <tt>0</tt>.
+ */
+NK_NATIVE NK_API NkSize NK_CALL NkArrayGetDynCount(_In_to_null_ NkVoid const **ptrArray);
 
 

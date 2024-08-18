@@ -134,7 +134,7 @@ NK_INTERNAL NkErrorCode __NkInt_VectorTryFreeRange(
  * \see    NkReallocateMemory
  */
 NK_INTERNAL NkErrorCode __NkInt_VectorResizeBuffer(_Inout_ NkVector *vecPtr, _In_ NkSize newCap) {
-    return NkReallocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), newCap * sizeof(NkVoid *), (NkVoid *)&vecPtr->mp_dataPtr);
+    return NkGPRealloc(NK_MAKE_ALLOCATION_CONTEXT(), newCap * sizeof(NkVoid *), (NkVoid *)&vecPtr->mp_dataPtr);
 }
 
 /**
@@ -201,13 +201,13 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorCreate(
 
     /* Allocate memory for parent structure. */
     NkErrorCode errorCode = NkErr_Ok;
-    if ((errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 0, NK_FALSE, vecPtr)) != NkErr_Ok)
+    if ((errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 0, NK_FALSE, vecPtr)) != NkErr_Ok)
         return errorCode;
     /* Allocate memory for internal buffer. */
     NkSize const initCap = sizeof *vecPtr * vecPropsPtr->m_initialCap;
-    errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), initCap, NK_FALSE, 0, (NkVoid **)&(*vecPtr)->mp_dataPtr);
+    errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), initCap, NK_FALSE, 0, (NkVoid **)&(*vecPtr)->mp_dataPtr);
     if (errorCode != NkErr_Ok) {
-        NkFreeMemory(*vecPtr);
+        NkGPFree(*vecPtr);
 
         *vecPtr = NULL;
         return errorCode;
@@ -224,14 +224,15 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorCreate(
 }
 
 NkVoid NK_CALL NkVectorDestroy(_Uninit_ptr_ NkVector **vecPtr) {
-    NK_ASSERT(vecPtr != NULL && *vecPtr != NULL, NkErr_InptrParameter);
+    if (vecPtr == NULL || *vecPtr == NULL)
+        return;
 
     /* Destroy elements if possible. */
     __NkInt_VectorTryFreeRange(*vecPtr, NK_VECTOR_BEGIN(*vecPtr), NK_VECTOR_END(*vecPtr) - 1);
 
     /* Free parent structure and buffer memory. */
-    NkFreeMemory((*vecPtr)->mp_dataPtr);
-    NkFreeMemory(*vecPtr);
+    NkGPFree((*vecPtr)->mp_dataPtr);
+    NkGPFree(*vecPtr);
     *vecPtr = NULL;
 }
 

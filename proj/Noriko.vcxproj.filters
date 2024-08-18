@@ -54,10 +54,7 @@
     <ClInclude Include="..\include\Noriko\dstruct\htable.h">
       <Filter>Header Files\dstruct</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Noriko\component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\Noriko\cmdline.h">
+    <ClInclude Include="..\include\Noriko\env.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -87,6 +84,9 @@
       <Filter>Source Files\dstruct</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Noriko\util.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\env.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

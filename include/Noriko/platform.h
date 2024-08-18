@@ -24,7 +24,6 @@
 /* stdlib includes */
 #if (defined NK_TARGET_MULTITHREADED)
     #include <threads.h>
-    #include <stdatomic.h>
 #endif
 
 /* Noriko includes */
@@ -62,6 +61,13 @@
     #pragma warning (disable: 4710) /* function not inlined */
     #pragma warning (disable: 4711) /* function selected for inline expansion */
     #pragma warning (disable: 4115) /* named type definition in parentheses */
+    /*
+     * Disable some warnings in deploy builds that are not substantial but may be
+     * important when debugging.
+     */
+    #if (defined NK_CONFIG_DEPLOY)
+        #pragma warning (disable: 4820) /* padding added after data member in struct */
+    #endif
 
     /* Include windows headers. */
     #include <windows.h>
@@ -118,14 +124,12 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkPlatformInformation
 /**
  * \brief   queries target platform and build information
  * \param   [in,out] pfInfoPtr buffer the target information is written to
- * \return  \c NkErr_Ok on success; non-zero if the target platform could not be
- *          retrieved
  * \note    If \c pfInfoPtr is \c NULL or \c pfInfoPtr is improperly initialized,
  *          the function fails.
  * \warning Before you run this function, initialize the \c m_structSize member variable
  *          of \c pfInfoPtr to the size of the buffer that is being passed to the
  *          function. To do this, use <tt>sizeof(NkPlatformInformation)</tt>.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *pfInfoPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *pfInfoPtr);
 
 

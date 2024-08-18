@@ -37,7 +37,7 @@
     #define NK_API                  extern __declspec(dllimport)
 #endif
 #define NK_CALL                     __cdecl
-#define NK_PROTOTYPE                extern
+#define NK_EXTERN                   extern
 #define NK_INTERNAL                 static
 #define NK_NORETURN                 __declspec(noreturn)
 #define NK_INLINE                   inline
@@ -49,10 +49,12 @@
 
     #define _Return_ok_             _Check_return_ _Success_(return == NkErr_Ok)
     #define _Return_false_          _Check_return_ _Success_(return == NK_FALSE)
+    #define _Return_notnull_        _Check_return_ _Success_(return != NULL)
     #define _Ecode_range_           _In_range_(NkErr_Ok, __NkErr_Count__ - 1)
     #define _Init_ptr_              _Outptr_ _Deref_post_notnull_ 
     #define _Reinit_ptr_            _Init_ptr_ _Deref_pre_valid_
     #define _Uninit_ptr_            _Pre_valid_ _Deref_post_null_
+    #define _Init_ptr_maybe_        _Outptr_result_maybenull_
     #define _Init_ptr_mbnull_       _Outptr_opt_result_maybenull_
     #define _I_array_(s)            _In_reads_(s)
     #define _O_array_(s)            _Out_writes_(s)
@@ -62,6 +64,8 @@
     #define _O_bytes_opt_(s)        _Out_writes_bytes_opt_(s)
     #define _Format_str_            _Printf_format_string_
     #define _Maybe_reinit_          _Init_ptr_ _Deref_pre_opt_valid_
+    #define _In_to_null_            _In_reads_to_ptr_opt_(NULL)
+    #define _Pre_maybevalid_        _Pre_ _Maybevalid_
 #else
     #define _In_
     #define _In_opt_
@@ -72,7 +76,9 @@
     #define _Struct_size_bytes_(n)
     #define _Return_ok_
     #define _Return_false_
+    #define _Return_notnull_
     #define _Success_(expr)
+    #define _Check_return_
     #define _In_range_(lo, hi)
     #define _Ecode_range_
     #define _Pre_notnull_
@@ -84,6 +90,7 @@
     #define _Init_ptr_
     #define _Reinit_ptr_
     #define _Uninit_ptr_
+    #define _Init_ptr_maybe_
     #define _In_reads_(s)
     #define _Out_writes_(s)
     #define _Init_ptr_mbnull_
@@ -95,6 +102,10 @@
     #define _O_bytes_opt_(s) 
     #define _Format_str_
     #define _Maybe_reinit_
+    #define _In_to_null_
+    #define _Pre_maybevalid_
+    #define _Outptr_result_maybenull_
+    #define _Outptr_opt_result_maybenull_
 #endif
 /** \endcond */
 
@@ -114,9 +125,12 @@ NK_NATIVE typedef size_t    NkSize;
 NK_NATIVE typedef ptrdiff_t NkOffset;
 NK_NATIVE typedef float     NkFloat, NkSingle;
 NK_NATIVE typedef double    NkDouble;
-NK_NATIVE typedef uint8_t   NkByte;
+NK_NATIVE typedef int8_t    NkInt8;
+NK_NATIVE typedef int16_t   NkInt16;
 NK_NATIVE typedef int32_t   NkInt32;
 NK_NATIVE typedef int64_t   NkInt64;
+NK_NATIVE typedef uint8_t   NkUint8, NkByte;
+NK_NATIVE typedef uint16_t  NkUint16;
 NK_NATIVE typedef uint32_t  NkUint32;
 NK_NATIVE typedef uint64_t  NkUint64, NkFlags;
 /** @} */

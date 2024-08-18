@@ -63,7 +63,7 @@
                     (NkStringView)NK_MAKE_STRING_VIEW(__func__),     \
                     NULL                                             \
                 });                                                  \
-            } else { }                                               \
+            }                                                        \
         } while (0)
 
     /**
@@ -112,6 +112,9 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_ObjectType,           /**< invalid object type */
     NkErr_ObjectState,          /**< invalid object state (function precond not met) */
     NkErr_SynchInit,            /**< error while initializing synchronization object */
+    NkErr_UnexpectedCharacter,  /**< unexpected character during parsing */
+    NkErr_InvalidIdentifier,    /**< invalid identifier during parsing */
+    NkErr_ClosingTokenNotFound, /**< could not find closing token for compound */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;
