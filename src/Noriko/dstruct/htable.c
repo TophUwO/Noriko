@@ -13,7 +13,6 @@
 /**
  * \file  htable.c
  * \brief implements the hash table data-structure used by Noriko
- * \todo pass proper value to key hash fn
  */
 #define NK_NAMESPACE "nk::dstruct"
 
@@ -445,7 +444,7 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableCreate(
     NK_ASSERT(htPtr != NULL, NkErr_OutptrParameter);
 
     /* Allocate memory for data-structure. */
-    NkErrorCode errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **htPtr, 0, NK_FALSE, htPtr);
+    NkErrorCode errorCode = NkPoolAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **htPtr, 1, htPtr);
     if (errorCode != NkErr_Ok)
         return errorCode;
     /* Allocate memory for element array. */
@@ -482,7 +481,7 @@ NkVoid NK_CALL NkHashtableDestroy(_Uninit_ptr_ NkHashtable **htPtr) {
 
     /* Free memory used. */
     NkGPFree((*htPtr)->mp_elemArray);
-    NkGPFree(*htPtr);
+    NkPoolFree(*htPtr);
     *htPtr = NULL;
 }
 

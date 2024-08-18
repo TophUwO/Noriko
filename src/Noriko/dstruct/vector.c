@@ -201,13 +201,13 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorCreate(
 
     /* Allocate memory for parent structure. */
     NkErrorCode errorCode = NkErr_Ok;
-    if ((errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 0, NK_FALSE, vecPtr)) != NkErr_Ok)
+    if ((errorCode = NkPoolAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **vecPtr, 1, vecPtr)) != NkErr_Ok)
         return errorCode;
     /* Allocate memory for internal buffer. */
     NkSize const initCap = sizeof *vecPtr * vecPropsPtr->m_initialCap;
     errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), initCap, NK_FALSE, 0, (NkVoid **)&(*vecPtr)->mp_dataPtr);
     if (errorCode != NkErr_Ok) {
-        NkGPFree(*vecPtr);
+        NkPoolFree(*vecPtr);
 
         *vecPtr = NULL;
         return errorCode;
@@ -232,7 +232,7 @@ NkVoid NK_CALL NkVectorDestroy(_Uninit_ptr_ NkVector **vecPtr) {
 
     /* Free parent structure and buffer memory. */
     NkGPFree((*vecPtr)->mp_dataPtr);
-    NkGPFree(*vecPtr);
+    NkPoolFree(*vecPtr);
     *vecPtr = NULL;
 }
 

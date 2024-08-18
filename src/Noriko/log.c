@@ -42,7 +42,23 @@
  *        given log level
  * \param x string representation of log level
  */
-#define NK_LOG_PADDING(x) (NkSize)(sizeof "FATAL" - sizeof x)
+#define NK_LOG_PADDING(x) ((NkSize)(sizeof "FATAL" - sizeof x))
+
+/**
+ * \brief NK_LOG_TSSIZE
+ * \brief size of the message timestamp buffer, in bytes (incl. <tt>NUL</tt>-terminator)
+ */
+#define NK_LOG_TSSIZE     ((NkSize)(1 << 5))
+/**
+ * \def   NK_LOG_MSGSIZE
+ * \brief size of the message buffer, in bytes (incl. <tt>NUL</tt>-terminator)
+ */
+#define NK_LOG_MSGSIZE    ((NkSize)(1 << 12))
+/**
+ * \def   NK_LOG_NSINKS
+ * \brief maximum number of sinks that can be registered at a time
+ */
+#define NK_LOG_NSINKS     ((NkSize)(1 << 6))
 
 
 /**
@@ -51,14 +67,14 @@
 NK_NATIVE typedef struct NkLogLevelProperties NkLogLevelProperties;
 
 /**
- * \struct __NkInt_LogSinkExtProperties
+ * \struct __NkInt_LogSinkExtProps
  * \brief  represents the log sink properties enhanced with synchronization facilities
  */
-NK_NATIVE typedef struct __NkInt_LogSinkExtProperties {
+NK_NATIVE typedef struct __NkInt_LogSinkExtProps {
     NkLogSinkProperties m_regProps; /**< public properties */
 
     NK_DECL_LOCK(m_mtxLock);        /**< synchronization object for sink */
-} __NkInt_LogSinkExtProperties;
+} __NkInt_LogSinkExtProps;
 
 /**
  * \struct __NkInt_LogExtContext
@@ -67,14 +83,9 @@ NK_NATIVE typedef struct __NkInt_LogSinkExtProperties {
 NK_NATIVE typedef struct __NkInt_LogExtContext {
     NK_DECL_LOCK(m_mtxLock);
 
-    char                         *mp_msgBuffer; /**< message buffer */
-    char                         *mp_tsBuffer;  /**< timestamp textual representation buffer */
-    NkSize                        m_msgLen;     /**< length of current message, in bytes */
-    NkSize                        m_tsLen;      /**< length of current timestamp, in bytes */
-    NkSize                        m_nOfSinks;   /**< current number of registered sinks */
-    NkTimer                       m_tsFmtTimer; /**< timer used for formatting the timestamp */
-    __NkInt_LogSinkExtProperties *mp_sinkArray; /**< sink array */
-    NkLogContext                  m_logCxt;     /**< global logger settings */
+    NkSize                   m_nOfSinks;                 /**< current number of registered sinks */
+    __NkInt_LogSinkExtProps  m_sinkArray[NK_LOG_NSINKS]; /**< sink array */
+    NkLogContext             m_logCxt;                   /**< global logger settings */
 } __NkInt_LogExtContext;
 
 
@@ -86,22 +97,16 @@ NK_NATIVE typedef struct __NkInt_LogExtContext {
  * may be accessed by multiple threads simultaneously without problems.
  */
 NK_INTERNAL __NkInt_LogExtContext gl_LogContext = {
-    .mp_msgBuffer  = NULL,
-    .mp_tsBuffer   = NULL,
-    .m_msgLen      = 0,
-    .m_tsLen       = sizeof "%m-%d-%y %H:%M:%S",
-    .m_nOfSinks    = 0,
-    .mp_sinkArray  = NULL,
-
+    .m_nOfSinks = 0,
     .m_logCxt = {
         .m_structSize = sizeof gl_LogContext.m_logCxt,
-        .m_maxMsgSize = 2 << 13,
+        .m_maxMsgSize = NK_LOG_MSGSIZE,
         .m_glMinLevel = NkLogLvl_None,
         .m_glMaxLevel = NkLogLvl_Critical,
         .mp_defFmtStr = NK_MAKE_STRING_VIEW_PTR("\033[97m"),
         .mp_rstFmtStr = NK_MAKE_STRING_VIEW_PTR("\033[0m"),
         .mp_tsFmtStr  = NK_MAKE_STRING_VIEW_PTR("%m-%d-%y %H:%M:%S"),
-        .m_nSinks     = 32,
+        .m_maxSinkCnt = NK_LOG_NSINKS,
 
         .m_lvlProps = { { 0, NK_MAKE_RGBA(0, 0, 0, 0), NULL, NULL },
             { NK_LOG_PADDING("TRACE"), NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("TRACE"), NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
@@ -178,8 +183,8 @@ NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConOnUninit(
 NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
     _In_     NkLogSinkHandle sinkHandle,
     _In_     NkLogLevel lvlId,
-    _In_     NkStringView const *tsPtr,
-    _In_     NkStringView const *fmtMsgPtr,
+    _In_     char const *tsPtr,
+    _In_     char const *fmtMsgPtr,
     _In_opt_ NkLogFrame const *framePtr,
     _Inout_  NkLogSinkProperties *sinkPropsPtr
 ) {
@@ -194,7 +199,7 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
     if (lvlId ^ NkLogLvl_None) {
         /* If the logging level is "none", do not print the level or timestamp information. */
         fputs("[", stdout);
-        fputs(tsPtr->mp_dataPtr, stdout);
+        fputs(tsPtr, stdout);
         fputs("] <", stdout);
         fputs(logLvlPropsPtr->mp_lvlFmtStr->mp_dataPtr, stdout);
         fputs(logLvlPropsPtr->mp_lvlStrRep->mp_dataPtr, stdout);
@@ -203,7 +208,7 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
         for (NkInt32 i = 0; i <= logLvlPropsPtr->m_nSpace; i++)
             fputc(' ', stdout);
     }
-    fputs(fmtMsgPtr->mp_dataPtr, stdout);
+    fputs(fmtMsgPtr, stdout);
     fputc('\n', stdout);
 }
 /** \endcond */
@@ -214,54 +219,37 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
  * \brief formats the new log message and also updates the timestamp if necessary
  * \param [in] fmtStr pointer to the format template of the current log message
  * \param [in] vlArgs extra arguments to format the message with
- * \note  The timestamp is only updated when its current representation would not align
- *        with the currently saved version. This is the case if the last log message is
- *        at most one second in the past.
+ * \param [out] msgPtr pointer to the message buffer
+ * \param [out] tsPtr pointer to the timestamp buffer
+ * \param [out] msgSzPtr variable that will receive the size in bytes (that is, incl.
+ *              <tt>NUL</tt>-terminator) of the message buffer
+ * \param [out] tsSzPtr variable that will receive the size in bytes (that is, incl.
+ *              <tt>NUL</tt>-terminator) of the timestamp buffer
+ * \note  This function never writes beyond the hard boundaries of the buffers.
  */
 NK_INTERNAL NkVoid __NkInt_LogFormatMessageAndTimestamp(
-    _In_opt_ _Format_str_ char const *fmtStr,
-    _In_opt_              va_list vlArgs
+    _In_z_ _Format_str_          char const *fmtStr,
+    _In_opt_                     va_list vlArgs,
+    _Out_writes_(NK_LOG_MSGSIZE) char *msgPtr,
+    _Out_writes_(NK_LOG_TSSIZE)  char *tsPtr,
+    _Out_                        NkSize *msgSzPtr,
+    _Out_                        NkSize *tsSzPtr
 ) {
-    /*
-     * If the first parameter is NULL, use this as an internal signal to only format the
-     * timestamp, independently from the timer. This behavior is not publicly documented
-     * and only used by the logging facility internally.
-     */
-    if (fmtStr == NULL)
-        goto lbl_FMTTS;
-
     /* Format string. */
-    int const nCharsWritten = vsnprintf(
-        gl_LogContext.mp_msgBuffer,
-        gl_LogContext.m_logCxt.m_maxMsgSize * sizeof *gl_LogContext.mp_msgBuffer,
-        fmtStr,
-        vlArgs
+    *msgSzPtr = (NkSize)vsnprintf(msgPtr, NK_LOG_MSGSIZE, fmtStr, vlArgs);
+
+    /* Format timestamp. */
+    NkInt64 currLTime;
+    struct tm currTime;
+    /* Get current time. */
+    _time64(&currLTime);
+    localtime_s(&currTime, &currLTime);
+    *tsSzPtr = strftime(
+        tsPtr,
+        NK_LOG_TSSIZE,
+        gl_LogContext.m_logCxt.mp_tsFmtStr->mp_dataPtr,
+        &currTime
     );
-    gl_LogContext.m_msgLen = (NkSize)nCharsWritten;
-
-    /*
-     * If the time since the last timestamp formatting has changed sufficiently, reformat
-     * the timestamp.
-     */
-    if (NkElapsedTimerGetAs(&gl_LogContext.m_tsFmtTimer, NkTiPrec_Seconds) >= 1.0) {
-lbl_FMTTS:
-        NkInt64 currLTime;
-        struct tm currTime;
-
-        /* Get current time. */
-        _time64(&currLTime);
-        localtime_s(&currTime, &currLTime);
-        /* Reformat timestamp. */
-        strftime(
-            gl_LogContext.mp_tsBuffer,
-            sizeof *gl_LogContext.mp_tsBuffer * (gl_LogContext.m_tsLen + 1),
-            gl_LogContext.m_logCxt.mp_tsFmtStr->mp_dataPtr,
-            &currTime
-        );
-
-        /* Restart timer. */
-        NkTimerRestart(&gl_LogContext.m_tsFmtTimer);
-    }
 }
 
 /**
@@ -271,7 +259,7 @@ lbl_FMTTS:
  * \return non-zero if the log level is enabled for the sink, zero if it is not
  */
 NK_INTERNAL NkBoolean __NkInt_LogIsLevelEnabledForSink(
-    _In_ __NkInt_LogSinkExtProperties const *sProps,
+    _In_ __NkInt_LogSinkExtProps const *sProps,
     _In_ NkLogLevel lvlId
 ) {
     return NK_INRANGE_INCL(lvlId, sProps->m_regProps.m_minLevel, sProps->m_regProps.m_maxLevel);
@@ -280,45 +268,6 @@ NK_INTERNAL NkBoolean __NkInt_LogIsLevelEnabledForSink(
 
 
 _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
-    /* Allocate log buffer. */
-    NkErrorCode errorCode = NkGPAlloc(
-        NK_MAKE_ALLOCATION_CONTEXT(),
-        sizeof *gl_LogContext.mp_msgBuffer * gl_LogContext.m_logCxt.m_maxMsgSize,
-        0,
-        NK_TRUE,
-        &gl_LogContext.mp_msgBuffer
-    );
-    if (errorCode != NkErr_Ok)
-        goto lbl_ONERROR;
-
-    /* Allocate timestamp buffer. */
-    errorCode = NkGPAlloc(
-        NK_MAKE_ALLOCATION_CONTEXT(),
-        sizeof *gl_LogContext.mp_tsBuffer * gl_LogContext.m_tsLen,
-        0,
-        NK_TRUE,
-        &gl_LogContext.mp_tsBuffer
-    );
-    if (errorCode != NkErr_Ok)
-        goto lbl_ONERROR;
-
-    /* Allocate sink array. */
-    errorCode = NkGPAlloc(
-        NK_MAKE_ALLOCATION_CONTEXT(),
-        sizeof *gl_LogContext.mp_sinkArray * gl_LogContext.m_logCxt.m_nSinks,
-        0,
-        NK_TRUE,
-        &gl_LogContext.mp_sinkArray
-    );
-    if (errorCode != NkErr_Ok)
-        goto lbl_ONERROR;
-
-    /* Create the timestamp timer. */
-    errorCode = NkTimerCreate(NkTiType_Elapsed, NK_TRUE, &gl_LogContext.m_tsFmtTimer);
-    if (errorCode != NkErr_Ok)
-        goto lbl_ONERROR;
-    /* Format timestamp. */
-    __NkInt_LogFormatMessageAndTimestamp(NULL, NULL);
     NK_INITLOCK(gl_LogContext.m_mtxLock);
 
 #if (!defined NK_CONFIG_DEPLOY)
@@ -334,17 +283,13 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
         .mp_fnOnSinkWrite  = (NkLogSinkWriteFn)&__NkInt_ConOnLog
     };
     NkLogSinkHandle dummyHandle;
-    NK_IGNORE_RETURN_VALUE(NkLogRegisterSink(&dbgconLogProps, &dummyHandle));
+    NkErrorCode errorCode = NkLogRegisterSink(&dbgconLogProps, &dummyHandle);
+    if (errorCode != NkErr_Ok)
+        return errorCode;
 #endif
 
     NK_LOG_INFO("init: logging");
     return NkErr_Ok;
-
-lbl_ONERROR:
-    NkGPFree(gl_LogContext.mp_msgBuffer);
-    NkGPFree(gl_LogContext.mp_tsBuffer);
-
-    return errorCode;
 }
 
 NkVoid NK_CALL NkLogUninitialize(NkVoid) {
@@ -354,19 +299,15 @@ NkVoid NK_CALL NkLogUninitialize(NkVoid) {
      * Traverse the entire sink array and run sink-specific uninitialization on all of
      * them.
      */
-    for (NkSize i = 0, j = 0; i < gl_LogContext.m_logCxt.m_nSinks && j < gl_LogContext.m_nOfSinks; i++) {
-        __NkInt_LogSinkExtProperties *sinkProps = (__NkInt_LogSinkExtProperties *)&gl_LogContext.mp_sinkArray[i];
+    for (NkSize i = 0, j = 0; i < gl_LogContext.m_logCxt.m_maxSinkCnt && j < gl_LogContext.m_nOfSinks; i++) {
+        __NkInt_LogSinkExtProps *sinkProps = (__NkInt_LogSinkExtProps *)&gl_LogContext.m_sinkArray[i];
         if (sinkProps->m_regProps.m_structSize == 0 || sinkProps->m_regProps.mp_fnOnSinkUninit == NULL)
             continue;
 
         /* Call 'onUninit' handler. */
         (*sinkProps->m_regProps.mp_fnOnSinkUninit)((NkLogSinkHandle)i, sinkProps->m_regProps.mp_extraCxt);
     }
-    NkGPFree(gl_LogContext.mp_sinkArray);
 
-    NkGPFree(gl_LogContext.mp_msgBuffer);
-    NkGPFree(gl_LogContext.mp_tsBuffer);
-    NkTimerDestroy(&gl_LogContext.m_tsFmtTimer);
     NK_DESTROYLOCK(gl_LogContext.m_mtxLock);
 }
 
@@ -387,7 +328,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
 
     /* Check if we can even add a sink. If we cannot, return invalid sink ID. */
     NK_LOCK(gl_LogContext.m_mtxLock);
-    if (gl_LogContext.m_nOfSinks >= gl_LogContext.m_logCxt.m_nSinks) {
+    if (gl_LogContext.m_nOfSinks >= gl_LogContext.m_logCxt.m_maxSinkCnt) {
         *sinkHandlePtr = -1;
 
         errorCode = NkErr_CapLimitExceeded;
@@ -398,9 +339,9 @@ _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
      * Insert the sink into the first free slot. Free slots are marked with their
      * m_structSize member being set to 0.
      */
-    for (NkSize i = 0; i < gl_LogContext.m_logCxt.m_nSinks; i++) {
+    for (NkSize i = 0; i < gl_LogContext.m_logCxt.m_maxSinkCnt; i++) {
         /* As soon as we reach an empty slot, attempt to insert sink in there. */
-        if (gl_LogContext.mp_sinkArray[i].m_regProps.m_structSize == 0) {
+        if (gl_LogContext.m_sinkArray[i].m_regProps.m_structSize == 0) {
             /* Call sink-specific 'onInit()' slot if possible. */
             if (sinkPropsPtr->mp_fnOnSinkInit != NULL) {
                 NK_UNLOCK(gl_LogContext.m_mtxLock);
@@ -412,9 +353,9 @@ _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
             }
 
             /* Copy sink properties. */
-            memcpy(&gl_LogContext.mp_sinkArray[i], sinkPropsPtr, sizeof * sinkPropsPtr);
+            memcpy(&gl_LogContext.m_sinkArray[i], sinkPropsPtr, sizeof * sinkPropsPtr);
             /* Make sure the size field is set correctly. */
-            gl_LogContext.mp_sinkArray[i].m_regProps.m_structSize = sizeof * sinkPropsPtr;
+            gl_LogContext.m_sinkArray[i].m_regProps.m_structSize = sizeof * sinkPropsPtr;
             /* Update registered sink count. */
             ++gl_LogContext.m_nOfSinks;
 
@@ -436,14 +377,14 @@ _Return_ok_ NkErrorCode NK_CALL NkLogUnregisterSink(_Inout_ NkLogSinkHandle *sin
 
     /* If the sink ID is invalid, do nothing. */
     NK_LOCK(gl_LogContext.m_mtxLock);
-    if (NK_INRANGE_INCL(*sinkHandlePtr, 0, (NkInt32)gl_LogContext.m_logCxt.m_nSinks - 1) == NK_FALSE) {
+    if (NK_INRANGE_INCL(*sinkHandlePtr, 0, (NkInt32)gl_LogContext.m_logCxt.m_maxSinkCnt - 1) == NK_FALSE) {
         errorCode = NkErr_InOutParameter;
 
         goto lbl_CLEANUP;
     }
 
     /* Get pointer to sink slot in question. */
-    __NkInt_LogSinkExtProperties *sProps = &gl_LogContext.mp_sinkArray[*sinkHandlePtr];
+    __NkInt_LogSinkExtProps *sProps = &gl_LogContext.m_sinkArray[*sinkHandlePtr];
 
     /* Call sink-specific 'onUninit()' handler is possible. */
     if (sProps->m_regProps.mp_fnOnSinkUninit != NULL) {
@@ -472,8 +413,13 @@ NkVoid NK_CALL NkLogWrite(
     _Format_str_ char const *fmtStr,
     ...
 ) {
-    // \todo Put static log msg array here to make it thread-safe.
-    //char buf[2 << 20];
+    /* Format message and timestamp (timestamp only if needed). */
+    char msgBuf[NK_LOG_MSGSIZE], tsBuf[NK_LOG_TSSIZE];
+    NkSize tsSize, msgSize;
+    va_list vlArgs;
+    va_start(vlArgs, fmtStr);
+    __NkInt_LogFormatMessageAndTimestamp(fmtStr, vlArgs, msgBuf, tsBuf, &msgSize, &tsSize);
+    va_end(vlArgs);
 
     NK_LOCK(gl_LogContext.m_mtxLock);
     /*
@@ -488,38 +434,30 @@ NkVoid NK_CALL NkLogWrite(
     if (!isEnabled || gl_LogContext.m_nOfSinks == 0)
         goto lbl_CLEANUP;
 
-    /* Format message and timestamp (timestamp only if needed). */
-    va_list vlArgs;
-    va_start(vlArgs, fmtStr);
-    __NkInt_LogFormatMessageAndTimestamp(fmtStr, vlArgs);
-    va_end(vlArgs);
-
     /*
      * Propagate formatted message and additional context data to sinks. Stop when we
      * reach the end of the sink array or we have processed all registered sinks,
      * whatever comes first.
      */
-    for (NkSize i = 0, j = 0; i < gl_LogContext.m_logCxt.m_nSinks && j < gl_LogContext.m_nOfSinks; i++) {
+    for (NkSize i = 0, j = 0; i < NK_ARRAYSIZE(gl_LogContext.m_sinkArray) && j < gl_LogContext.m_nOfSinks; i++) {
         /*
          * Get pointer to sink slot and check if the slot is used. If not, ignore. Also
          * ignore if the current sink is set to ignore the log level of the current
          * message.
          */
-        __NkInt_LogSinkExtProperties *sinkProps = (__NkInt_LogSinkExtProperties *)&gl_LogContext.mp_sinkArray[i];
+        __NkInt_LogSinkExtProps *sinkProps = (__NkInt_LogSinkExtProps *)&gl_LogContext.m_sinkArray[i];
         if (sinkProps->m_regProps.m_structSize == 0 || __NkInt_LogIsLevelEnabledForSink(sinkProps, lvlId) == NK_FALSE)
             continue;
 
         /* Call the sink's 'onLog' handler. */
         NK_UNLOCK(gl_LogContext.m_mtxLock);
-        NK_SYNCHRONIZED(sinkProps->m_mtxLock,
-            (*sinkProps->m_regProps.mp_fnOnSinkWrite)(
-                (NkLogSinkHandle)i,
-                lvlId,
-                &(NkStringView){ gl_LogContext.mp_tsBuffer,  gl_LogContext.m_tsLen  },
-                &(NkStringView){ gl_LogContext.mp_msgBuffer, gl_LogContext.m_msgLen },
-                framePtr,
-                &sinkProps->m_regProps
-            )
+        (*sinkProps->m_regProps.mp_fnOnSinkWrite)(
+            (NkLogSinkHandle)i,
+            lvlId,
+            tsBuf,
+            msgBuf,
+            framePtr,
+            &sinkProps->m_regProps
         );
         NK_LOCK(gl_LogContext.m_mtxLock);
 

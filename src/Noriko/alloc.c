@@ -19,6 +19,9 @@
  * global allocation functions for book-keeping and general-purpose memory and various
  * specialized pool-allocators for fixed object sizes requiring frequent allocation and
  * deallocation.
+ * 
+ * \todo Make block sizes round up to the next multiple of 4096 to increase memory
+ *       efficiency a bit.
  */
 #define NK_NAMESPACE "nk::alloc"
 

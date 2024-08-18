@@ -119,8 +119,8 @@ NK_NATIVE typedef NkErrorCode (NK_CALL *NkLogSinkUninitFn)(
 NK_NATIVE typedef NkVoid (NK_CALL *NkLogSinkWriteFn)(
     _In_     NkLogSinkHandle sinkHandle, 
     _In_     enum NkLogLevel lvlId,
-    _In_     NkStringView const *tsPtr,
-    _In_     NkStringView const *fmtMsgPtr,
+    _In_     char const *tsPtr,
+    _In_     char const *fmtMsgPtr,
     _In_opt_ NkLogFrame const *framePtr,
     _Inout_  NkLogSinkProperties *sinkPropsPtr
 );
@@ -192,7 +192,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogContext {
     NkStringView *mp_defFmtStr; /**< default format (for virtual terminal) */
     NkStringView *mp_rstFmtStr; /**< reset format (for virtual terminal) */
     NkStringView *mp_tsFmtStr;  /**< format pattern for timestamp */
-    NkSize        m_nSinks;     /**< total number of sink slots */
+    NkSize        m_maxSinkCnt; /**< total number of sink slots */
 
     /**
      * \struct NkLogLevelProperties
