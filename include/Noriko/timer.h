@@ -50,40 +50,51 @@ NK_NATIVE typedef enum NkTimerPrecision {
 /**
  * \struct NkTimer 
  * \brief  generic timer type, for use with the timer API functions declared in
- *         \c timer.h 
+ *         \c timer.h
+ * \note   This structure acts as a placeholder to allow opaque types that can be
+ *         statically instantiated.
  */
-NK_NATIVE typedef struct NkTimer NkTimer;
+NK_NATIVE typedef struct NkTimer {
+    _Alignas(NkInt64) NkByte const m_reserved[24]; /**< placeholder for internal state */
+} NkTimer;
 
 
 /**
- * \brief   creates a new timing device with the specified properties or reinitializes an
- *          an existing timing device with new properties
+ * \brief  initializes the global timing device context
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   This function should be run once from the main thread before any child thread
+ *         has been started.
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid);
+/**
+ * \brief  uninitializes the global timing device context
+ * \note   This function should be run once from the main thread after all child threads
+ *         have been killed.
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkTimerUninitialize(NkVoid);
+/**
+ * \brief   creates a new timing device with the specified properties
  * \param   [in] tiType type ID of the new timer
  * \param   [in] isAutoStart whether or not to start the timer automatically right before
  *               the function returns
- * \param   [in] tiPtr pointer to a variable holding the pointer to either an existing
- *               timer (in which case the existing timer will be halted, and reinitialized
- *               with the new properties), or a <tt>NULL</tt>-pointer (in which case a new
- *               timer with the given properties will be created)
+ * \param   [in] tiPtr pointer to an instance of NkTimer
  * \return  \c NkErr_Ok if everything goes well, non-zero on failure
- * \note    \li If the function fails, \c tiPtr will be set to <tt>NULL</tt>.
- * \note    \li The function will never fail to reinitialize an existing timer.
  * \warning If \c tiPtr is <tt>NULL</tt>, the behavior is undefined.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerCreate(
-    _In_           NkTimerType tiType,
-    _In_opt_       NkBoolean isAutoStart,
-    _Maybe_reinit_ NkTimer **tiPtr
+    _In_     NkTimerType tiType,
+    _In_opt_ NkBoolean isAutoStart,
+    _Out_    NkTimer *tiPtr
 );
 /**
  * \brief   destroys the given timing device
- * \param   [in] tiPtr pointer to the variable that holds the pointer to the timing device
+ * \param   [in] tiPtr pointer to the NkTimer instance
  * \note    \li Like all destructors, passing a <tt>NULL</tt>-pointer will result in a
  *              no-op.
  * \note    \li This function works for all timing devices.
  * \warning If \c tiPtr is <tt>NULL</tt>, the behavior is undefined.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkTimerDestroy(_Uninit_ptr_ NkTimer **tiPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkTimerDestroy(_Inout_ NkTimer *tiPtr);
 /**
  * \brief   starts the given timer
  * \param   [in] tiPtr pointer to the timing device
@@ -104,12 +115,12 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkTimerStop(_Inout_ NkTimer *tiPtr);
  * \note    \li This function is basically a shortcut for stopping and subsequently
  *          starting and is thus equivalent to
  *          \code{.c}
- *          NkTimer *t;
+ *          NkTimer t;
  * 
  *          ...
  * 
- *          NkTimerStop(t);
- *          NkTimerStart(t);
+ *          NkTimerStop(&t);
+ *          NkTimerStart(&t);
  *          \endcode
  * \note    \li This function works for all timing devices.
  * \warning If \c tiPtr is <tt>NULL</tt>, the behavior is undefined.

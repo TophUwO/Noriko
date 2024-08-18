@@ -40,14 +40,14 @@
      * 
      * \note  *ns* and *p* must be static string literals.
      */
-    #define NK_MAKE_ALLOCATION_CONTEXT()                      \
-        &(NkAllocationContext){                               \
-            sizeof(NkAllocationContext),                      \
-            &(NkStringView)NK_MAKE_STRING_VIEW(__FILE__),     \
-            &(NkStringView)NK_MAKE_STRING_VIEW(NK_NAMESPACE), \
-            &(NkStringView)NK_MAKE_STRING_VIEW(__func__),     \
-            __LINE__,                                         \
-            0                                                 \
+    #define NK_MAKE_ALLOCATION_CONTEXT()                     \
+        &(NkAllocationContext){                              \
+            sizeof(NkAllocationContext),                     \
+            (NkStringView)NK_MAKE_STRING_VIEW(__FILE__),     \
+            (NkStringView)NK_MAKE_STRING_VIEW(NK_NAMESPACE), \
+            (NkStringView)NK_MAKE_STRING_VIEW(__func__),     \
+            __LINE__,                                        \
+            0                                                \
         }
 #else
     #define NK_MAKE_ALLOCATION_CONTEXT() (NULL)
@@ -55,7 +55,8 @@
 
 
 /**
- * \brief represents an allocation context
+ * \struct NkAllocationContext
+ * \brief  represents an allocation context
  * 
  * The allocation context is used by the debugging tools to monitor allocation states. It
  * is usually provided by the requesting function and may be statically allocated. When
@@ -63,38 +64,35 @@
  * passed is shared across threads, the behavior is undefined.
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocationContext {
-    NkSize        m_structSize;        /**< size of this structure, in bytes */
-    NkStringView *mp_filePath;         /**< path of the file */
-    NkStringView *mp_namespaceIdent;   /**< namespace the function belongs to */
-    NkStringView *mp_functionName;     /**< name of the function */
-    uint32_t      m_lineInFile;        /**< line the allocation originated from, relative to file */
-    uint32_t      m_timestampInMillis; /**< timestamp of when the allocation was requested */
+    NkSize       m_structSize;        /**< size of this structure, in bytes */
+    NkStringView m_filePath;          /**< path of the file */
+    NkStringView m_namespaceIdent;    /**< namespace the function belongs to */
+    NkStringView m_functionName;      /**< name of the function */
+    NkUint32     m_lineInFile;        /**< line the allocation originated from, relative to file */
+    NkUint32     m_timestampInMillis; /**< timestamp of when the allocation was requested */
 } NkAllocationContext;
 
+
 /**
- * \brief represents the debug state of an allocator
- * 
- * The debugging tools make extensive use of the data found in this structure. They are
- * used for visualization, profiling, and logging.
- * 
- * \note  The values in this struct show only a momentary state and will have to be
- *        requeried for up-to-date information.
+ * \brief  initializes the global memory allocators
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li It is not safe to call any allocation functions if this function fails.
+ * \note   \li This function should be run once from the main thread before worker
+ *         threads that might access the shared allocators are started.
  */
-NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
-    NkSize        m_structSize;         /**< size of this structure, in bytes */
-    NkStringView *mp_allocatorName;     /**< debug name for this allocator */
-    NkSize        m_currMemUsage;       /**< current memory usage, in bytes */
-    NkSize        m_minAllocBytes;      /**< minimum allocation size so far */
-    NkSize        m_maxAllocBytes;      /**< maximum allocation size so far */
-    NkSize        m_nBytesAllocated;    /**< number of bytes ever allocated */
-    NkSize        m_nBytesFreed;        /**< number of bytes ever freed */
-    NkSize        m_nAllocationsActive; /**< number of currently allocated blocks */
-    NkSize        m_nAllocationsFreed;  /**< number of previously allocated blocks that have been freed already */
-} NkAllocatorState;
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid);
+/**
+ * \brief uninitializes the global memory allocators
+ * \note  \li It is not safe to call any allocation functions after this function has
+ *        returned.
+ * \note  \li This function should be called once from the main thread after all worker
+ *        threads that may access the shared allocators have been terminated.
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkAllocUninitialize(NkVoid);
 
 
 /**
- * \brief  allocates a new block of memory from the heap
+ * \brief  allocates a new block of memory on the heap
  * 
  * This general-purpose memory allocator allocates directly from the heap provided by the
  * host platform. Use this only for book-keeping memory or other memory that is only very
@@ -108,15 +106,15 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocatorState {
  * \param  [out] memPtr address of a pointer that will receive the starting address of
  *         the new memory block
  * \return *NkErr_Ok* on success, non-zero on failure
- * \note   If the function fails, no memory is allocated and *memPtr* will be set to
+ * \note   \li If the function fails, no memory is allocated and *memPtr* will be set to
  *         point to NULL.
- * \note   *alignInBytes* must be a power of two.
- * \note   Aligned allocation is currently not supported.
+ * \note   \li \c alignInBytes must be a power of two.
+ * \note   \li Aligned allocation is currently not supported.
  * \todo   Implement *aligned allocation*.
  * \see    NkAllocationContext
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
-    _In_opt_         NkAllocationContext const *const allocCxt,
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkGPAlloc(
+    _In_opt_         NkAllocationContext const *allocCxt,
     _In_ _Pre_valid_ NkSize sizeInBytes,
     _In_opt_         NkSize alignInBytes,
     _In_opt_         NkBoolean isZeroed,
@@ -132,34 +130,87 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocateMemory(
  * \return *NkErr_Ok* on success, non-zero on failure
  * \note   If the function fails, the memory is not moved and thus remains valid.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkReallocateMemory(
-    _In_opt_         NkAllocationContext const *const allocCxt,
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkGPRealloc(
+    _In_opt_         NkAllocationContext const *allocCxt,
     _In_ _Pre_valid_ NkSize newSizeInBytes,
     _Reinit_ptr_     NkVoid **memPtr
 );
 /**
  * \brief  frees dynamically-allocated memory
- * \param  [out] memPtr pointer to the memory address that is to be freed
+ * \param  [in] memPtr pointer to the memory address that is to be freed
+ * \note   If \c memPtr is <tt>NULL</tt>, the function does nothing.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkFreeMemory(NkVoid *memPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkGPFree(_In_ NkVoid const *memPtr);
 
 /**
- * \brief   retrieves the current state for the requested allocator
- * \param   [in] debugName debug identifier for the allocator
- * \param   [out] bufferPtr pointer to the buffer that will receive the momentary memory
- *          allocator state
- * \return  *NkErr_Ok* on success, non-zero on failure
- * \note    If *bufferPtr* is *NULL* or *bufferPtr* is improperly initialized, the
- *          function fails.
- * \note    If the function fails and *bufferPtr* is not NULL, *bufferPtr* is initialized
- *          with all zeroes.
- * \warning Before you run this function, initialize the *m_structSize* member variable
- *          of *bufferPtr* to the size of the buffer that is being passed to the
- *          function. To do this, use **sizeof(NkAllocatorState)**.
+ * \brief   allocates one or more blocks of memory using the pool allocator
+ * 
+ * Noriko implements a variety of different allocators optimized for different use-cases.
+ * For small allocations, especially allocations of object types that are plentiful in
+ * the current application state, a pool allocator can be used to improve memory- and
+ * cache performance.
+ * 
+ * \param   [in] allocCxt (optional) allocation context for debugging and such
+ * \param   [in] blockSize block size to use for chunking
+ * \param   [in] blockCount number of (consecutive) blocks to allocate
+ * \param   [out] memPtr pointer to a variable that will receive the pointer to the newly
+ *                allocated block
+ * \return  \c NkErr_Ok on success, non-zero on failure
+ * \see     NkPoolReserve, NkPoolFree
+ * \note    \li This function is thread-safe.
+ * \note    \li To return the memory back to the allocator after you are done with it,
+ *          use the \c NkPoolFree() function.
+ * \note    \li This function may allocate new memory pools on the heap if necessary.
+ *          This may increase latency a bit for large allocations. To mitigate this, use
+ *          the \c NkPoolReserve() function.
+ * \warning The memory returned by this function is not guaranteed to be zeroed. Do not
+ *          access the returned memory before having verified its integrity or before
+ *          having reinitialized it yourself.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkGetAllocatorState(
-    _In_ _Pre_valid_                 NkStringView const *const debugName,
-    _Out_ _Pre_notnull_ _Post_valid_ NkAllocatorState *const bufferPtr
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPoolAlloc(
+    _In_opt_   NkAllocationContext const *allocCxt,
+    _In_       NkUint32 blockSize,
+    _In_opt_   NkUint32 blockCount,
+    _Init_ptr_ NkVoid **memPtr
 );
+/**
+ * \brief  allocates a new memory pool with the given properties
+ *
+ * The name \c *reserve() may be misleading; it does not \e reserve a pool for use by a
+ * specific actor, but rather allocates a new pool of the given block count. This is done
+ * even if a free pool with the same properties already exists. The allocated pool can be
+ * used by every component that uses the pool allocator.
+ * 
+ * \param  [in] blockSize size of one block, in bytes
+ * \param  [in] blockCount number of block the pool will have
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   This function is thread-safe.
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPoolReserve(_In_ NkUint32 blockSize, _In_ NkUint32 blockCount);
+/**
+ * \brief frees the allocation at the given address
+ * \param [in] memPtr memory block address as returned by \c NkPoolAlloc()
+ * \note  \li This function is thread-safe.
+ * \note  \li If \c memPtr is <tt>NULL</tt>, the function does nothing.
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkPoolFree(_Inout_opt_ NkVoid *memPtr);
+/**
+ * \brief  determines the size of the block at the given address
+ * \param  [in] memPtr memory block address
+ * \return size of the memory block, in bytes
+ * \note   This function is thread-safe.
+ */
+NK_NATIVE NK_API NkUint32 NK_CALL NkPoolGetBlockSize(_In_ NkVoid const *memPtr);
+/**
+ * \brief  determines the size of the entire application
+ * \param  [in] memPtr memory block address
+ * \return size of the allocation, in bytes
+ * \note  \li This function is thread-safe.
+ * \note   \li For single block allocations (i.e., \c blockCount=1 when <tt>NkPoolAlloc()</tt>
+ *         was called), the allocation size is equal to the block size. For multi-block
+ *         allocations, the allocation size is the size of all blocks that belong to the 
+ *         same allocation as the block pointed to by the given block address combined.
+ */
+NK_NATIVE NK_API NkUint32 NK_CALL NkPoolGetAllocSize(_In_ NkVoid const *memPtr);
 
 

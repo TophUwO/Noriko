@@ -52,21 +52,21 @@
  *           is desirable.
  */
 /** @{ */
-#define NK_LOG_NONE(msg, ...)      NkLog(NULL, NkLogLvl_None, msg, ##__VA_ARGS__)
-#define NK_LOG_TRACE(msg, ...)     NkLog(NULL, NkLogLvl_Trace, msg, ##__VA_ARGS__)
-#define NK_LOG_DEBUG(msg, ...)     NkLog(NULL, NkLogLvl_Debug, msg, ##__VA_ARGS__)
-#define NK_LOG_INFO(msg, ...)      NkLog(NULL, NkLogLvl_Info, msg, ##__VA_ARGS__)
-#define NK_LOG_WARNING(msg, ...)   NkLog(NULL, NkLogLvl_Warn, msg, ##__VA_ARGS__)
-#define NK_LOG_ERROR(msg, ...)     NkLog(NULL, NkLogLvl_Error, msg, ##__VA_ARGS__)
-#define NK_LOG_CRITICAL(msg, ...)  NkLog(NULL, NkLogLvl_Critical, msg, ##__VA_ARGS__)
+#define NK_LOG_NONE(msg, ...)      NkLogWrite(NULL, NkLogLvl_None, msg, ##__VA_ARGS__)
+#define NK_LOG_TRACE(msg, ...)     NkLogWrite(NULL, NkLogLvl_Trace, msg, ##__VA_ARGS__)
+#define NK_LOG_DEBUG(msg, ...)     NkLogWrite(NULL, NkLogLvl_Debug, msg, ##__VA_ARGS__)
+#define NK_LOG_INFO(msg, ...)      NkLogWrite(NULL, NkLogLvl_Info, msg, ##__VA_ARGS__)
+#define NK_LOG_WARNING(msg, ...)   NkLogWrite(NULL, NkLogLvl_Warn, msg, ##__VA_ARGS__)
+#define NK_LOG_ERROR(msg, ...)     NkLogWrite(NULL, NkLogLvl_Error, msg, ##__VA_ARGS__)
+#define NK_LOG_CRITICAL(msg, ...)  NkLogWrite(NULL, NkLogLvl_Critical, msg, ##__VA_ARGS__)
 
-#define NK_LOG_CNONE(msg, ...)     NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_None, msg, ##__VA_ARGS__)
-#define NK_LOG_CTRACE(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Trace, msg, ##__VA_ARGS__)
-#define NK_LOG_CDEBUG(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Debug, msg, ##__VA_ARGS__)
-#define NK_LOG_CINFO(msg, ...)     NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Info, msg, ##__VA_ARGS__)
-#define NK_LOG_CWARNING(msg, ...)  NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Warn, msg, ##__VA_ARGS__)
-#define NK_LOG_CERROR(msg, ...)    NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Error, msg, ##__VA_ARGS__)
-#define NK_LOG_CCRITICAL(msg, ...) NkLog(NK_MAKE_LOG_FRAME(), NkLogLvl_Critical, msg, ##__VA_ARGS__)
+#define NK_LOG_CNONE(msg, ...)     NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_None, msg, ##__VA_ARGS__)
+#define NK_LOG_CTRACE(msg, ...)    NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Trace, msg, ##__VA_ARGS__)
+#define NK_LOG_CDEBUG(msg, ...)    NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Debug, msg, ##__VA_ARGS__)
+#define NK_LOG_CINFO(msg, ...)     NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Info, msg, ##__VA_ARGS__)
+#define NK_LOG_CWARNING(msg, ...)  NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Warn, msg, ##__VA_ARGS__)
+#define NK_LOG_CERROR(msg, ...)    NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Error, msg, ##__VA_ARGS__)
+#define NK_LOG_CCRITICAL(msg, ...) NkLogWrite(NK_MAKE_LOG_FRAME(), NkLogLvl_Critical, msg, ##__VA_ARGS__)
 /** @} */
 
 
@@ -282,7 +282,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogUnregisterSink(_Inout_ NkL
  * \warning \li Calling this function without having called \c NkLogInitialize() before
  *              is undefined behavior.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkLog(
+NK_NATIVE NK_API NkVoid NK_CALL NkLogWrite(
     _In_opt_     NkLogFrame const *framePtr,
     _In_         NkLogLevel lvlId,
     _Format_str_ char const *fmtStr,

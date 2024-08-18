@@ -13,6 +13,7 @@
 /**
  * \file  htable.c
  * \brief implements the hash table data-structure used by Noriko
+ * \todo pass proper value to key hash fn
  */
 #define NK_NAMESPACE "nk::dstruct"
 
@@ -147,9 +148,10 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_HashtableGetKeySizeInBytes(
 ) {
     switch (kType) {
         case NkHtKeyTy_Int64:
-        case NkHtKeyTy_Uint64:  return sizeof(NkUint64);
-        case NkHtKeyTy_Pointer: return sizeof(NkVoid *);
-        case NkHtKeyTy_String:  return strlen(keyPtr->mp_strKey) + 1;
+        case NkHtKeyTy_Uint64:     return sizeof(NkUint64);
+        case NkHtKeyTy_Pointer:    return sizeof(NkVoid *);
+        case NkHtKeyTy_String:     return (NkSize)strlen(keyPtr->mp_strKey);
+        case NkHtKeyTy_StringView: return keyPtr->mp_svKey->m_sizeInBytes;
         default:
             /* Should never happen. */
 #pragma warning (suppress: 4127)
@@ -171,10 +173,13 @@ NK_INTERNAL NkUint32 __NkInt_HashtableHash(
     _In_ NkHashtableKeyType kType,
     _In_ NkUint32 htCap
 ) {
-    unsigned char const *ni = (unsigned char const *)(kType ^ NkHtKeyTy_String
-        ? (NkVoid *)keyPtr
-        : (NkVoid *)keyPtr->mp_strKey
-    );
+    char const unsigned *ni = NULL;
+    switch (kType) {
+        case NkHtKeyTy_String:     ni = (char const unsigned *)keyPtr->mp_strKey;             break;
+        case NkHtKeyTy_StringView: ni = (char const unsigned *)keyPtr->mp_svKey->mp_dataPtr;  break;
+        default:
+            ni = (char const unsigned *)keyPtr;
+    }
     unsigned char const *kk = (unsigned char const *)&gl_HtContext.m_hashSeed;
 
     NkUint64 out;
@@ -315,7 +320,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_HashtableAdjustCapacity(
 ) {
     /* Create a dummy hash table instance. */
     NkHashtable hTable = { .m_currCap = newCap, .m_elemCount = htPtr->m_elemCount, .m_htProps = htPtr->m_htProps };
-    NkErrorCode eCode = NkAllocateMemory(
+    NkErrorCode eCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
         sizeof(__NkInt_HashtableExtPair) * newCap,
         0,
@@ -336,14 +341,14 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_HashtableAdjustCapacity(
          * elements in the current hash table are still valid.
          */
         if (__NkInt_HashtableRobinHoodInsertSingle(&hTable, &htPair->m_regPair) ^ NK_TRUE) {
-            NkFreeMemory(hTable.mp_elemArray);
+            NkGPFree(hTable.mp_elemArray);
 
             return NkErr_CapLimitExceeded;
         }
         ++j;
     }
     /* All elements are transferred. Delete the old element array. */
-    NkFreeMemory(htPtr->mp_elemArray);
+    NkGPFree(htPtr->mp_elemArray);
 
     /* Copy over the dummy hash table. */
     *htPtr = hTable;
@@ -367,10 +372,11 @@ NK_INTERNAL NkBoolean __NkInt_HashtableCompareKeys(
     _In_ NkHashtableKeyType keyType
 ) {
     switch (keyType) {
-        case NkHtKeyTy_Int64:   return fkPtr->m_int64Key == skPtr->m_int64Key;
-        case NkHtKeyTy_Uint64:  return fkPtr->m_uint64Key == skPtr->m_uint64Key;
-        case NkHtKeyTy_String:  return !strcmp(fkPtr->mp_strKey, skPtr->mp_strKey);
-        case NkHtKeyTy_Pointer: return fkPtr->mp_ptrKey == skPtr->mp_ptrKey;
+        case NkHtKeyTy_Int64:      return fkPtr->m_int64Key == skPtr->m_int64Key;
+        case NkHtKeyTy_Uint64:     return fkPtr->m_uint64Key == skPtr->m_uint64Key;
+        case NkHtKeyTy_String:     return !strcmp(fkPtr->mp_strKey, skPtr->mp_strKey);
+        case NkHtKeyTy_StringView: return !NkStringViewCompare(fkPtr->mp_svKey, skPtr->mp_svKey);
+        case NkHtKeyTy_Pointer:    return fkPtr->mp_ptrKey == skPtr->mp_ptrKey;
         default:
 #pragma warning (suppress: 4127)
             NK_ASSERT_EXTRA(
@@ -439,11 +445,11 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableCreate(
     NK_ASSERT(htPtr != NULL, NkErr_OutptrParameter);
 
     /* Allocate memory for data-structure. */
-    NkErrorCode errorCode = NkAllocateMemory(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **htPtr, 0, NK_FALSE, htPtr);
+    NkErrorCode errorCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), sizeof **htPtr, 0, NK_FALSE, htPtr);
     if (errorCode != NkErr_Ok)
         return errorCode;
     /* Allocate memory for element array. */
-    errorCode = NkAllocateMemory(
+    errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
         sizeof *(*htPtr)->mp_elemArray * htPropsPtr->m_initCap,
         0,
@@ -451,7 +457,7 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableCreate(
         &(*htPtr)->mp_elemArray
     );
     if (errorCode != NkErr_Ok) {
-        NkFreeMemory(*htPtr);
+        NkGPFree(*htPtr);
 
         *htPtr = NULL;
         return errorCode;
@@ -465,8 +471,7 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableCreate(
 }
 
 NkVoid NK_CALL NkHashtableDestroy(_Uninit_ptr_ NkHashtable **htPtr) {
-    NK_ASSERT(htPtr != NULL, NkErr_InptrParameter);
-    if (*htPtr == NULL)
+    if (htPtr == NULL || *htPtr == NULL)
         return;
 
     /*
@@ -476,8 +481,8 @@ NkVoid NK_CALL NkHashtableDestroy(_Uninit_ptr_ NkHashtable **htPtr) {
     __NkInt_HashtableFreeElems(*htPtr);
 
     /* Free memory used. */
-    NkFreeMemory((*htPtr)->mp_elemArray);
-    NkFreeMemory(*htPtr);
+    NkGPFree((*htPtr)->mp_elemArray);
+    NkGPFree(*htPtr);
     *htPtr = NULL;
 }
 
@@ -545,11 +550,17 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableInsertMulti(
     }
 
     /* Insert elements. */
-    for (NkUint32 i = 0; i < nElems; i++)
+    NkUint32 actAdded = 0;
+    for (NkUint32 i = 0; i < nElems; i++) {
+        if (NkHashtableContains(htPtr, &htPairArray[i]->m_keyVal) == NK_TRUE)
+            continue;
+
         __NkInt_HashtableRobinHoodInsertSingle(htPtr, htPairArray[i]);
+        ++actAdded;
+    }
 
     /* Update state and return. */
-    htPtr->m_elemCount += nElems;
+    htPtr->m_elemCount += actAdded;
     return NkErr_Ok;
 }
 
@@ -584,6 +595,29 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableErase(_Inout_ NkHashtable *htPtr, _In
     }
 
     --htPtr->m_elemCount;
+    return NkErr_Ok;
+}
+
+_Return_ok_ NkErrorCode NK_CALL NkHashtableAt(
+    _In_     NkHashtable const *htPtr,
+    _In_     NkHashtableKey const *keyPtr,
+    _Outptr_ NkVoid **valPtr
+) {
+    NK_ASSERT(htPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(keyPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(valPtr != NULL, NkErr_OutptrParameter);
+
+    /* Find the key. */
+    NkUint32 const where2Find = __NkInt_HashtableLocKey(htPtr, keyPtr);
+    if (where2Find == UINT32_MAX) {
+        *valPtr = NULL;
+
+        return NkErr_ItemNotFound;
+    }
+    __NkInt_HashtableExtPair *entryPtr = (__NkInt_HashtableExtPair *)&htPtr->mp_elemArray[where2Find];
+
+    /* Get the value. */
+    *valPtr = entryPtr->m_regPair.mp_valuePtr;
     return NkErr_Ok;
 }
 

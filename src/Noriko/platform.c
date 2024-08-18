@@ -80,7 +80,7 @@
 /** @} */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {
+NkVoid NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platformInfoPtr) {
     /* Parameter validation. */
     NK_ASSERT(platformInfoPtr != NULL && platformInfoPtr->m_structSize ^ 0, NkErr_InOutParameter);
 
@@ -111,8 +111,6 @@ _Return_ok_ NkErrorCode NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInf
     /* Initialize basic *buf* structure with requested target and build information. */
     memcpy(platformInfoPtr, &gl_PlatformInfo, actSize);
     platformInfoPtr->m_structSize = actSize;
-    /* All good. */
-    return NkErr_Ok;
 }
 
 

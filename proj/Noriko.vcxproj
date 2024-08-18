@@ -278,7 +278,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\alloc.h" />
-    <ClInclude Include="..\include\Noriko\component.h" />
+    <ClInclude Include="..\include\Noriko\env.h" />
     <ClInclude Include="..\include\Noriko\def.h" />
     <ClInclude Include="..\include\Noriko\dstruct\htable.h" />
     <ClInclude Include="..\include\Noriko\dstruct\vector.h" />
@@ -292,6 +292,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />
+    <ClCompile Include="..\src\Noriko\env.c" />
     <ClCompile Include="..\src\Noriko\dstruct\htable.c" />
     <ClCompile Include="..\src\Noriko\dstruct\vector.c" />
     <ClCompile Include="..\src\Noriko\error.c" />

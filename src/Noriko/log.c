@@ -17,6 +17,8 @@
  * The logger is designed as a singleton that is fully modular. Rather than implementing
  * all features directly, the logger defers the implementation of the "sinks" to modules
  * that use its API.
+ * 
+ * \todo make sink array static
  */
 #define NK_NAMESPACE "nk::log"
 
@@ -31,7 +33,6 @@
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/log.h>
 #include <include/Noriko/timer.h>
-#include <include/Noriko/component.h>
 
 
 /** \cond INTERNAL */
@@ -41,7 +42,7 @@
  *        given log level
  * \param x string representation of log level
  */
-#define NK_LOG_PADDING(x) (NkSize)(sizeof "CRITICAL" - sizeof x)
+#define NK_LOG_PADDING(x) (NkSize)(sizeof "FATAL" - sizeof x)
 
 
 /**
@@ -64,17 +65,16 @@ NK_NATIVE typedef struct __NkInt_LogSinkExtProperties {
  * \brief  represents the internal log context
  */
 NK_NATIVE typedef struct __NkInt_LogExtContext {
-    NkComponent;
     NK_DECL_LOCK(m_mtxLock);
 
-    char                         *mp_msgBuffer;  /**< message buffer */
-    char                         *mp_tsBuffer;   /**< timestamp textual representation buffer */
-    NkSize                        m_msgLen;      /**< length of current message, in bytes */
-    NkSize                        m_tsLen;       /**< length of current timestamp, in bytes */
-    NkSize                        m_nOfSinks;    /**< current number of registered sinks */
-    NkTimer                      *mp_tsFmtTimer; /**< timer used for formatting the timestamp */
-    __NkInt_LogSinkExtProperties *mp_sinkArray;  /**< sink array */
-    NkLogContext                  m_logCxt;      /**< global logger settings */
+    char                         *mp_msgBuffer; /**< message buffer */
+    char                         *mp_tsBuffer;  /**< timestamp textual representation buffer */
+    NkSize                        m_msgLen;     /**< length of current message, in bytes */
+    NkSize                        m_tsLen;      /**< length of current timestamp, in bytes */
+    NkSize                        m_nOfSinks;   /**< current number of registered sinks */
+    NkTimer                       m_tsFmtTimer; /**< timer used for formatting the timestamp */
+    __NkInt_LogSinkExtProperties *mp_sinkArray; /**< sink array */
+    NkLogContext                  m_logCxt;     /**< global logger settings */
 } __NkInt_LogExtContext;
 
 
@@ -91,7 +91,6 @@ NK_INTERNAL __NkInt_LogExtContext gl_LogContext = {
     .m_msgLen      = 0,
     .m_tsLen       = sizeof "%m-%d-%y %H:%M:%S",
     .m_nOfSinks    = 0,
-    .mp_tsFmtTimer = NULL,
     .mp_sinkArray  = NULL,
 
     .m_logCxt = {
@@ -105,12 +104,12 @@ NK_INTERNAL __NkInt_LogExtContext gl_LogContext = {
         .m_nSinks     = 32,
 
         .m_lvlProps = { { 0, NK_MAKE_RGBA(0, 0, 0, 0), NULL, NULL },
-            { NK_LOG_PADDING("TRACE"),    NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("TRACE"),    NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
-            { NK_LOG_PADDING("DEBUG"),    NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("DEBUG"),    NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
-            { NK_LOG_PADDING("INFO"),     NK_MAKE_RGB(0, 255, 0),     NK_MAKE_STRING_VIEW_PTR("INFO"),     NK_MAKE_STRING_VIEW_PTR("\033[92;40m") },
-            { NK_LOG_PADDING("WARNING"),  NK_MAKE_RGB(255, 255, 0),   NK_MAKE_STRING_VIEW_PTR("WARNING"),  NK_MAKE_STRING_VIEW_PTR("\033[33;40m") },
-            { NK_LOG_PADDING("ERROR"),    NK_MAKE_RGB(255, 0, 0),     NK_MAKE_STRING_VIEW_PTR("ERROR"),    NK_MAKE_STRING_VIEW_PTR("\033[91;40m") },
-            { NK_LOG_PADDING("CRITICAL"), NK_MAKE_RGB(150, 0, 0),     NK_MAKE_STRING_VIEW_PTR("CRITICAL"), NK_MAKE_STRING_VIEW_PTR("\033[97;41m") }
+            { NK_LOG_PADDING("TRACE"), NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("TRACE"), NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
+            { NK_LOG_PADDING("DEBUG"), NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("DEBUG"), NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
+            { NK_LOG_PADDING("INFO"),  NK_MAKE_RGB(0, 255, 0),     NK_MAKE_STRING_VIEW_PTR("INFO"),  NK_MAKE_STRING_VIEW_PTR("\033[92;40m") },
+            { NK_LOG_PADDING("WARN"),  NK_MAKE_RGB(255, 255, 0),   NK_MAKE_STRING_VIEW_PTR("WARN"),  NK_MAKE_STRING_VIEW_PTR("\033[33;40m") },
+            { NK_LOG_PADDING("ERROR"), NK_MAKE_RGB(255, 0, 0),     NK_MAKE_STRING_VIEW_PTR("ERROR"), NK_MAKE_STRING_VIEW_PTR("\033[91;40m") },
+            { NK_LOG_PADDING("FATAL"), NK_MAKE_RGB(150, 0, 0),     NK_MAKE_STRING_VIEW_PTR("FATAL"), NK_MAKE_STRING_VIEW_PTR("\033[97;41m") }
         }
     }
 };
@@ -244,7 +243,7 @@ NK_INTERNAL NkVoid __NkInt_LogFormatMessageAndTimestamp(
      * If the time since the last timestamp formatting has changed sufficiently, reformat
      * the timestamp.
      */
-    if (NkElapsedTimerGetAs(gl_LogContext.mp_tsFmtTimer, NkTiPrec_Seconds) >= 1.0) {
+    if (NkElapsedTimerGetAs(&gl_LogContext.m_tsFmtTimer, NkTiPrec_Seconds) >= 1.0) {
 lbl_FMTTS:
         NkInt64 currLTime;
         struct tm currTime;
@@ -261,7 +260,7 @@ lbl_FMTTS:
         );
 
         /* Restart timer. */
-        NkTimerRestart((NkTimer *)gl_LogContext.mp_tsFmtTimer);
+        NkTimerRestart(&gl_LogContext.m_tsFmtTimer);
     }
 }
 
@@ -281,11 +280,8 @@ NK_INTERNAL NkBoolean __NkInt_LogIsLevelEnabledForSink(
 
 
 _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
-    NK_ENSURE_NOT_INITIALIZED(gl_LogContext);
-    NK_INITIALIZE(gl_LogContext);
-
     /* Allocate log buffer. */
-    NkErrorCode errorCode = NkAllocateMemory(
+    NkErrorCode errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
         sizeof *gl_LogContext.mp_msgBuffer * gl_LogContext.m_logCxt.m_maxMsgSize,
         0,
@@ -296,7 +292,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
         goto lbl_ONERROR;
 
     /* Allocate timestamp buffer. */
-    errorCode = NkAllocateMemory(
+    errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
         sizeof *gl_LogContext.mp_tsBuffer * gl_LogContext.m_tsLen,
         0,
@@ -307,7 +303,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
         goto lbl_ONERROR;
 
     /* Allocate sink array. */
-    errorCode = NkAllocateMemory(
+    errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
         sizeof *gl_LogContext.mp_sinkArray * gl_LogContext.m_logCxt.m_nSinks,
         0,
@@ -318,7 +314,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
         goto lbl_ONERROR;
 
     /* Create the timestamp timer. */
-    errorCode = NkTimerCreate(NkTiType_Elapsed, NK_TRUE, (NkTimer **)&gl_LogContext.mp_tsFmtTimer);
+    errorCode = NkTimerCreate(NkTiType_Elapsed, NK_TRUE, &gl_LogContext.m_tsFmtTimer);
     if (errorCode != NkErr_Ok)
         goto lbl_ONERROR;
     /* Format timestamp. */
@@ -345,18 +341,15 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
     return NkErr_Ok;
 
 lbl_ONERROR:
-    NkFreeMemory(gl_LogContext.mp_msgBuffer);
-    NkFreeMemory(gl_LogContext.mp_tsBuffer);
+    NkGPFree(gl_LogContext.mp_msgBuffer);
+    NkGPFree(gl_LogContext.mp_tsBuffer);
 
-    NK_UNINITIALIZE(gl_LogContext);
     return errorCode;
 }
 
 NkVoid NK_CALL NkLogUninitialize(NkVoid) {
-    NK_ENSURE_INITIALIZED_VOID(gl_LogContext);
-
     NK_LOG_INFO("shutdown: logging");
-    NK_UNINITIALIZE(gl_LogContext);
+
     /*
      * Traverse the entire sink array and run sink-specific uninitialization on all of
      * them.
@@ -369,17 +362,15 @@ NkVoid NK_CALL NkLogUninitialize(NkVoid) {
         /* Call 'onUninit' handler. */
         (*sinkProps->m_regProps.mp_fnOnSinkUninit)((NkLogSinkHandle)i, sinkProps->m_regProps.mp_extraCxt);
     }
-    NkFreeMemory(gl_LogContext.mp_sinkArray);
+    NkGPFree(gl_LogContext.mp_sinkArray);
 
-    NkFreeMemory(gl_LogContext.mp_msgBuffer);
-    NkFreeMemory(gl_LogContext.mp_tsBuffer);
-    NkTimerDestroy((NkTimer **)&gl_LogContext.mp_tsFmtTimer);
+    NkGPFree(gl_LogContext.mp_msgBuffer);
+    NkGPFree(gl_LogContext.mp_tsBuffer);
+    NkTimerDestroy(&gl_LogContext.m_tsFmtTimer);
     NK_DESTROYLOCK(gl_LogContext.m_mtxLock);
 }
 
 NkVoid NK_CALL NkLogQueryContext(_Out_ NkLogContext *cxtStructPtr) {
-    NK_ENSURE_INITIALIZED_VOID(gl_LogContext);
-
     /* Copy current state into result pointer. */
     memcpy(
         (NkVoid *)cxtStructPtr,
@@ -392,7 +383,6 @@ _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
     _Inout_ NkLogSinkProperties *sinkPropsPtr,
     _Out_   NkLogSinkHandle *sinkHandlePtr
 ) {
-    NK_ENSURE_INITIALIZED(gl_LogContext);
     NkErrorCode errorCode = NkErr_Ok;
 
     /* Check if we can even add a sink. If we cannot, return invalid sink ID. */
@@ -442,7 +432,6 @@ lbl_CLEANUP:
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkLogUnregisterSink(_Inout_ NkLogSinkHandle *sinkHandlePtr) {
-    NK_ENSURE_INITIALIZED(gl_LogContext);
     NkErrorCode errorCode = NkErr_Ok;
 
     /* If the sink ID is invalid, do nothing. */
@@ -477,14 +466,12 @@ lbl_CLEANUP:
     return errorCode;
 }
 
-NkVoid NK_CALL NkLog(
+NkVoid NK_CALL NkLogWrite(
     _In_opt_     NkLogFrame const *framePtr,
     _In_         NkLogLevel lvlId,
     _Format_str_ char const *fmtStr,
     ...
 ) {
-    NK_ENSURE_INITIALIZED_VOID(gl_LogContext);
-
     // \todo Put static log msg array here to make it thread-safe.
     //char buf[2 << 20];
 
