@@ -20,8 +20,9 @@
  * specialized pool-allocators for fixed object sizes requiring frequent allocation and
  * deallocation.
  * 
- * \todo Make block sizes round up to the next multiple of 4096 to increase memory
- *       efficiency a bit.
+ * \note For the pool allocator to work properly, the block sizes (i.e., the sizes of the
+ *       individual elements) must be a multiple of 8 and the alignment requirement must
+ *       be <= 16.
  */
 #define NK_NAMESPACE "nk::alloc"
 
@@ -38,6 +39,13 @@
 
 
 /** \cond INTERNAL */
+/**
+ * \def   NK_ALLOC_NPOOLS
+ * \brief maximum number of memory pools allocatable
+ */
+#define NK_ALLOC_NPOOLS ((NkSize)(8192))
+
+
 /**
  * \enum  __NkInt_AllocType
  * \brief type identifier for the block
@@ -76,9 +84,9 @@ NK_NATIVE typedef struct __NkInt_PoolAllocBlockHead {
 NK_NATIVE typedef struct __NkInt_PoolAllocContext {
     NK_DECL_LOCK(m_mtxLock); /**< synchronization object */
 
-    NkUint32                    m_nAllocPools;    /**< number of currently allocated pools */
-    NkUint32                    m_firstFreePool;  /**< offset of the first free block in the pool */
-    __NkInt_PoolAllocMemoryPool m_memPools[8192]; /**< static array of memory pools */
+    NkUint32                    m_nAllocPools;               /**< number of currently allocated pools */
+    NkUint32                    m_firstFreePool;             /**< offset of the first free block in the pool */
+    __NkInt_PoolAllocMemoryPool m_memPools[NK_ALLOC_NPOOLS]; /**< static array of memory pools */
 } __NkInt_PoolAllocContext;
 
 
@@ -98,6 +106,10 @@ NK_INTERNAL NkUint32 const gl_BlockAlign = 16U;
  * \brief default block count per memory pool 
  */
 NK_INTERNAL NkUint32 const gl_DefBlockCount = 128U;
+/**
+ * \brief default fixed page-size
+ */
+NK_INTERNAL NkUint32 const gl_PageSize = 4096U;
 
 
 /**
@@ -198,16 +210,16 @@ NK_INTERNAL NkVoid __NkInt_FreeMemoryUnaligned(_In_ NkVoid const *ptr) {
  * \param  [in] blAlign alignment of the first memory block, in bytes
  * \return block header section size, in bytes
  */
-NK_INTERNAL NK_INLINE NkSize __NkInt_PoolAllocCalcPoolHeadSize(
+NK_INTERNAL NK_INLINE NkUint32 __NkInt_PoolAllocCalcPoolHeadSize(
     _In_ NkUint32 blockCount,
-    _In_ NkSize blAlign
+    _In_ NkUint32 blAlign
 ) {
-    NkSize poolHeadSize = 0;
+    NkUint32 poolHeadSize = 0;
 
     /* Add the block header section size. */
     poolHeadSize += blockCount * sizeof(__NkInt_PoolAllocBlockHead);
     /* Add the optional padding so that the actual memory blocks are aligned properly. */
-    poolHeadSize += blAlign - poolHeadSize % blAlign;
+    poolHeadSize += poolHeadSize % blAlign;
 
     return poolHeadSize;
 }
@@ -220,14 +232,14 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_PoolAllocCalcPoolHeadSize(
  * \return total size of the memory pool, in bytes
  * \note   \c blAlign must be a power of two.
  */
-NK_INTERNAL NK_INLINE NkSize __NkInt_PoolAllocCalcPoolSize(
+NK_INTERNAL NK_INLINE NkUint32 __NkInt_PoolAllocCalcPoolSize(
     _In_ NkUint32 blockCount,
     _In_ NkUint32 blockSize,
-    _In_ NkSize blAlign
+    _In_ NkUint32 blAlign
 ) {
     NK_ASSERT(blAlign ^ 0 && (blAlign & (blAlign - 1)) == 0, NkErr_MemoryAlignment);
 
-    NkSize poolSize = 0;
+    NkUint32 poolSize = 0;
     
     /* Calculate pool head size. */
     poolSize += __NkInt_PoolAllocCalcPoolHeadSize(blockCount, blAlign);
@@ -235,6 +247,50 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_PoolAllocCalcPoolSize(
     poolSize += blockSize * blockCount;
 
     return poolSize;
+}
+
+/**
+ * \brief  adjusts the pool size to be a multiple of a common page size in an effort to
+ *         maximize memory usage efficiency
+ * \param  [in] blockSize 
+ * \param  [in,out] blockCountPtr initial   block count; may be adjusted
+ * \param  [in,out] poolSizePtr total initial pool size in bytes; may be adjusted
+ * \return \c new adjusted pool size in bytes
+ * \note   When adjustments are made, the pool size and block count are only ever going
+ *         to be increased.
+ */
+NK_INTERNAL NK_INLINE NkUint32 __NkInt_PoolAllocAdjustPoolMetrics(
+    _In_    NkUint32  blockSize,
+    _Inout_ NkUint32 *blockCountPtr,
+    _Inout_ NkUint32 *poolSizePtr
+) {
+    /* Round to next multiple of the fixed page size. */
+    *poolSizePtr += (*poolSizePtr % gl_PageSize) ? gl_PageSize - *poolSizePtr % gl_PageSize : 0;
+    /*
+     * Determine the largest number of blocks savable after having adjusted. Regarding
+     * any insertion of padding due to the alignment requirements, The following equation
+     * is always true:
+     *     (1) n * (|block| + |head|) <= m * |page| = |pool|,
+     * where
+     *     |block| ... block size in bytes
+     *     |head|  ... head size in bytes
+     *     |page|  ... fixed page size
+     *     |pool|  ... total pool size, all things considered.
+     * Since |block|, |head|, and |page| are always a multiple of 8 (as per basic
+     * requirements), |pool| is also a multiple of 8 because
+     *     |pool| = m * |page| = 8 * m * (|page| / 8)) and
+     *     8 * a - 8 * b = 8 * (a - b).
+     * Thus and because of (1), there can only ever be a multiple of 8 bytes unoccupied
+     * (= usable for padding) which is enough since |head| = 8 and the alignment
+     * requirement is
+     *     16 = 2 * |head|.
+     * Because of this, the actual padding requirement is only ever going to be 8 or 0,
+     * both of which are multiples of 8. It concludes that we do not need to make any
+     * further adjustments to the block count contrary to previous gut feeling.
+     */
+    *blockCountPtr = *poolSizePtr / (blockSize + sizeof(__NkInt_PoolAllocBlockHead));
+
+    return *poolSizePtr;
 }
 
 /**
@@ -257,11 +313,17 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_PoolAllocRequestNewPool(
     if (gl_PoolAllocCxt.m_firstFreePool == UINT32_MAX)
         return NkErr_MemoryAllocation;
 
-    /* Allocate the new pool by using the general-purpose allocator. */
     NkVoid *blockPtr = NULL;
+    NkUint32 defPoolSize = __NkInt_PoolAllocCalcPoolSize(blockCount, blockSize, gl_BlockAlign);
+    __NkInt_PoolAllocAdjustPoolMetrics(blockSize, &blockCount, &defPoolSize);
+    /* Allocate the new pool by using the general-purpose allocator. */
     NkErrorCode errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),
-        __NkInt_PoolAllocCalcPoolSize(blockCount, blockSize, gl_BlockAlign),
+        __NkInt_PoolAllocAdjustPoolMetrics(
+            blockSize,
+            &blockCount,
+            &defPoolSize
+        ),
         0,
         NK_FALSE,
         &blockPtr
@@ -284,8 +346,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_PoolAllocRequestNewPool(
 
     /*
      * Find the next free pool. There are two cases:
-     *  (1) We just allocated the last available block.
-     *  (2) We still have free blocks available.
+     *  (1) We just allocated the last available pool.
+     *  (2) We still have free pool available.
      */
     if (gl_PoolAllocCxt.m_nAllocPools == gl_MaxPools)
         gl_PoolAllocCxt.m_firstFreePool = UINT32_MAX;
@@ -299,10 +361,11 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_PoolAllocRequestNewPool(
     }
 
     NK_LOG_TRACE(
-        "Allocated new pool 0x%p of %u elements with a block size of %u.",
+        "Allocated new pool 0x%p of %u elements with a block size of %u. [total size: %u bytes]",
         *poolPtr,
         blockCount,
-        blockSize
+        blockSize,
+        defPoolSize
     );
     return NkErr_Ok;
 }
@@ -456,14 +519,14 @@ lbl_FINDNEXT:
 
 
 _Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid) {
-    NK_LOG_INFO("init: allocators");
+    NK_LOG_INFO("startup: allocators");
 
     NK_INITLOCK(gl_PoolAllocCxt.m_mtxLock);
     return NkErr_Ok;
 }
 
 NkVoid NK_CALL NkAllocUninitialize(NkVoid) {
-    NK_LOG_INFO("uninit: allocators");
+    NK_LOG_INFO("shutdown: allocators");
 
     /* Free all memory pools. */
     for (NkUint32 i = 0, j = 0; i < gl_MaxPools && j < gl_PoolAllocCxt.m_nAllocPools; i++) {
@@ -598,13 +661,14 @@ lbl_ALLOCBLOCK:
 
 lbl_RETBLOCKPTR:
         *memPtr = (NkByte *)(basePtr + memPool->m_blockCount)
-            + gl_BlockAlign - (memPool->m_blockCount * sizeof *specPtr) % gl_BlockAlign
+            + (memPool->m_blockCount * sizeof *specPtr) % gl_BlockAlign
             + memPool->m_blockSize * (&basePtr[blockIndex] - basePtr);
 
         NK_LOG_TRACE(
-            "Allocated %u memory block(s) [%u ->] (0x%p) [base: 0x%p] in pool [%u] (0x%p).",
+            "Allocated %u memory block(s) [%u - %u] (0x%p) [base: 0x%p] in pool [%u] (0x%p).",
             blockCount,
             blockIndex,
+            blockIndex + blockCount - 1,
             *memPtr,
             basePtr,
             (NkUint32)(memPool - &gl_PoolAllocCxt.m_memPools[0]),

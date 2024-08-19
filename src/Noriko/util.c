@@ -212,7 +212,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
     return NkErr_NotImplemented;
 #endif
     
-    NK_LOG_INFO("init: PRNG");
+    NK_LOG_INFO("startup: PRNG");
     return NkErr_Ok;
 }
 
@@ -324,16 +324,16 @@ NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVar
     va_start(vlArg, valType);
 
     switch (valType) {
-        case NkVarTy_Boolean:    vPtr->m_val.m_boolVal = va_arg(vlArg, NkBoolean); break;
-        case NkVarTy_Char:       vPtr->m_val.m_chVal   = va_arg(vlArg, char);      break;
-        case NkVarTy_Int8:       vPtr->m_val.m_i8Val   = va_arg(vlArg, NkInt8);    break;
-        case NkVarTy_Int16:      vPtr->m_val.m_i16Val  = va_arg(vlArg, NkInt16);   break;
-        case NkVarTy_Int32:      vPtr->m_val.m_i32Val  = va_arg(vlArg, NkInt32);   break;
-        case NkVarTy_Int64:      vPtr->m_val.m_i64Val  = va_arg(vlArg, NkInt64);   break;
-        case NkVarTy_Uint8:      vPtr->m_val.m_u8Val   = va_arg(vlArg, NkUint8);   break;
-        case NkVarTy_Uint16:     vPtr->m_val.m_u16Val  = va_arg(vlArg, NkUint16);  break;
-        case NkVarTy_Uint32:     vPtr->m_val.m_u32Val  = va_arg(vlArg, NkUint32);  break;
-        case NkVarTy_Uint64:     vPtr->m_val.m_u64Val  = va_arg(vlArg, NkUint64);  break;
+        case NkVarTy_Boolean:    vPtr->m_val.m_boolVal = va_arg(vlArg, NkBoolean);  break;
+        case NkVarTy_Char:       vPtr->m_val.m_chVal   = va_arg(vlArg, char);       break;
+        case NkVarTy_Int8:       vPtr->m_val.m_i8Val   = va_arg(vlArg, NkInt8);     break;
+        case NkVarTy_Int16:      vPtr->m_val.m_i16Val  = va_arg(vlArg, NkInt16);    break;
+        case NkVarTy_Int32:      vPtr->m_val.m_i32Val  = va_arg(vlArg, NkInt32);    break;
+        case NkVarTy_Int64:      vPtr->m_val.m_i64Val  = va_arg(vlArg, NkInt64);    break;
+        case NkVarTy_Uint8:      vPtr->m_val.m_u8Val   = va_arg(vlArg, NkUint8);    break;
+        case NkVarTy_Uint16:     vPtr->m_val.m_u16Val  = va_arg(vlArg, NkUint16);   break;
+        case NkVarTy_Uint32:     vPtr->m_val.m_u32Val  = va_arg(vlArg, NkUint32);   break;
+        case NkVarTy_Uint64:     vPtr->m_val.m_u64Val  = va_arg(vlArg, NkUint64);   break;
         case NkVarTy_Float:
             /*
              * Variadic function parameters passed as float are automatically promoted to
@@ -355,10 +355,7 @@ NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVar
         case NkVarTy_Pointer:
         case NkVarTy_Vector:
         case NkVarTy_Hashtable:
-        case NkVarTy_Timer:
-            vPtr->m_val.mp_ptrVal = va_arg(vlArg, NkVoid *);
-
-            break;
+        case NkVarTy_Timer:      vPtr->m_val.mp_ptrVal = va_arg(vlArg, NkVoid *);    break;
     }
 
     vPtr->m_type = valType;

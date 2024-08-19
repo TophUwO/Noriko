@@ -28,7 +28,7 @@
  * \param [in,out] keyPtr pointer to the key
  * \param [in,out] valPtr pointer to the value
  */
-typedef NkVoid (NK_CALL *NkHashtableFreeFn)(struct NkHashtableKey *keyPtr, NkVoid *valPtr);
+typedef NkVoid (NK_CALL *NkHashtableFreeFn)(union NkHashtableKey *keyPtr, NkVoid *valPtr);
 /**
  * \brief  callback definition for when the implementation iterates over a range of
  *         elements

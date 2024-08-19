@@ -178,13 +178,13 @@ NK_INTERNAL NkErrorCode __NkInt_TimerInitializeStaticContext(NkVoid) {
 
 
 _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid) {
-    NK_LOG_INFO("init: timing device context");
+    NK_LOG_INFO("startup: timing device context");
 
     return __NkInt_TimerInitializeStaticContext();
 }
 
 NkVoid NK_CALL NkTimerUninitialize(NkVoid) {
-    NK_LOG_INFO("uninit: timing device context");
+    NK_LOG_INFO("shutdown: timing device context");
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkTimerCreate(

@@ -17,8 +17,6 @@
  * The logger is designed as a singleton that is fully modular. Rather than implementing
  * all features directly, the logger defers the implementation of the "sinks" to modules
  * that use its API.
- * 
- * \todo make sink array static
  */
 #define NK_NAMESPACE "nk::log"
 
@@ -118,6 +116,7 @@ NK_INTERNAL __NkInt_LogExtContext gl_LogContext = {
         }
     }
 };
+/* Make sure that the level table aligns with the numeric log level IDs. */
 static_assert(NK_ARRAYSIZE(gl_LogContext.m_logCxt.m_lvlProps) == __NkLogLvl_Count__, "Log level table size mismatch!");
 
 
@@ -288,7 +287,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
         return errorCode;
 #endif
 
-    NK_LOG_INFO("init: logging");
+    NK_LOG_INFO("startup: logging");
     return NkErr_Ok;
 }
 
