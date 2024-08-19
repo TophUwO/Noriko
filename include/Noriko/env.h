@@ -50,6 +50,8 @@
  *         have been passed to the application until \c NkEnvCleanup() is called.
  * \note   \li This function may allocate dynamic memory. Thus, \c NkEnvCleanup()
  *         must be called after the application is done with the command-line arguments.
+ * \note   \li On Windows and Linux, there is a special \c main() overload that passes
+ *         \c envp as a raw pointer.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkEnvParse(
     _In_             int argc,
