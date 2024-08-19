@@ -76,6 +76,8 @@ NK_NATIVE typedef struct __NkInt_PoolAllocBlockHead {
     NkUint32 m_blockFlags;  /**< block flags (allocated, type, ...) */
     NkUint32 m_nMultiBlock; /**< number of blocks if this block is the start of a multi-block allocation */
 } __NkInt_PoolAllocBlockHead;
+/* Make sure the size requirement for the block header is met. */
+static_assert(sizeof(__NkInt_PoolAllocBlockHead) == 8, "Block header for memory pool must be 8 bytes.");
 
 /**
  * \struct __NkInt_PoolAllocContext
@@ -594,7 +596,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPoolAlloc(
     _Init_ptr_ NkVoid **memPtr
 ) {
     NK_UNREFERENCED_PARAMETER(allocCxt);
-    NK_ASSERT(blockSize != 0, NkErr_InParameter);
+    NK_ASSERT(blockSize != 0 && blockSize % 8 == 0, NkErr_InParameter);
     NK_ASSERT(blockCount != 0, NkErr_InParameter);
     NK_ASSERT(memPtr != NULL, NkErr_OutptrParameter);
 

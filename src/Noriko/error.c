@@ -36,6 +36,13 @@
 
 /** \cond INTERNAL */
 /**
+ * \def   NK_ERROR_MSGBUF
+ * \brief size in bytes of the fatal error message buffer
+ */
+#define NK_ERROR_MSGBUF ((NkSize)(1 << 12))
+
+
+/**
  * \brief textual representations for integral error code values
  */
 NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
@@ -114,16 +121,17 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "
  * \return pointer to the formatted string buffer (*NUL*-terminated)
  * \see    NkFatalErrorContext
  */
-NK_INTERNAL char const *NkIntFormatFatalErrorMessage(_In_ NkFatalErrorContext const *errCxtPtr) {
-    NK_INTERNAL char               gl_int_FormatBuffer[2 << 12] = { 0x00 };
+NK_INTERNAL char const *__NkInt_ErrorFormatFatalErrorMessage(
+    _In_                          NkFatalErrorContext const *errCxtPtr,
+    _Out_writes_(NK_ERROR_MSGBUF) char *outBuf
+) {
     NK_INTERNAL NkStringView const gl_int_DefExtra = NK_MAKE_STRING_VIEW(
         "This error signifies abnormal program termination. Please contact the"
         " responsible developer, providing the details shown by this error message."
     );
 
-    /** \todo make reentrant by merging with NkFatalTerminate */
     /* Get extra message. */
-    NkStringView const *const extraMsg = errCxtPtr->m_additionalDesc.m_sizeInBytes == 1
+    NkStringView const *const extraMsg = errCxtPtr->m_additionalDesc.m_sizeInBytes == 0
         ? &gl_int_DefExtra
         : &errCxtPtr->m_additionalDesc
     ;
@@ -137,8 +145,8 @@ NK_INTERNAL char const *NkIntFormatFatalErrorMessage(_In_ NkFatalErrorContext co
 
     /* Format the text buffer. */
     snprintf(
-        gl_int_FormatBuffer,
-        NK_ARRAYSIZE(gl_int_FormatBuffer) - 1,
+        outBuf,
+        NK_ERROR_MSGBUF - 1,
         "An unrecoverable error occurred and the application was forced to halt:\n\n"
         "  Expr:\t%s\n"
         "  Code:\t%s (%i)\n"
@@ -158,7 +166,7 @@ NK_INTERNAL char const *NkIntFormatFatalErrorMessage(_In_ NkFatalErrorContext co
         extraMsg->mp_dataPtr                                    /* extra message */
     );
 
-    return &gl_int_FormatBuffer[0];
+    return outBuf;
 }
 /** \endcond */
 
@@ -184,8 +192,9 @@ _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ Nk
 
 NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext const *errCxtPtr) {
     NK_ASSERT(errCxtPtr != NULL, NkErr_InParameter);
-    
-    char const *msgPtr = NkIntFormatFatalErrorMessage(errCxtPtr);
+
+    char gl_int_FormatBuffer[NK_ERROR_MSGBUF];
+    char const *msgPtr = __NkInt_ErrorFormatFatalErrorMessage(errCxtPtr, gl_int_FormatBuffer);
     NK_LOG_CRITICAL(msgPtr);
 
 #if (defined NK_TARGET_WINDOWS)

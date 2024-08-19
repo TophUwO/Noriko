@@ -158,6 +158,7 @@ NK_NATIVE NK_API NkVoid NK_CALL NkGPFree(_In_ NkVoid const *memPtr);
  * \return  \c NkErr_Ok on success, non-zero on failure
  * \see     NkPoolReserve, NkPoolFree
  * \note    \li This function is thread-safe.
+ * \note    \li \c blockSize must be non-zero and a multiple of eight.
  * \note    \li To return the memory back to the allocator after you are done with it,
  *          use the \c NkPoolFree() function.
  * \note    \li This function may allocate new memory pools on the heap if necessary.
