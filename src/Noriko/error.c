@@ -121,7 +121,7 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "
  * \return pointer to the formatted string buffer (*NUL*-terminated)
  * \see    NkFatalErrorContext
  */
-NK_INTERNAL char const *__NkInt_ErrorFormatFatalErrorMessage(
+NK_INTERNAL char const *__NkInt_FormatFatalErrorMessage(
     _In_                          NkFatalErrorContext const *errCxtPtr,
     _Out_writes_(NK_ERROR_MSGBUF) char *outBuf
 ) {
@@ -194,7 +194,7 @@ NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext cons
     NK_ASSERT(errCxtPtr != NULL, NkErr_InParameter);
 
     char gl_int_FormatBuffer[NK_ERROR_MSGBUF];
-    char const *msgPtr = __NkInt_ErrorFormatFatalErrorMessage(errCxtPtr, gl_int_FormatBuffer);
+    char const *msgPtr = __NkInt_FormatFatalErrorMessage(errCxtPtr, gl_int_FormatBuffer);
     NK_LOG_CRITICAL(msgPtr);
 
 #if (defined NK_TARGET_WINDOWS)
