@@ -204,7 +204,7 @@ NK_NATIVE typedef struct NkStringView {
  * \brief generates a compile-time string view to a static string
  * \param str string literal to create string view for
  */
-#define NK_MAKE_STRING_VIEW(str)     { .mp_dataPtr = str, .m_sizeInBytes = sizeof str - 1 }
+#define NK_MAKE_STRING_VIEW(str)     { (char *)str, sizeof str - 1 }
 /**
  * \def   NK_MAKE_STRING_VIEW_PTR(str)
  * \brief like NK_MAKE_STRING_VIEW but it includes the code for turning the string view
@@ -490,7 +490,12 @@ NK_NATIVE typedef _In_range_(NkVarTy_None + 1, __NkVarTy_Count__ - 1) enum NkVar
  *          or manipulate it directly.
  */
 NK_NATIVE typedef struct NkVariant {
-    _Alignas(NkInt64) NkByte const m_reserved[24]; /**< placeholder for the internal structure */
+#if (defined __cplusplus)
+    alignas(NkInt64)
+#else
+    _Alignas(NkInt64)
+#endif
+        NkByte const m_reserved[24]; /**< placeholder for the internal structure */
 } NkVariant;
 
 /**

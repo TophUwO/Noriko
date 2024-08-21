@@ -551,6 +551,7 @@ _Return_ok_ NkErrorCode NK_CALL NkGPAlloc(
     _In_opt_         NkBoolean isZeroed,
     _Init_ptr_       NkVoid **memPtr
 ) {
+    NK_UNREFERENCED_PARAMETER(alignInBytes);
     NK_ASSERT(sizeInBytes ^ 0, NkErr_InParameter);
     NK_ASSERT(alignInBytes == 0, NkErr_NotImplemented);
     NK_ASSERT(memPtr != NULL, NkErr_OutptrParameter);

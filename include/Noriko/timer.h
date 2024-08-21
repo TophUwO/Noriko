@@ -55,7 +55,12 @@ NK_NATIVE typedef enum NkTimerPrecision {
  *         statically instantiated.
  */
 NK_NATIVE typedef struct NkTimer {
-    _Alignas(NkInt64) NkByte const m_reserved[24]; /**< placeholder for internal state */
+#if (defined __cplusplus)
+    alignas(NkInt64)
+#else
+    _Alignas(NkInt64)
+#endif
+        NkByte const m_reserved[24]; /**< placeholder for internal state */
 } NkTimer;
 
 

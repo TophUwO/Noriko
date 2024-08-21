@@ -37,7 +37,7 @@
 #define NK_VER_ITER                          1
 
 #define NK_PRODUCT_NAME                      "Noriko"
-#define NK_PRODUCT_COPYRIGHT                 "(c) TophUwO <tophuwo01@gmail.com>"
+#define NK_PRODUCT_COPYRIGHT                 "(c) 2024 TophUwO <tophuwo01@gmail.com>. All rights reserved."
 #if (defined NK_CONFIG_DEBUG)                
     #define NK_PRODUCT_CONFIGURATION         "Debug"
 #elif (defined NK_CONFIG_DEBUG_OPTIMIZED)

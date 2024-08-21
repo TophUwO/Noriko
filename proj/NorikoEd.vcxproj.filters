@@ -22,4 +22,31 @@
       <Extensions>ts</Extensions>
     </Filter>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\NorikoEd\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\application.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\application.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\window.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\common.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="..\res\forms\form_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
 </Project>

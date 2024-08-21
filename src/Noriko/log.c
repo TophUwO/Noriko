@@ -182,8 +182,8 @@ NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConOnUninit(
 NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
     _In_     NkLogSinkHandle sinkHandle,
     _In_     NkLogLevel lvlId,
-    _In_     char const *tsPtr,
-    _In_     char const *fmtMsgPtr,
+    _In_z_   char const *tsPtr,
+    _In_z_   char const *fmtMsgPtr,
     _In_opt_ NkLogFrame const *framePtr,
     _Inout_  NkLogSinkProperties *sinkPropsPtr
 ) {
@@ -352,9 +352,9 @@ _Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
             }
 
             /* Copy sink properties. */
-            memcpy(&gl_LogContext.m_sinkArray[i], sinkPropsPtr, sizeof * sinkPropsPtr);
+            memcpy(&gl_LogContext.m_sinkArray[i], sinkPropsPtr, sizeof *sinkPropsPtr);
             /* Make sure the size field is set correctly. */
-            gl_LogContext.m_sinkArray[i].m_regProps.m_structSize = sizeof * sinkPropsPtr;
+            gl_LogContext.m_sinkArray[i].m_regProps.m_structSize = sizeof *sinkPropsPtr;
             /* Update registered sink count. */
             ++gl_LogContext.m_nOfSinks;
 

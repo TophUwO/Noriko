@@ -161,8 +161,7 @@ NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_
  *        error that caused the abnormal termination
  * \param [in] errCxtPtr pointer to a NkFatalErrorContext structure that contains more
  *             information on the errors
- * \see   NkFatalErrorContext
- * \see   NkErrorCode
+ * \see   NkFatalErrorContext, NkErrorCode
  * \note  \li This function does not return.
  * \note  \li Any *atexit()*-handlers will be executed before quitting.
  */

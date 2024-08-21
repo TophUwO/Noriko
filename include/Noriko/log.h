@@ -119,8 +119,8 @@ NK_NATIVE typedef NkErrorCode (NK_CALL *NkLogSinkUninitFn)(
 NK_NATIVE typedef NkVoid (NK_CALL *NkLogSinkWriteFn)(
     _In_     NkLogSinkHandle sinkHandle, 
     _In_     enum NkLogLevel lvlId,
-    _In_     char const *tsPtr,
-    _In_     char const *fmtMsgPtr,
+    _In_z_   char const *tsPtr,
+    _In_z_   char const *fmtMsgPtr,
     _In_opt_ NkLogFrame const *framePtr,
     _Inout_  NkLogSinkProperties *sinkPropsPtr
 );
@@ -172,11 +172,22 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogSinkProperties {
     NkStringView       m_sinkIdent;       /**< string identifier for this sink */
     NkLogLevel         m_minLevel;        /**< global minimum log level */
     NkLogLevel         m_maxLevel;        /**< global maximum log level */
-    NkVoid            *mp_extraCxt;       /**< extra context to be passed to  */
+    NkVoid            *mp_extraCxt;       /**< extra context to be passed to the callbacks */
     NkLogSinkInitFn    mp_fnOnSinkInit;   /**< virtual \c OnInit callback */
     NkLogSinkUninitFn  mp_fnOnSinkUninit; /**< virtual \c onUninit callback */
     NkLogSinkWriteFn   mp_fnOnSinkWrite;  /**< virtual \c OnLog callback */
 } NkLogSinkProperties;
+
+/**
+ * \struct NkLogLevelProperties
+ * \brief  represents the properties for the individual log levels
+ */
+NK_NATIVE typedef struct NkLogLevelProperties {
+    NkInt32       m_nSpace;     /**< number of spaces needed for proper alignment */
+    NkRgbaColor   m_rgbaCol;    /**< color as RGB(A) value */
+    NkStringView *mp_lvlStrRep; /**< string representation of the level */
+    NkStringView *mp_lvlFmtStr; /**< format used for level (for virtual terminal) */
+} NkLogLevelProperties;
 
 /**
  * \struct NkLogContext
@@ -198,13 +209,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkLogContext {
      * \struct NkLogLevelProperties
      * \brief  represents the static properties for each log level
      */
-    struct NkLogLevelProperties {
-        NkInt32       m_nSpace;     /**< number of spaces needed for proper alignment */
-        NkRgbaColor   m_rgbaCol;    /**< color as RGB(A) value */
-        NkStringView *mp_lvlStrRep; /**< string representation of the level */
-        NkStringView *mp_lvlFmtStr; /**< format used for level (for virtual terminal) */
-    };
-    struct NkLogLevelProperties m_lvlProps[__NkLogLvl_Count__]; /**< level properties array */
+    NkLogLevelProperties m_lvlProps[__NkLogLvl_Count__]; /**< level properties array */
 } NkLogContext;
 
 
