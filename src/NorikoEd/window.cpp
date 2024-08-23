@@ -47,6 +47,12 @@ namespace NkE {
         newProjDlg.exec();
     }
 
+    void MainWindow::on_actionProjOpen_triggered() {
+        dlg::OpenProjectDialog openProjDlg(m_projManInst.get(), this);
+
+        openProjDlg.exec();
+    }
+
     void MainWindow::on_actionFileExit_triggered() {
         QApplication::exit(EXIT_SUCCESS);
     }

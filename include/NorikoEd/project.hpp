@@ -47,6 +47,23 @@ namespace NkE {
          * \param [in] dirRoot root directory on the filesystem
          */
         explicit Project(QString const &wkTitle, QString const &author, QString const &brDesc, QDir const &dirRoot);
+        /**
+         * \brief constructs a new project instance from the given parameters but with a
+         *        custom UUID
+         * \param [in] uuidStr UUID string representation
+         * \param [in] wkTitle working title of the finished product
+         * \param [in] author authoring organization identifier
+         * \param [in] brDesc brief description of the finished product
+         * \param [in] dirRoot root directory on the filesystem
+         * \note  This constructor may throw exceptions of type <tt>NkErrorCode</tt>.
+         */
+        explicit Project(
+            QString const &uuidStr,
+            QString const &wkTitle,
+            QString const &author,
+            QString const &brDesc,
+            QString const &dirRoot
+        );
         ~Project() = default;
 
         /**
@@ -98,6 +115,12 @@ namespace NkE {
             QString const &prodDesc,
             QString const &dirRoot
         );
+        /**
+         * \brief  opens an existing project from its project file
+         * \param  [in] projFilePath absolute path to the project file
+         * \return \c true on success, \c false on error
+         */
+        bool openProject(QString const &projFilePath);
 
         /**
          * \brief  creates the project path based on the given parameters

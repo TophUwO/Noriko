@@ -63,6 +63,9 @@
     <QtUic Include="..\res\forms\form_dlg_projnew.ui">
       <Filter>Form Files\dialogs</Filter>
     </QtUic>
+    <QtUic Include="..\res\forms\form_dlg_projopen.ui">
+      <Filter>Form Files\dialogs</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\NorikoEd\project.hpp">

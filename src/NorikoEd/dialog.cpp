@@ -28,12 +28,13 @@
 #include <include/NorikoEd/dialog.hpp>
 
 
+/* Project New dialog */
 namespace NkE::dlg {
     QString NewProjectDialog::m_DefParent = QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first();
 
 
-    NewProjectDialog::NewProjectDialog(ProjectManager *projMan, QWidget *parPtr)
-        : QDialog(parPtr), mp_projMan(projMan), m_parPath(m_DefParent)
+    NewProjectDialog::NewProjectDialog(ProjectManager *projManPtr, QWidget *parPtr)
+        : QDialog(parPtr), mp_projMan(projManPtr), m_parPath(m_DefParent)
     {
         setupUi(this);
 
@@ -113,6 +114,46 @@ namespace NkE::dlg {
 
         /* Update state of 'Ok' button. */
         btnOk->setEnabled(!leWkTitle->text().isEmpty() && !(m_parPath.isEmpty() || !QDir(m_parPath).exists()));
+    }
+} /* namespace NkE::dlg */
+
+
+/* Project Open dialog */
+namespace NkE::dlg {
+    OpenProjectDialog::OpenProjectDialog(ProjectManager *projManPtr, QWidget *parPtr)
+        : QDialog(parPtr), mp_projMan(projManPtr)
+    {
+        setupUi(this);
+        setFixedSize(size());
+
+        /* Connect necessary signals. */
+        connect(leProjFilePath, &QLineEdit::textChanged, this, &OpenProjectDialog::on_UpdateDialogState);
+        on_UpdateDialogState();
+    }
+
+
+    void OpenProjectDialog::accept() {
+        if (mp_projMan->openProject(leProjFilePath->text()))
+            QDialog::accept();
+    }
+
+
+    void OpenProjectDialog::on_tbtnBrowse_clicked() {
+        QStringList selFilters{ "Noriko Project Files (*.nkproj)" };
+        QString newProjFile = QFileDialog::getOpenFileName(
+            this,
+            "Choose project file",
+            QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first(),
+            selFilters[0],
+            &selFilters[0]
+        );
+
+        if (!newProjFile.isEmpty())
+            leProjFilePath->setText(newProjFile);
+    }
+
+    void OpenProjectDialog::on_UpdateDialogState() {
+        btnOk->setEnabled(QFile(leProjFilePath->text()).exists());
     }
 } /* namespace NkE::dlg */
 

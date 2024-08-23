@@ -33,7 +33,15 @@
      </property>
      <addaction name="actionProjNew"/>
     </widget>
+    <widget class="QMenu" name="menuFileOpen">
+     <property name="title">
+      <string>Open</string>
+     </property>
+     <addaction name="actionProjOpen"/>
+    </widget>
     <addaction name="menuFileNew"/>
+    <addaction name="separator"/>
+    <addaction name="menuFileOpen"/>
     <addaction name="separator"/>
     <addaction name="actionFileExit"/>
    </widget>
@@ -56,6 +64,11 @@
    </property>
   </action>
   <action name="actionProject">
+   <property name="text">
+    <string>Project</string>
+   </property>
+  </action>
+  <action name="actionProjOpen">
    <property name="text">
     <string>Project</string>
    </property>

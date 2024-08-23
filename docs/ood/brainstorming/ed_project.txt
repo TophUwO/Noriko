@@ -3,3 +3,5 @@
 - project manager window, allowing to delete them entirely, manage them in other ways or migrate them
 - default locations in settings (default project dir, temp dir, cache dir, NorikoEd settings dir, naming schemes, ...)
 - recent projects cache
+- use standard project dir for default project open dialog directory
+- provide DTD for project files for validation

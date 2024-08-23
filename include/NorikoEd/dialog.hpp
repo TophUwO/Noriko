@@ -22,6 +22,7 @@
 #include <QDialog>
 /* Qt forms includes */
 #include <ui_form_dlg_projnew.h>
+#include <ui_form_dlg_projopen.h>
 
 /* NorikoEd includes */
 #include <include/NorikoEd/project.hpp>
@@ -41,10 +42,10 @@ namespace NkE::dlg {
     public:
         /**
          * \brief constructs a new instance of NewProjectDialog
-         * \param [in] projMan pointer to the global project manager instance
+         * \param [in] projManPtr pointer to the global project manager instance
          * \param [in,out] parPtr pointer to the parent widget
          */
-        explicit NewProjectDialog(ProjectManager *projMan, QWidget *parPtr = nullptr);
+        explicit NewProjectDialog(ProjectManager *projManPtr, QWidget *parPtr = nullptr);
         ~NewProjectDialog() = default;
 
         /**
@@ -67,6 +68,36 @@ namespace NkE::dlg {
         QString m_parPath;    /**< project parent path */
 
         static QString m_DefParent; /**< default parent directory */
+    };
+
+
+    /**
+     * \class OpenProjectDialog
+     * \brief represents the dialog that is shown when a project is to be imported from
+     *        an existing disk file
+     */
+    class OpenProjectDialog : public QDialog, private Ui_OpenProjectDialog {
+        Q_OBJECT
+
+        ProjectManager *mp_projMan; /**< reference to project manager */
+
+    public:
+        /**
+         * \brief constructs a new open project dialog 
+         * \param [in] projManPtr pointer to the project manager
+         * \param [in] parPtr pointer to the parent widget
+         */
+        explicit OpenProjectDialog(ProjectManager *projManPtr, QWidget *parPtr = nullptr);
+        ~OpenProjectDialog() = default;
+
+        /**
+         * \brief reimplements the \c accept() method of \c QDialog
+         */
+        virtual void accept() override;
+
+    private slots:
+        void on_tbtnBrowse_clicked();
+        void on_UpdateDialogState();
     };
 } /* namespace NkE::dlg */
 

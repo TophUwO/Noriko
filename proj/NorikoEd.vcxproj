@@ -180,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="..\res\forms\form_dlg_projnew.ui" />
+    <QtUic Include="..\res\forms\form_dlg_projopen.ui" />
     <QtUic Include="..\res\forms\form_window.ui" />
   </ItemGroup>
   <ItemGroup>

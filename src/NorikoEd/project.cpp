@@ -36,6 +36,16 @@ namespace NkE {
         : m_projName(wkTitle), m_projAuthor(author), m_projDesc(brDesc), m_qualPath(dirRoot)
     { }
 
+    Project::Project(
+        QString const &uuidStr,
+        QString const &wkTitle,
+        QString const &author,
+        QString const &brDesc,
+        QString const &dirRoot
+    ) : UniversallyNamedItem(uuidStr), m_projName(wkTitle), m_projAuthor(author), m_projDesc(brDesc),
+        m_qualPath(dirRoot)
+    { }
+
 
     bool Project::writeRootXmlDocument(QIODevice *ioDevPtr) const {
         if (ioDevPtr == NULL)
@@ -119,6 +129,72 @@ namespace NkE {
             wkTitle.toStdString().c_str(),
             qualDirRoot.absolutePath().toStdString().c_str()
         );
+        return true;
+    }
+
+    bool ProjectManager::openProject(QString const &projFilePath) {
+        /* Open the file handle. */
+        QFile projFile(projFilePath);
+        if (!projFile.open(QIODeviceBase::Text | QIODeviceBase::ReadOnly)) {
+            QMessageBox::critical(
+                nullptr,
+                "Error",
+                QString(
+                    "Could not open project file \"%1\".\n\nCheck if the file path is valid and "
+                    "file permissions."
+                ).arg(projFilePath),
+                QMessageBox::Ok
+            );
+
+            return false;
+        }
+
+        /* Parse the file as XML and read all the required parameters. */
+        QString uuidStr, wkTitle, author, brDesc, rootPath;
+        QXmlStreamReader xmlReader(&projFile);
+        while (!xmlReader.isEndDocument()) {
+            QString const currName = xmlReader.name().toString();
+
+            if (currName == "uuid")                uuidStr  = xmlReader.readElementText();
+            if (currName == "working_title")       wkTitle  = xmlReader.readElementText();
+            if (currName == "project_author")      author   = xmlReader.readElementText();
+            if (currName == "product_description") brDesc   = xmlReader.readElementText();
+            if (currName == "rootpath")            rootPath = xmlReader.readElementText();
+
+            xmlReader.readNext();
+        }
+        /* Check that the necessary parameters are valid. */
+        if (wkTitle.isEmpty() || rootPath.isEmpty()) {
+            QMessageBox::critical(
+                nullptr,
+                "Error",
+                QString("Could not open project file \"%1\". File is malformed.").arg(projFilePath),
+                QMessageBox::Ok
+            );
+
+            return false;
+        }
+
+        /* Create the project from the parsed parameters. */
+        try {
+            Project newProj{ uuidStr, wkTitle, author, brDesc, rootPath };
+
+            m_projVec.append(std::move(newProj));
+            NK_LOG_INFO("Opened project \"%s\" at %s.", wkTitle.toStdString().c_str(), rootPath.toStdString().c_str());
+        } catch (NkErrorCode errCode) {
+            NK_UNREFERENCED_PARAMETER(errCode);
+
+            QMessageBox::critical(
+                nullptr,
+                "Error",
+                QString(
+                    "Could not instantiate project instance from project file %1. Check whether the file and all the "
+                    "data fields are encoded properly."
+                ).arg(projFilePath),
+                QMessageBox::Ok
+            );
+            return false;
+        }
         return true;
     }
 

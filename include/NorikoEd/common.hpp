@@ -94,10 +94,24 @@ namespace NkE {
          * \note  The universal identifier is automatically generated when this object is
          *        instantiated.
          */
-        explicit UniversallyNamedItem() {
+        explicit UniversallyNamedItem() noexcept {
             NkUuidGenerate(&m_uuidRep);
 
             NK_LOG_TRACE("Created universally named item with UUID {%s}.", uuidToString().toStdString().c_str());
+        }
+        /**
+         * \brief creates a new universally named item from an existing UUID
+         * \param [in] uuidStr string representation of the UUID
+         */
+        explicit UniversallyNamedItem(QString const &uuidStr) {
+            NkErrorCode cvtRes = NkUuidFromString(uuidStr.toStdString().c_str(), &m_uuidRep);
+            if (cvtRes != NkErr_Ok) {
+                NK_LOG_ERROR("UUID {%s} is malformed.", uuidStr.toStdString().c_str());
+
+                throw cvtRes;
+            }
+
+            NK_LOG_TRACE("Created universally named item from existing UUID {%s}.", uuidStr.toStdString().c_str());
         }
         virtual ~UniversallyNamedItem() = default;
 

@@ -51,6 +51,7 @@ namespace NkE {
 
     private slots:
         void on_actionProjNew_triggered();
+        void on_actionProjOpen_triggered();
         void on_actionFileExit_triggered();
     };
 } /* namespace NkE */
