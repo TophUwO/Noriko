@@ -378,7 +378,8 @@ NK_NATIVE NK_API _Return_ok_ enum NkErrorCode NK_CALL NkPRNGInitialize(NkVoid);
 NK_NATIVE NK_API NkVoid NK_CALL NkPRNGUninitialize(NkVoid);
 /**
  * \brief  retrieves the next number in the random number sequence
- * \param  [in] outPtr pointer to an NkUint64 variable that will receive the random number
+ * \param  [in] outPtr pointer to an NkUint64 variable that will receive the random
+ *              number
  * \return \c NkErr_Ok on success, non-zero on failure
  * \note   This function is thread-safe.
  */
@@ -399,7 +400,6 @@ NK_NATIVE typedef union NkUuid {
  * \brief  generates a new UUID
  * \param  [out] uuidPtr pointer to an NkUuid instance that will receive the generated
  *               bytes
- * \return \c NkErr_Ok on success, non-zero on failure
  * \note   \li This implementation generates exclusively version 4 UUIDs (random or
  *             pseudo-random).
  * \note   \li The UUID generator depends on the pseudo-random number generator. It must
@@ -407,7 +407,7 @@ NK_NATIVE typedef union NkUuid {
  *             to make the PRNG ready.
  * \see    NkPRNGInit
  */
-NK_NATIVE NK_API _Return_ok_ enum NkErrorCode NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr);
 /**
  * \brief  compares two UUIDs
  * \param  [in] fUuid left UUID
@@ -439,14 +439,13 @@ NK_NATIVE NK_API NK_INLINE _Return_ok_ enum NkErrorCode NK_CALL NkUuidFromString
  *              string representation
  * \param  [out] strBuf pointer to a <tt>char *</tt> buffer that is to receive the result
  *               of the conversion
- * \return \c NkErr_Ok on success, non-zero on failure.
  * \note   \li If the function fails, the contents of \c strBuf are undefined.
  * \note   \li There is generally no validation carried out on the input UUID. If the
  *             input is invalidly encoded, the contents of \c strBuf are indeterminate.
  * \note   \li The term \e normalized refers to the usual \c 8-4-4-4-12 normal form.
  * \note   \li It is not required for this function to initialize the PRNG beforehand.
  */
-NK_NATIVE NK_API NK_INLINE _Return_ok_ enum NkErrorCode NK_CALL NkUuidToString(
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkUuidToString(
     _In_          NkUuid const *uuidPtr,
     _O_bytes_(37) char *strBuf
 );

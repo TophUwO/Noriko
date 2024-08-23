@@ -232,7 +232,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {
 }
 
 
-_Return_ok_ NkErrorCode NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr) {
+NkVoid NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr) {
     NK_ASSERT(uuidPtr != NULL, NkErr_OutParameter);
 
     /* Generate two random numbers. */
@@ -244,7 +244,6 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr) {
     /* Adjust version field. This implementation generates version 4 UUIDs. */
     uuidPtr->m_asByte[6] = 0b0100 << 4 | uuidPtr->m_asByte[6] & 0x0F;
     uuidPtr->m_asByte[8] = 0b0010 << 6 | uuidPtr->m_asByte[8] & 0x3F;
-    return NkErr_Ok;
 }
 
 NkBoolean NK_CALL NkUuidIsEqual(_In_ NkUuid const *fUuid, _In_ NkUuid const *sUuid) {
@@ -285,7 +284,7 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidA
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *strBuf) {
+NkVoid NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *strBuf) {
     NK_ASSERT(uuidPtr != NULL, NkErr_InParameter);
     NK_ASSERT(strBuf != NULL, NkErr_OutParameter);
 
@@ -298,8 +297,6 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_by
         *strBuf++ = "0123456789abcdef"[uuidPtr->m_asByte[i] & 0x0F];
     }
     *strBuf = 0x00;
-
-    return NkErr_Ok;
 }
 
 

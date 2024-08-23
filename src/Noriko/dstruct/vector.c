@@ -333,7 +333,7 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
      * **elemPtr**.
      */
     NkSize const lenToDel = NK_MIN(maxN, vecPtr->m_elemCount - sInd);
-    if (lenToDel > 0) {
+    if (lenToDel > 0 && elemArray != NULL) {
         if (__NkInt_VectorTryFreeRange(vecPtr, sInd, sInd + lenToDel) == NkErr_NoOperation) {
             /*
              * Copy range into output buffer for the caller to (possibly and hopefully)
@@ -353,7 +353,7 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
          * Set the first element of the result buffer to NULL to adhere to the
          * constraints posed on the return value by NkVectorErase().
          */
-        *elemArray = NULL;
+        elemArray[0] = NULL;
     }  else return NkErr_NoOperation;
 
     return NkErr_Ok;

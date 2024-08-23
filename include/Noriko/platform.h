@@ -44,12 +44,16 @@
 
     /* Enable memory leak detection of Microsoft Visual Studio in debug builds. */
     #if (defined NK_TOOLCHAIN_MSVC)
-        #define _CRTDBG_MAP_ALLOC
+        #if (!defined NK_EDITOR)
+            #define _CRTDBG_MAP_ALLOC
+        #endif
         #define NK_USE_MSVC_MEMORY_LEAK_DETECTOR
 
         #define _CRT_RAND_S /* use Microsoft-specific "rand_s()" function */
         #include <stdlib.h>
-        #include <crtdbg.h>
+        #if (!defined NK_EDITOR)
+            #include <crtdbg.h>
+        #endif
     #endif
 
     /* Suppress some non-important warnings. */
@@ -86,7 +90,7 @@
 
 
 /* Make some basic assumptions. */
-static_assert(sizeof(float)  == 4, "sizeof(float) must be 4 (four)bytes.");
+static_assert(sizeof(float)  == 4, "sizeof(float) must be 4 (four) bytes.");
 static_assert(sizeof(int)    == 4, "sizeof(int) must be 4 (four) bytes.");
 static_assert(sizeof(double) == 8, "sizeof(double) must be 4 (four) bytes.");
 static_assert(sizeof(char)   == 1, "sizeof(char) must be 1 (one) byte.");

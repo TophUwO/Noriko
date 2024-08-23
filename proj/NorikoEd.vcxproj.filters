@@ -21,6 +21,9 @@
       <UniqueIdentifier>{639EADAA-A684-42e4-A9AD-28FC9BCB8F7C}</UniqueIdentifier>
       <Extensions>ts</Extensions>
     </Filter>
+    <Filter Include="Form Files\dialogs">
+      <UniqueIdentifier>{91e3c9bf-a843-40d8-a9d9-c61aaac6f24c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\NorikoEd\main.cpp">
@@ -30,6 +33,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NorikoEd\window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\project.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -43,10 +52,21 @@
     <QtMoc Include="..\include\NorikoEd\common.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="..\res\forms\form_window.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="..\res\forms\form_dlg_projnew.ui">
+      <Filter>Form Files\dialogs</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\NorikoEd\project.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

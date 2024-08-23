@@ -50,14 +50,17 @@ namespace NkE {
          */
         NkErrorCode runApplication();
 
+        std::shared_ptr<ProjectManager> getProjectManagerInstance() const;
+
     private:
         /**
          * \brief prints some platform information on the debug console
          */
         void int_PrintPlatformInformation();
 
-        std::unique_ptr<MainWindow> m_mainWnd;  /**< main window */
-        NkPlatformInformation       m_platInfo; /**< Noriko platform information */
+        NkPlatformInformation           m_platInfo; /**< Noriko platform information */
+        std::unique_ptr<MainWindow>     m_mainWnd;  /**< main window */
+        std::shared_ptr<ProjectManager> m_projMan;  /**< project manager */
     };
 } /* namespace NkE */
 

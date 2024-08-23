@@ -21,19 +21,34 @@
 
 /* NorikoEd includes */
 #include <include/NorikoEd/window.hpp>
+#include <include/NorikoEd/dialog.hpp>
+#include <include/NorikoEd/application.hpp>
 
 
 namespace NkE {
-    MainWindow::MainWindow(QString const &title, QSize const &defSize, QWidget *parPtr)
+    MainWindow::MainWindow(QString const &wndTitle, QSize const &defSize, QWidget *parPtr)
         : QMainWindow(parPtr)
     {
-        /* Initialize static widgets. */
         setupUi(this);
 
         /* Set basic properties. */
-        setWindowTitle(title);
+        setWindowTitle(wndTitle);
         setVisible(true);
         resize(defSize);
+
+        /* Query global components. */
+        m_projManInst = dynamic_cast<Application *>(QApplication::instance())->getProjectManagerInstance();
+    }
+
+
+    void MainWindow::on_actionProjNew_triggered() {
+        dlg::NewProjectDialog newProjDlg(m_projManInst.get(), this);
+
+        newProjDlg.exec();
+    }
+
+    void MainWindow::on_actionFileExit_triggered() {
+        QApplication::exit(EXIT_SUCCESS);
     }
 } /* namespace NkE */
 

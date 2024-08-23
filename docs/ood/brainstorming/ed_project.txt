@@ -1,0 +1,5 @@
+- default org in app settings OR system username if not set
+- auto-generate project name (easteregg)
+- project manager window, allowing to delete them entirely, manage them in other ways or migrate them
+- default locations in settings (default project dir, temp dir, cache dir, NorikoEd settings dir, naming schemes, ...)
+- recent projects cache

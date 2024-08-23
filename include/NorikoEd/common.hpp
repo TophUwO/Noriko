@@ -81,6 +81,40 @@ namespace NkE {
         Qt::DockWidgetArea  m_defDockArea; /**< default dock widget area */
         QMainWindow        *mp_contWidget; /**< container widget */
     };
+
+
+    /**
+     * \class UniversallyNamedItem
+     * \brief represents an item with a universally unique identifier (UUID)
+     */
+    class UniversallyNamedItem {
+    public:
+        /**
+         * \brief creates a new universally named item
+         * \note  The universal identifier is automatically generated when this object is
+         *        instantiated.
+         */
+        explicit UniversallyNamedItem() {
+            NkUuidGenerate(&m_uuidRep);
+
+            NK_LOG_TRACE("Created universally named item with UUID {%s}.", uuidToString().toStdString().c_str());
+        }
+        virtual ~UniversallyNamedItem() = default;
+
+        /**
+         * \brief  converts the underlying UUID to a string
+         * \return UUID represented as string
+         */
+        QString uuidToString() const {
+            char tmpBuf[100] = { 0 };
+            NkUuidToString(&m_uuidRep, tmpBuf);
+
+            return tmpBuf;
+        }
+
+    private:
+        NkUuid m_uuidRep; /**< underlying UUID structure */
+    };
 } /* namespace NkE */
 
 

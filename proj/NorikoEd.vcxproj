@@ -101,7 +101,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <LanguageStandard>$(Qt_STDCPP_)</LanguageStandard>
-      <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>nkmain64r.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
@@ -110,7 +110,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">
     <ClCompile>
       <LanguageStandard>$(Qt_STDCPP_)</LanguageStandard>
-      <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalDependencies>nkmain_x64.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
@@ -121,7 +121,7 @@
       <AdditionalDependencies>nkmain64d.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
     </Link>
     <ClCompile>
-      <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -170,13 +170,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\src\NorikoEd\application.cpp" />
+    <ClCompile Include="..\src\NorikoEd\dialog.cpp" />
     <ClCompile Include="..\src\NorikoEd\main.cpp" />
+    <ClCompile Include="..\src\NorikoEd\project.cpp" />
     <ClCompile Include="..\src\NorikoEd\window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\include\NorikoEd\application.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <QtUic Include="..\res\forms\form_dlg_projnew.ui" />
     <QtUic Include="..\res\forms\form_window.ui" />
   </ItemGroup>
   <ItemGroup>
@@ -184,6 +187,10 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\include\NorikoEd\common.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp" />
+    <ClInclude Include="..\include\NorikoEd\project.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
