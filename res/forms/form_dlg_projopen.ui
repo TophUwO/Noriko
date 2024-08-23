@@ -27,6 +27,9 @@
           <property name="text">
            <string>...</string>
           </property>
+          <property name="icon">
+           <iconset theme="folder-open"/>
+          </property>
          </widget>
         </item>
         <item row="1" column="0">

@@ -94,7 +94,7 @@ namespace NkE::dlg {
             this,
             "Select root directory",
             m_parPath,
-            QFileDialog::DontUseNativeDialog | QFileDialog::ShowDirsOnly
+            QFileDialog::ShowDirsOnly
         );
 
         /* Update root directory but only if the dialog was accepted. */
