@@ -26,18 +26,17 @@
 
 
 namespace NkE {
-    MainWindow::MainWindow(QString const &wndTitle, QSize const &defSize, QWidget *parPtr)
-        : QMainWindow(parPtr)
-    {
+    MainWindow::MainWindow(QString const &wndTitle) {
         setupUi(this);
 
         /* Set basic properties. */
         setWindowTitle(wndTitle);
+        setWindowState(Qt::WindowMaximized);
         setVisible(true);
-        resize(defSize);
 
         /* Query global components. */
-        m_projManInst = dynamic_cast<Application *>(QApplication::instance())->getProjectManagerInstance();
+        m_projManInst  = dynamic_cast<Application *>(QApplication::instance())->getProjectManagerInstance();
+        m_projExplInst = std::make_shared<ExplorerWidget>(new ExplorerModel(this), this);
     }
 
 

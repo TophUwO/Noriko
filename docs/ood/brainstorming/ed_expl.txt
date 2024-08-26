@@ -1,0 +1,14 @@
+- project explorer
+ - search filter
+ - add project
+ - add file to selected filter
+ - remove file
+ - remove and delete file
+ - duplicate
+ - expand all
+ - collapse all
+ - settings
+ - show properties (open property widget)
+
+- dependency tree
+ - 

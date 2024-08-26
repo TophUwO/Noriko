@@ -37,7 +37,13 @@ namespace NkE::dlg {
     class NewProjectDialog : public QDialog, private Ui_NewProjectDialog {
         Q_OBJECT
 
-        ProjectManager *mp_projMan; /**< reference to project manager */
+        ProjectManager *mp_projMan;   /**< reference to project manager */
+        QString         m_wkTitle;    /**< working title */
+        QString         m_projAuthor; /**< project authoring organization */
+        QString         m_brDesc;     /**< brief description */
+        QString         m_parPath;    /**< project parent path */
+
+        static QString m_DefParent;   /**< default parent directory */
 
     public:
         /**
@@ -60,14 +66,6 @@ namespace NkE::dlg {
         void on_btnReset_clicked();
         void on_tbtnBrowse_clicked();
         void on_UpdateDialogState();
-
-    private:
-        QString m_wkTitle;    /**< working title */
-        QString m_projAuthor; /**< project authoring organization */
-        QString m_brDesc;     /**< brief description */
-        QString m_parPath;    /**< project parent path */
-
-        static QString m_DefParent; /**< default parent directory */
     };
 
 

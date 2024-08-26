@@ -139,13 +139,13 @@ namespace NkE::dlg {
 
 
     void OpenProjectDialog::on_tbtnBrowse_clicked() {
-        QStringList selFilters{ "Noriko Project Files (*.nkproj)" };
+        QString selFilter = "Noriko Project Files (*.nkproj)";
         QString newProjFile = QFileDialog::getOpenFileName(
             this,
             "Choose project file",
             QStandardPaths::standardLocations(QStandardPaths::DocumentsLocation).first(),
-            selFilters[0],
-            &selFilters[0]
+            selFilter,
+            &selFilter
         );
 
         if (!newProjFile.isEmpty())

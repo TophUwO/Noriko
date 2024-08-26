@@ -129,6 +129,7 @@ namespace NkE {
             wkTitle.toStdString().c_str(),
             qualDirRoot.absolutePath().toStdString().c_str()
         );
+        emit projectLoaded(wkTitle, dirRoot);
         return true;
     }
 
@@ -195,6 +196,7 @@ namespace NkE {
             );
             return false;
         }
+        emit projectLoaded(wkTitle, rootPath);
         return true;
     }
 

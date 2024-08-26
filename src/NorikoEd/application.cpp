@@ -16,9 +16,6 @@
  */
 
 
-/* Qt includes */
-#include <QMainWindow>
-
 /* NorikoEd includes */
 #include <include/NorikoEd/application.hpp>
 
@@ -32,7 +29,7 @@ namespace NkE {
 
         /* Create main components. */
         m_projMan = std::make_shared<ProjectManager>();
-        m_mainWnd = std::make_unique<MainWindow>("NorikoEd indev", QSize{ 1200, 800 });
+        m_mainWnd = std::make_unique<MainWindow>("NorikoEd indev");
 
         /* Initialize other Noriko components. */
         NK_IGNORE_RETURN_VALUE(NkPRNGInitialize());

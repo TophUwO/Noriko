@@ -27,6 +27,7 @@
 #include <include/Noriko/noriko.h>
 /* NorikoEd includes */
 #include <include/NorikoEd/project.hpp>
+#include <include/NorikoEd/explorer.hpp>
 
 
 namespace NkE {
@@ -37,16 +38,15 @@ namespace NkE {
     class MainWindow : public QMainWindow, private Ui_MainWindow {
         Q_OBJECT
 
-        std::shared_ptr<ProjectManager> m_projManInst; /**< global project manager instance */
+        std::shared_ptr<ProjectManager> m_projManInst;  /**< global project manager instance */
+        std::shared_ptr<ExplorerWidget> m_projExplInst; /**< global project explorer widget instance */
 
     public:
         /**
          * \brief constructs a new main window
          * \param [in] wndTitle window title
-         * \param [in] defSize default size in pixels
-         * \param [in,out] parPtr pointer to the parent widget 
          */
-        MainWindow(QString const &wndTitle, QSize const &defSize, QWidget *parPtr = nullptr);
+        MainWindow(QString const &wndTitle);
         ~MainWindow() = default;
 
     private slots:

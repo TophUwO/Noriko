@@ -38,6 +38,11 @@ namespace NkE {
      * \note  The project represents the top-most organizational node in the object tree.
      */
     class Project : public UniversallyNamedItem {
+        QDir    m_qualPath;   /**< qualified root path */
+        QString m_projName;   /**< project name */
+        QString m_projAuthor; /**< authoring organization name */
+        QString m_projDesc;   /**< brief project description */
+
     public:
         /**
          * \brief constructs a new project instance
@@ -74,16 +79,10 @@ namespace NkE {
          */
         bool writeRootXmlDocument(QIODevice *ioDevPtr) const;
 
-        QDir getQualifiedPath() const { return m_qualPath; }
-        QString getProjectName() const { return m_projName; }
+        QDir    getQualifiedPath() const { return m_qualPath; }
+        QString getProjectName()   const { return m_projName; }
         QString getProjectAuthor() const { return m_projAuthor; }
-        QString getProjectDesc() const { return m_projDesc; }
-
-    private:
-        QDir    m_qualPath;   /**< qualified root path */
-        QString m_projName;   /**< project name */
-        QString m_projAuthor; /**< authoring organization name */
-        QString m_projDesc;   /**< brief project description */
+        QString getProjectDesc()   const { return m_projDesc; }
     };
 
 
@@ -94,7 +93,21 @@ namespace NkE {
      * The project manager is responsible for creating, editing, and otherwise managing
      * project files and directories. It also controls the project explorer widget.
      */
-    class ProjectManager {
+    class ProjectManager : public QObject {
+        Q_OBJECT
+
+        /**
+         * \brief  writes the project file for the given project
+         * \param  [in] projRef project object for which the project file is to be
+         *              written
+         * \return \c true on success, \c false on failure
+         * \note   If this function fails, the function may show message boxes that could
+         *         block the main thread.
+         */
+        static bool int_WriteProjectFile(Project const &projRef);
+
+        QList<Project> m_projVec; /**< currently loaded projects */
+
     public:
         explicit ProjectManager();
         ~ProjectManager();
@@ -138,18 +151,15 @@ namespace NkE {
          */
         static QString ConvertWorkingTitle(QString const &wkTitle);
 
-    private:
+    signals:
         /**
-         * \brief  writes the project file for the given project
-         * \param  [in] projRef project object for which the project file is to be
-         *              written
-         * \return \c true on success, \c false on failure
-         * \note   If this function fails, the function may show message boxes that could
-         *         block the main thread.
+         * \brief signal that is emitted whenever a new project was added to the manager
+         * \param [in] wkTitle working title of the loaded project
+         * \param [in] rootPath root path of the loaded project
+         * \note  This signal is emitted when a project is created or when it is opened
+         *        from an existing directory.
          */
-        static bool int_WriteProjectFile(Project const &projRef);
-
-        QList<Project> m_projVec; /**< currently loaded projects */
+        void projectLoaded(QString const &wkTitle, QString const &rootPath);
     };
 } /* namespace NkE */
 

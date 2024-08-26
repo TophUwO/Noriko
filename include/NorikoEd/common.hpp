@@ -41,6 +41,9 @@ namespace NkE {
     class DockableContainer : public QDockWidget {
         Q_OBJECT
 
+        Qt::DockWidgetArea  m_defDockArea; /**< default dock widget area */
+        QMainWindow        *mp_contWidget; /**< container widget */
+
     public:
         /**
          * \brief constructs a new dockable container
@@ -76,10 +79,6 @@ namespace NkE {
          * \return pointer to the underlying QMainWindow instance
          */
         QMainWindow *contentWidget() const { return mp_contWidget; }
-
-    private:
-        Qt::DockWidgetArea  m_defDockArea; /**< default dock widget area */
-        QMainWindow        *mp_contWidget; /**< container widget */
     };
 
 
@@ -88,6 +87,8 @@ namespace NkE {
      * \brief represents an item with a universally unique identifier (UUID)
      */
     class UniversallyNamedItem {
+        NkUuid m_uuidRep; /**< underlying UUID structure */
+
     public:
         /**
          * \brief creates a new universally named item
@@ -125,9 +126,6 @@ namespace NkE {
 
             return tmpBuf;
         }
-
-    private:
-        NkUuid m_uuidRep; /**< underlying UUID structure */
     };
 } /* namespace NkE */
 
