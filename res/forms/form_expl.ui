@@ -103,9 +103,7 @@
      <string>menuSearchOptions</string>
     </property>
     <addaction name="actEnableRegex"/>
-    <addaction name="separator"/>
-    <addaction name="actSearchExpl"/>
-    <addaction name="actSearchFiles"/>
+    <addaction name="actCaseSensitivity"/>
    </widget>
    <addaction name="menuSearchOptions"/>
   </widget>
@@ -215,6 +213,9 @@
    <property name="checkable">
     <bool>true</bool>
    </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resource.qrc">
      <normaloff>:/icons/ico_search.png</normaloff>:/icons/ico_search.png</iconset>
@@ -241,23 +242,11 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actRegEx">
+  <action name="actEnableRegex">
    <property name="checkable">
     <bool>true</bool>
    </property>
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_regex.png</normaloff>:/icons/ico_regex.png</iconset>
-   </property>
-   <property name="text">
-    <string>Support regular expressions</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="actEnableRegex">
-   <property name="checkable">
+   <property name="checked">
     <bool>true</bool>
    </property>
    <property name="icon">
@@ -268,30 +257,6 @@
     <string>Enable regular expressions</string>
    </property>
   </action>
-  <action name="actSearchExpl">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_treeview.png</normaloff>:/icons/ico_treeview.png</iconset>
-   </property>
-   <property name="text">
-    <string>Search in project explorer</string>
-   </property>
-  </action>
-  <action name="actSearchFiles">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_folder.png</normaloff>:/icons/ico_folder.png</iconset>
-   </property>
-   <property name="text">
-    <string>Search in files</string>
-   </property>
-  </action>
   <action name="actSearchOptions">
    <property name="icon">
     <iconset resource="../resource.qrc">
@@ -299,6 +264,21 @@
    </property>
    <property name="text">
     <string>Search Options</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actCaseSensitivity">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_casesens.png</normaloff>:/icons/ico_casesens.png</iconset>
+   </property>
+   <property name="text">
+    <string>Enable case sensitivity</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

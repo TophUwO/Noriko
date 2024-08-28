@@ -26,6 +26,7 @@
 /* Qt includes */
 #include <QMessageBox>
 #include <QStyledItemDelegate>
+#include <QSortFilterProxyModel>
 
 /* NorikoEd includes */
 #include <include/NorikoEd/explorer.hpp>
@@ -54,13 +55,13 @@ namespace NkE {
         if (mp_parentItem == nullptr)
             return 0;
 
-        auto const itemIter = std::find_if(m_childItems.cbegin(), m_childItems.cend(),
+        auto const itemIter = std::find_if(mp_parentItem->m_childItems.cbegin(), mp_parentItem->m_childItems.cend(),
             [&](std::unique_ptr<ExplorerItem> const &itemRef) {
                 return this == itemRef.get();
             }
         );
 
-        return static_cast<NkInt32>(std::distance(m_childItems.cbegin(), itemIter));
+        return static_cast<NkInt32>(std::distance(mp_parentItem->m_childItems.cbegin(), itemIter));
     }
 
     ExplorerItem *ExplorerItem::getChildAt(int rowPos) const {
@@ -158,11 +159,22 @@ namespace NkE {
         auto a3 = std::make_unique<ExplorerFilterItem>("tilesets", a2.get());
         auto a4 = std::make_unique<ExplorerFilterItem>("maps", a2.get());
         auto a5 = std::make_unique<ExplorerFilterItem>("out", a1.get());
+        auto a6 = std::make_unique<ExplorerFilterItem>("OUT", a1.get());
         a2->insertChildItem(0, std::move(a3));
         a2->insertChildItem(1, std::move(a4));
         a1->insertChildItem(0, std::move(a2));
         a1->insertChildItem(1, std::move(a5));
+        a1->insertChildItem(2, std::move(a6));
         m_rootItem->insertChildItem(0, std::move(a1));
+    }
+
+
+    ExplorerItem *ExplorerModel::getItemPointer(QModelIndex const &modelIndex) const {
+        if (modelIndex.isValid())
+            if (auto *itemPtr = static_cast<ExplorerItem *>(modelIndex.internalPointer()))
+                return itemPtr;
+
+        return m_rootItem.get();
     }
 
 
@@ -174,17 +186,18 @@ namespace NkE {
     }
 
     QModelIndex ExplorerModel::index(int rowPos, int colPos, const QModelIndex &parIndex) const {
-        if (!hasIndex(rowPos, colPos, parIndex))
+        if (parIndex.isValid() && parIndex.column() != 0)
             return QModelIndex{};
 
         /* Get parent item. */
-        auto parItem = parIndex.isValid()
-            ? static_cast<ExplorerItem *>(parIndex.internalPointer())
-            : m_rootItem.get()
-        ;
+        ExplorerItem *parItem = getItemPointer(parIndex);
+        if (parItem == nullptr)
+            return QModelIndex{};
 
         /* Find child at given position and create index from it. */
-        return createIndex(rowPos, colPos, parItem->getChildAt(rowPos));
+        if (ExplorerItem *childItem = parItem->getChildAt(rowPos))
+            return createIndex(rowPos, colPos, childItem);
+        return QModelIndex{};
     }
 
     QModelIndex ExplorerModel::parent(const QModelIndex &childIndex) const {
@@ -192,32 +205,30 @@ namespace NkE {
             return QModelIndex{};
 
         /* Get item pointer from the given index. */
-        auto parPtr = static_cast<ExplorerItem *>(childIndex.internalPointer())->getParent();
+        ExplorerItem *childItem  = getItemPointer(childIndex);
+        ExplorerItem *parentItem = childItem != nullptr ? childItem->getParent() : nullptr;
 
         /*
          * If the child item is actually the root item, an invalid model index is
          * returned since the root item has no parent.
          */
-        return parPtr != m_rootItem.get()
-            ? createIndex(parPtr->getItemRow(), 0, parPtr)
+        return parentItem != m_rootItem.get() && parentItem != nullptr
+            ? createIndex(parentItem->getItemRow(), 0, parentItem)
             : QModelIndex{}
         ;
     }
 
     int ExplorerModel::rowCount(const QModelIndex &parIndex) const {
-        if (parIndex.column() > 0)
+        if (parIndex.isValid() && parIndex.column() > 0)
             return 0;
 
         /*
          * Get the item pointer behind the given model index. If the index is invalid,
          * use the topmost (root) item.
          */
-        auto itemPtr = parIndex.isValid()
-            ? static_cast<ExplorerItem *>(parIndex.internalPointer())
-            : m_rootItem.get()
-        ;
+        ExplorerItem *itemPtr = getItemPointer(parIndex);
 
-        return static_cast<int>(itemPtr->getChildCount());
+        return itemPtr != nullptr ? static_cast<int>(itemPtr->getChildCount()) : 0;
     }
 
     int ExplorerModel::columnCount(const QModelIndex &parIndex) const {
@@ -229,7 +240,7 @@ namespace NkE {
             return QVariant{};
 
         /* Get pointer to the item. */
-        auto itemPtr = static_cast<ExplorerItem *>(modelIndex.internalPointer());
+        ExplorerItem *itemPtr = getItemPointer(modelIndex);
 
         /*
          * Qt::DisplayRole ... QString that is to be displayed as the main item text 
@@ -245,15 +256,14 @@ namespace NkE {
 
 
     bool ExplorerModel::setData(QModelIndex const &modelIndex, QVariant const &newVal, int roleId) {
-        if (!modelIndex.isValid())
+        if (roleId != Qt::EditRole)
             return false;
 
         /* Update the data. */
         bool editRes = false;
-        auto itemPtr = static_cast<ExplorerItem *>(modelIndex.internalPointer());
+        ExplorerItem *itemPtr = getItemPointer(modelIndex);
         switch (roleId) {
             case Qt::EditRole:
-            case Qt::DisplayRole:
                 editRes = itemPtr->setDisplayData(newVal);
                 
                 break;
@@ -263,12 +273,9 @@ namespace NkE {
          * Emit dataChanged signal as per requirements.
          * See: https://doc.qt.io/qt-6/qabstractitemmodel.html#setData
          */
-        if (editRes) {
+        if (editRes)
             emit dataChanged(modelIndex, modelIndex, { Qt::DisplayRole, Qt::EditRole });
-
-            return true;
-        }
-        return false;
+        return editRes;
     }
 } /* namespace NkE */
 
@@ -333,6 +340,52 @@ namespace NkE::priv {
 }
 
 
+/* implementation of the custom filtering model used by the project explorer view */
+namespace NkE::priv {
+    /**
+     * \class ExplorerFilterModel
+     * \brief represents the proxy model that is used to filter the underlying item model
+     */
+    class ExplorerFilterModel : public QSortFilterProxyModel {
+        Q_OBJECT
+
+    public:
+        /**
+         * \brief constructs a new explorer filter model
+         * \param [in] explModelPtr pointer to the source model
+         * \param [in] parPtr pointer to the parent object
+         */
+        ExplorerFilterModel(ExplorerModel *explModelPtr, QObject *parPtr = nullptr)
+            : QSortFilterProxyModel(parPtr)
+        {
+            setSourceModel(explModelPtr);
+            setRecursiveFilteringEnabled(true);
+        }
+
+    protected:
+        /**
+         * \brief reimplements \c QSortFilterProxyModel::filterAcceptsRow()
+         * \see   https://doc.qt.io/qt-6/qsortfilterproxymodel.html#filterAcceptsRow
+         */
+        virtual bool filterAcceptsRow(int sourceRowNum, const QModelIndex &srcParentIndex) const override {
+            if (!srcParentIndex.isValid())
+                return false;
+
+            /* Get pointer to parent item. */
+            auto parPtr = static_cast<::NkE::ExplorerItem *>(srcParentIndex.internalPointer());
+            if (sourceRowNum >= parPtr->getChildCount())
+                return false;
+
+            /* Get child index. */
+            QModelIndex currModelIndex   = sourceModel()->index(sourceRowNum, 0, srcParentIndex);
+            ::NkE::ExplorerItem *itemPtr = static_cast<::NkE::ExplorerItem *>(currModelIndex.internalPointer());
+
+            return itemPtr->getDisplayData().toString().contains(filterRegularExpression());
+        }
+    };
+}
+
+
 /* implementation of the explorer widget */
 namespace NkE {
     ExplorerWidget::ExplorerWidget(ExplorerModel *explModelPtr, QWidget *parPtr)
@@ -348,14 +401,16 @@ namespace NkE {
         connect(actShowSearchBar, &QAction::triggered, this, &ExplorerWidget::on_actShowSearchBar_triggered);
         connect(actEnableRegex, &QAction::triggered, this, &ExplorerWidget::on_actEnableRegex_triggered);
         connect(actCtrlSearchBar, &QAction::triggered, this, &ExplorerWidget::on_actCtrlSearchBar_triggered);
+        connect(actCaseSensitivity, &QAction::triggered, this, &ExplorerWidget::on_actCaseSensitivity_triggered);
         /* Connect slots triggered indirectly by other widgets. */
         connect(leSearch, &QLineEdit::textChanged, this, &ExplorerWidget::on_leSearch_textChanged);
 
         /* Setup view. */
         tvExplorer->itemDelegate()->deleteLater();
         tvExplorer->setItemDelegate(new priv::ExplorerItemDelegate(tvExplorer));
-        tvExplorer->setModel(explModelPtr);
+        tvExplorer->setModel(new priv::ExplorerFilterModel(explModelPtr, this));
         tvExplorer->expandAll();
+
         NK_LOG_INFO("startup: project explorer");
     }
 
@@ -371,7 +426,6 @@ namespace NkE {
 
         leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
         leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
-        leSearch->addAction(actRegEx, QLineEdit::TrailingPosition);
     }
 
     
@@ -385,10 +439,19 @@ namespace NkE {
 
     void ExplorerWidget::on_actShowSearchBar_triggered(bool isChecked) {
         leSearch->setVisible(isChecked);
+
+        /* If the search bar is hidden, also reset the search filter. */
+        if (!isChecked) {
+            priv::ExplorerFilterModel *modelPtr = dynamic_cast<priv::ExplorerFilterModel *>(tvExplorer->model());
+
+            leSearch->clear();
+            if (modelPtr != nullptr)
+                modelPtr->setFilterRegularExpression("");
+        }
     }
 
     void ExplorerWidget::on_actEnableRegex_triggered(bool isChecked) {
-        actRegEx->setVisible(isChecked);
+        on_leSearch_textChanged(leSearch->text());
     }
 
     void ExplorerWidget::on_actCtrlSearchBar_triggered() {
@@ -398,16 +461,48 @@ namespace NkE {
             leSearch->clear();
     }
 
+    void ExplorerWidget::on_actCaseSensitivity_triggered(bool isChecked) {
+        priv::ExplorerFilterModel *modelPtr = dynamic_cast<priv::ExplorerFilterModel *>(tvExplorer->model());
 
-    void ExplorerWidget::on_leSearch_textChanged() {
-        QString const currText = leSearch->text();
+        if (modelPtr != nullptr) {
+            modelPtr->setFilterCaseSensitivity(isChecked ? Qt::CaseSensitive : Qt::CaseInsensitive);
 
+            tvExplorer->expandAll();
+        }
+    }
+
+
+    void ExplorerWidget::on_leSearch_textChanged(QString const &newText) {
         /* Update "Control search bar" action. */
-        actCtrlSearchBar->setIcon(currText.isEmpty()
+        actCtrlSearchBar->setIcon(newText.isEmpty()
             ? QIcon(":/icons/ico_search.png")
             : QIcon(":/icons/ico_delete.png")
         );
-        actCtrlSearchBar->setToolTip(currText.isEmpty() ? "" : "Clear search bar");
+        actCtrlSearchBar->setToolTip(newText.isEmpty() ? "" : "Clear search bar");
+
+        /* Update palette if necessary. */
+        bool updateRegEx = true;
+        QPalette newPalette = QApplication::palette(leSearch);
+        QRegularExpression tmpRegEx(newText);
+        if (actEnableRegex->isChecked() && !tmpRegEx.isValid()) {
+            newPalette.setColor(QPalette::ColorRole::Text, Qt::red);
+
+            /* Set error tooltip. */
+            leSearch->setToolTip("Error: " + tmpRegEx.errorString());
+            updateRegEx = false;
+        } else
+            leSearch->setToolTip("");
+        leSearch->setPalette(newPalette);
+
+        /* Update filter model. */
+        priv::ExplorerFilterModel *modelPtr = dynamic_cast<priv::ExplorerFilterModel *>(tvExplorer->model());
+        if (actEnableRegex->isChecked() && updateRegEx)
+            modelPtr->setFilterRegularExpression(tmpRegEx);
+        else
+            modelPtr->setFilterFixedString(newText.trimmed());
+
+        /* Expand the view after the filtering has finished. */
+        tvExplorer->expandAll();
     }
 } /* namespace NkE */
 

@@ -174,6 +174,13 @@ namespace NkE {
         ~ExplorerModel() = default;
 
         /**
+         * \brief  retrieves the raw pointer to the underlying item
+         * \param  [in] modelIndex index pointing to the model item
+         * \return pointer to the item that corresponds to the given model index
+         */
+        ExplorerItem *getItemPointer(QModelIndex const &modelIndex) const;
+
+        /**
          * \brief reimplements \c QAbstractItemModel::flags()
          * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#flags
          */
@@ -243,8 +250,9 @@ namespace NkE {
         void on_actShowSearchBar_triggered(bool isChecked = false);
         void on_actEnableRegex_triggered(bool isChecked = false);
         void on_actCtrlSearchBar_triggered();
+        void on_actCaseSensitivity_triggered(bool isChecked = false);
 
-        void on_leSearch_textChanged();
+        void on_leSearch_textChanged(QString const &newText = "");
     };
 } /* namespace NkE */
 
