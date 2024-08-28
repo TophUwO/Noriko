@@ -61,6 +61,10 @@ namespace NkE {
          * \brief gets the data used for the Qt::DisplayRole of the overarching model 
          */
         virtual QVariant      getDisplayData()       const;
+        /**
+         * \brief gets the decoration data (i.e., the item's icon) for use inside the
+         *        view 
+         */
         virtual QVariant      getDecorationData()    const;
                 NkSize        getChildCount()        const;
                 NkInt32       getItemRow()           const;
