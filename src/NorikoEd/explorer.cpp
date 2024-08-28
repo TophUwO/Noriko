@@ -274,27 +274,17 @@ namespace NkE {
         : DockableContainer("Project Explorer", Qt::RightDockWidgetArea, parPtr)
     {
         setupUi(contentWidget());
-        mbMain->setVisible(false);
-        explModelPtr->setParent(this);
-
-        /* Connect signals for the search bar. */
-        connect(leSearch, &QLineEdit::textChanged, this, [&]() {
-            QString tmpTxt = leSearch->text();
-
-            if (tmpTxt.isEmpty())
-                actCtrlSearchBar->setIcon(QIcon(":/icons/ico_search.png"));
-            else
-                actCtrlSearchBar->setIcon(QIcon(":/icons/ico_delete.png"));
-        });
-        connect(actCtrlSearchBar, &QAction::triggered, this, [&]() {
-            leSearch->clear();
-        });
-        
         /* Setup dynamic widgets. */
-        actSearchOptions->setMenu(menuSearchOptions);
-        leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
-        leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
-        leSearch->addAction(actRegEx, QLineEdit::TrailingPosition);
+        int_setupDynamicWidgets();
+
+        /* Connect slots triggered by actions directly. */
+        connect(actCollapseAll, &QAction::triggered, this, &ExplorerWidget::on_actCollapseAll_triggered);
+        connect(actExpandAll, &QAction::triggered, this, &ExplorerWidget::on_actExpandAll_triggered);
+        connect(actShowSearchBar, &QAction::triggered, this, &ExplorerWidget::on_actShowSearchBar_triggered);
+        connect(actEnableRegex, &QAction::triggered, this, &ExplorerWidget::on_actEnableRegex_triggered);
+        connect(actCtrlSearchBar, &QAction::triggered, this, &ExplorerWidget::on_actCtrlSearchBar_triggered);
+        /* Connect slots triggered indirectly by other widgets. */
+        connect(leSearch, &QLineEdit::textChanged, this, &ExplorerWidget::on_leSearch_textChanged);
 
         /* Setup model. */
         tvExplorer->setModel(explModelPtr);
@@ -304,6 +294,53 @@ namespace NkE {
 
     ExplorerWidget::~ExplorerWidget() {
         NK_LOG_INFO("shutdown: project explorer");
+    }
+
+
+    void ExplorerWidget::int_setupDynamicWidgets() {
+        /* Use the hidden menu. */
+        mbMain->setVisible(false);
+        actSearchOptions->setMenu(menuSearchOptions);
+
+        leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
+        leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
+        leSearch->addAction(actRegEx, QLineEdit::TrailingPosition);
+    }
+
+    
+    void ExplorerWidget::on_actCollapseAll_triggered() {
+        tvExplorer->collapseAll();
+    }
+
+    void ExplorerWidget::on_actExpandAll_triggered() {
+        tvExplorer->expandAll();
+    }
+
+    void ExplorerWidget::on_actShowSearchBar_triggered(bool isChecked) {
+        leSearch->setVisible(isChecked);
+    }
+
+    void ExplorerWidget::on_actEnableRegex_triggered(bool isChecked) {
+        actRegEx->setVisible(isChecked);
+    }
+
+    void ExplorerWidget::on_actCtrlSearchBar_triggered() {
+        QString searchBarText = leSearch->text();
+
+        if (!searchBarText.isEmpty())
+            leSearch->clear();
+    }
+
+
+    void ExplorerWidget::on_leSearch_textChanged() {
+        QString const currText = leSearch->text();
+
+        /* Update "Control search bar" action. */
+        actCtrlSearchBar->setIcon(currText.isEmpty()
+            ? QIcon(":/icons/ico_search.png")
+            : QIcon(":/icons/ico_delete.png")
+        );
+        actCtrlSearchBar->setToolTip(currText.isEmpty() ? "" : "Clear search bar");
     }
 } /* namespace NkE */
 

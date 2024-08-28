@@ -222,6 +222,12 @@ namespace NkE {
     class ExplorerWidget : public DockableContainer, private Ui_ExplorerWidget {
         Q_OBJECT
 
+        /**
+         * \brief carries out specific dynamic widget initialization that could not be
+         *        done during the Qt Designer stage.
+         */
+        void int_setupDynamicWidgets();
+
     public:
         /**
          * \brief constructs a new explorer widget
@@ -230,6 +236,15 @@ namespace NkE {
          */
         explicit ExplorerWidget(ExplorerModel *explModelPtr, QWidget *parPtr = nullptr);
         ~ExplorerWidget();
+
+    private slots:
+        void on_actCollapseAll_triggered();
+        void on_actExpandAll_triggered();
+        void on_actShowSearchBar_triggered(bool isChecked = false);
+        void on_actEnableRegex_triggered(bool isChecked = false);
+        void on_actCtrlSearchBar_triggered();
+
+        void on_leSearch_textChanged();
     };
 } /* namespace NkE */
 
