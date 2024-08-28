@@ -23,6 +23,10 @@
 /* stdlib includes */
 #include <algorithm>
 
+/* Qt includes */
+#include <QMessageBox>
+#include <QStyledItemDelegate>
+
 /* NorikoEd includes */
 #include <include/NorikoEd/explorer.hpp>
 
@@ -269,6 +273,66 @@ namespace NkE {
 } /* namespace NkE */
 
 
+/* implementation of the custom explorer item delegate */
+namespace NkE::priv {
+    /**
+    * \class ExplorerItemDelegate
+    * \brief represents a modified item delegate for the project explorer
+    */
+    class ExplorerItemDelegate : public QStyledItemDelegate {
+        Q_OBJECT
+
+    public:
+        /**
+         * \brief construct a new explorer item delegate
+         * \param [in] parPtr pointer to the parent object
+         */
+        explicit ExplorerItemDelegate(QObject *parPtr = nullptr)
+            : QStyledItemDelegate(parPtr)
+        { }
+
+
+        /**
+         * \brief reimplements \c QStyledItemDelegate::setModelData()
+         * \see   https://doc.qt.io/qt-6/qstyleditemdelegate.html#setModelData
+         * \note  This function causes an empty string not to be accepted when the model
+         *        is edited by hand.
+         */
+        virtual void setModelData(QWidget *ePtr, QAbstractItemModel *mdPtr, QModelIndex const &mdInd) const override {
+            if (!mdInd.isValid()) {
+                QStyledItemDelegate::setModelData(ePtr, mdPtr, mdInd);
+
+                return;
+            }
+
+            /* Get the underlying QLineEdit editor widget. */
+            QLineEdit *editorWg = dynamic_cast<QLineEdit *>(ePtr);
+            /*
+            * If the editor widget's text was modified, check if it's not empty. If it is,
+            * show error message and reset editor widget.
+            */
+            if (editorWg != nullptr && editorWg->isModified()) {
+                QString const editorWgTxt = editorWg->text().trimmed();
+
+                if (editorWgTxt.isEmpty()) {
+                    /* Show error message. */
+                    QMessageBox::critical(
+                        nullptr,
+                        "Error",
+                        "Please enter a valid new name for the selected item.",
+                        QMessageBox::Ok
+                    );
+
+                    return;
+                }
+            }
+
+            QStyledItemDelegate::setModelData(ePtr, mdPtr, mdInd);
+        }
+    };
+}
+
+
 /* implementation of the explorer widget */
 namespace NkE {
     ExplorerWidget::ExplorerWidget(ExplorerModel *explModelPtr, QWidget *parPtr)
@@ -287,7 +351,9 @@ namespace NkE {
         /* Connect slots triggered indirectly by other widgets. */
         connect(leSearch, &QLineEdit::textChanged, this, &ExplorerWidget::on_leSearch_textChanged);
 
-        /* Setup model. */
+        /* Setup view. */
+        tvExplorer->itemDelegate()->deleteLater();
+        tvExplorer->setItemDelegate(new priv::ExplorerItemDelegate(tvExplorer));
         tvExplorer->setModel(explModelPtr);
         tvExplorer->expandAll();
         NK_LOG_INFO("startup: project explorer");
@@ -344,5 +410,8 @@ namespace NkE {
         actCtrlSearchBar->setToolTip(currText.isEmpty() ? "" : "Clear search bar");
     }
 } /* namespace NkE */
+
+
+#include "explorer.moc"
 
 

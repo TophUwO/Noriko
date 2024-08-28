@@ -171,14 +171,14 @@
   <ItemGroup>
     <ClCompile Include="..\src\NorikoEd\application.cpp" />
     <ClCompile Include="..\src\NorikoEd\dialog.cpp" />
-    <ClCompile Include="..\src\NorikoEd\explorer.cpp">
+    <QtMoc Include="..\src\NorikoEd\explorer.cpp">
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
-    </ClCompile>
+    </QtMoc>
     <ClCompile Include="..\src\NorikoEd\main.cpp" />
     <ClCompile Include="..\src\NorikoEd\project.cpp" />
     <ClCompile Include="..\src\NorikoEd\window.cpp" />

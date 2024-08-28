@@ -41,9 +41,6 @@
     <ClCompile Include="..\src\NorikoEd\dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\NorikoEd\explorer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\include\NorikoEd\application.hpp">
@@ -63,6 +60,9 @@
     </QtMoc>
     <QtMoc Include="..\include\NorikoEd\dialog.hpp">
       <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\src\NorikoEd\explorer.cpp">
+      <Filter>Source Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
