@@ -198,6 +198,9 @@
   <ItemGroup>
     <QtMoc Include="..\include\NorikoEd\explorer.hpp" />
   </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="..\res\resource.qrc" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
     <Import Project="$(QtMsBuild)\qt.targets" />

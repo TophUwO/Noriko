@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icons/ico_folder.png</file>
+        <file>icons/ico_folderadd.png</file>
+        <file>icons/ico_folderfilter.png</file>
+        <file>icons/ico_folderrem.png</file>
+        <file>icons/ico_project.png</file>
+        <file>icons/ico_collapseall.png</file>
+        <file>icons/ico_expandall.png</file>
+        <file>icons/ico_show_only_files.png</file>
+        <file>icons/ico_preview.png</file>
+        <file>icons/ico_properties.png</file>
+        <file>icons/ico_settings.png</file>
+        <file>icons/ico_search.png</file>
+        <file>icons/ico_delete.png</file>
+        <file>icons/ico_backward.png</file>
+        <file>icons/ico_forward.png</file>
+    </qresource>
+</RCC>

@@ -38,6 +38,10 @@ namespace NkE {
         return QVariant{};
     }
 
+    QVariant ExplorerItem::getDecorationData() const {
+        return QVariant{};
+    }
+
     NkSize ExplorerItem::getChildCount() const {
         return (NkSize)m_childItems.size();
     }
@@ -87,6 +91,10 @@ namespace NkE {
     QVariant ExplorerProjectItem::getDisplayData() const {
         return m_projItem->getProjectName();
     }
+
+    QVariant ExplorerProjectItem::getDecorationData() const {
+        return QIcon(":/icons/ico_project.png");
+    }
 } /* namespace NkE */
 
 
@@ -100,6 +108,10 @@ namespace NkE {
     QVariant ExplorerFilterItem::getDisplayData() const {
         return m_filterName;
     }
+
+    QVariant ExplorerFilterItem::getDecorationData() const {
+        return QIcon(":/icons/ico_folderfilter.png");
+    }
 } /* namespace NkE */
 
 
@@ -110,6 +122,18 @@ namespace NkE {
     {
         /* Create root item. */
         m_rootItem = std::make_unique<ExplorerItem>(nullptr);
+
+        /* Setup example model. */
+        auto a1 = std::make_unique<ExplorerProjectItem>(std::make_shared<Project>("Ace of Spaces", "", "", QDir()), m_rootItem.get());
+        auto a2 = std::make_unique<ExplorerFilterItem>("assets", a1.get());
+        auto a3 = std::make_unique<ExplorerFilterItem>("tilesets", a2.get());
+        auto a4 = std::make_unique<ExplorerFilterItem>("maps", a2.get());
+        auto a5 = std::make_unique<ExplorerFilterItem>("out", a1.get());
+        a2->insertChildItem(0, std::move(a3));
+        a2->insertChildItem(1, std::move(a4));
+        a1->insertChildItem(0, std::move(a2));
+        a1->insertChildItem(1, std::move(a5));
+        m_rootItem->insertChildItem(0, std::move(a1));
     }
 
 
@@ -175,7 +199,8 @@ namespace NkE {
          * Qt::DisplayRole ... QString that is to be displayed as the main item text 
          */
         switch (roleId) {
-            case Qt::DisplayRole: return itemPtr->getDisplayData();
+            case Qt::DisplayRole:    return itemPtr->getDisplayData();
+            case Qt::DecorationRole: return itemPtr->getDecorationData();
         }
 
         return QVariant{};
@@ -190,6 +215,22 @@ namespace NkE {
     {
         setupUi(contentWidget());
         explModelPtr->setParent(this);
+
+        /* Connect signals for the search bar. */
+        connect(leSearch, &QLineEdit::textChanged, this, [&]() {
+            QString tmpTxt = leSearch->text();
+
+            if (tmpTxt.isEmpty())
+                actCtrlSearchBar->setIcon(QIcon(":/icons/ico_search.png"));
+            else
+                actCtrlSearchBar->setIcon(QIcon(":/icons/ico_delete.png"));
+        });
+        connect(actCtrlSearchBar, &QAction::triggered, this, [&]() {
+            leSearch->clear();
+        });
+        
+        /* Setup dynamic widgets. */
+        leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
 
         tvExplorer->setModel(explModelPtr);
         tvExplorer->expandAll();

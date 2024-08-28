@@ -61,6 +61,7 @@ namespace NkE {
          * \brief gets the data used for the Qt::DisplayRole of the overarching model 
          */
         virtual QVariant      getDisplayData()       const;
+        virtual QVariant      getDecorationData()    const;
                 NkSize        getChildCount()        const;
                 NkInt32       getItemRow()           const;
                 ExplorerItem *getChildAt(int rowPos) const;
@@ -101,6 +102,7 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDisplayData() 
          */
         virtual QVariant getDisplayData() const override;
+        virtual QVariant getDecorationData() const override;
     };
 
 
@@ -124,6 +126,7 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDisplayData() 
          */
         virtual QVariant getDisplayData() const override;
+        virtual QVariant getDecorationData() const override;
     };
 
 

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>385</width>
+    <width>577</width>
     <height>712</height>
    </rect>
   </property>
@@ -30,10 +30,20 @@
     <property name="verticalSpacing">
      <number>0</number>
     </property>
-    <item row="0" column="0">
+    <item row="1" column="0">
      <widget class="QTreeView" name="tvExplorer">
       <property name="headerHidden">
        <bool>true</bool>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0">
+     <widget class="QLineEdit" name="leSearch">
+      <property name="focusPolicy">
+       <enum>Qt::FocusPolicy::StrongFocus</enum>
+      </property>
+      <property name="placeholderText">
+       <string>Search project explorer</string>
       </property>
      </widget>
     </item>
@@ -67,8 +77,153 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="actBackward"/>
+   <addaction name="actForward"/>
+   <addaction name="separator"/>
+   <addaction name="actCollapseAll"/>
+   <addaction name="actExpandAll"/>
+   <addaction name="actShowFilesOnly"/>
+   <addaction name="separator"/>
+   <addaction name="actItemProperties"/>
+   <addaction name="actPreviewOnSel"/>
+   <addaction name="separator"/>
+   <addaction name="actViewSettings"/>
   </widget>
+  <action name="actCollapseAll">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_collapseall.png</normaloff>:/icons/ico_collapseall.png</iconset>
+   </property>
+   <property name="text">
+    <string>Collapse all</string>
+   </property>
+   <property name="toolTip">
+    <string>Collapse all parent items</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actExpandAll">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_expandall.png</normaloff>:/icons/ico_expandall.png</iconset>
+   </property>
+   <property name="text">
+    <string>Expand all</string>
+   </property>
+   <property name="toolTip">
+    <string>Expand all parent items</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actShowFilesOnly">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_show_only_files.png</normaloff>:/icons/ico_show_only_files.png</iconset>
+   </property>
+   <property name="text">
+    <string>Show files only</string>
+   </property>
+   <property name="toolTip">
+    <string>Shows only files; hides all filters</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actPreviewOnSel">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_preview.png</normaloff>:/icons/ico_preview.png</iconset>
+   </property>
+   <property name="text">
+    <string>Preview items when selected</string>
+   </property>
+   <property name="toolTip">
+    <string>Preview selected item</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actItemProperties">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_properties.png</normaloff>:/icons/ico_properties.png</iconset>
+   </property>
+   <property name="text">
+    <string>Item Properties</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actViewSettings">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_settings.png</normaloff>:/icons/ico_settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>View Settings</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actCtrlSearchBar">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_search.png</normaloff>:/icons/ico_search.png</iconset>
+   </property>
+   <property name="text">
+    <string>Search</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actBackward">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_backward.png</normaloff>:/icons/ico_backward.png</iconset>
+   </property>
+   <property name="text">
+    <string>Backward</string>
+   </property>
+   <property name="toolTip">
+    <string>Go back</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actForward">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_forward.png</normaloff>:/icons/ico_forward.png</iconset>
+   </property>
+   <property name="text">
+    <string>Forward</string>
+   </property>
+   <property name="toolTip">
+    <string>Go forward</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
  </widget>
- <resources/>
+ <resources>
+  <include location="../resource.qrc"/>
+ </resources>
  <connections/>
 </ui>
