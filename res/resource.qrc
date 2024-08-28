@@ -15,5 +15,6 @@
         <file>icons/ico_views.png</file>
         <file>icons/ico_regex.png</file>
         <file>icons/ico_delete.png</file>
+        <file>icons/ico_treeview.png</file>
     </qresource>
 </RCC>

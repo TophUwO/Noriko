@@ -274,7 +274,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_views.png</normaloff>:/icons/ico_views.png</iconset>
+     <normaloff>:/icons/ico_treeview.png</normaloff>:/icons/ico_treeview.png</iconset>
    </property>
    <property name="text">
     <string>Search in project explorer</string>
