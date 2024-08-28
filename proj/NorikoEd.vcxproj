@@ -171,7 +171,14 @@
   <ItemGroup>
     <ClCompile Include="..\src\NorikoEd\application.cpp" />
     <ClCompile Include="..\src\NorikoEd\dialog.cpp" />
-    <ClCompile Include="..\src\NorikoEd\explorer.cpp" />
+    <ClCompile Include="..\src\NorikoEd\explorer.cpp">
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
+      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
+      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(Filename).moc</QtMocFileName>
+    </ClCompile>
     <ClCompile Include="..\src\NorikoEd\main.cpp" />
     <ClCompile Include="..\src\NorikoEd\project.cpp" />
     <ClCompile Include="..\src\NorikoEd\window.cpp" />
@@ -192,7 +199,6 @@
     <QtMoc Include="..\include\NorikoEd\common.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\dialog.hpp" />
     <QtMoc Include="..\include\NorikoEd\project.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +206,9 @@
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="..\res\resource.qrc" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

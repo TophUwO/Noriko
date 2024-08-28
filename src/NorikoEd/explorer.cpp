@@ -231,6 +231,7 @@ namespace NkE {
          * Qt::DisplayRole ... QString that is to be displayed as the main item text 
          */
         switch (roleId) {
+            case Qt::EditRole:
             case Qt::DisplayRole:    return itemPtr->getDisplayData();
             case Qt::DecorationRole: return itemPtr->getDecorationData();
         }

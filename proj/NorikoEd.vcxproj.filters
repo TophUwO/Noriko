@@ -55,13 +55,13 @@
     <QtMoc Include="..\include\NorikoEd\common.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\dialog.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="..\include\NorikoEd\project.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="..\include\NorikoEd\explorer.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
