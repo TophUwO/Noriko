@@ -1,14 +1,44 @@
 - project explorer
- - search filter
- - add project
- - add file to selected filter
- - remove file
- - remove and delete file
- - duplicate
- - expand all
- - collapse all
- - settings
- - show properties (open property widget)
+ -- search filter
+ --- add project
+ --- add file to selected filter
+ --- remove file
+ --- remove and delete file
+ --- duplicate
+ -- expand all
+ -- collapse all
+ -- settings
+ -- show properties (open property widget)
+ - home (return from scope to this)
 
-- dependency tree
- - 
+- context menus
+ - project
+  - add new
+  - add existing
+  - add filter
+  - copy
+  - duplicate
+  - remove
+  - delete from disk
+  - cut
+  - close
+  - save
+  - deploy
+  - rename
+  - set as startup project
+  - backup
+  - collapse
+  - expand
+  - scope to this
+  - properties
+ - filter
+  - add new
+  - add existing
+  - add filter
+  - remove
+  - rename
+  - collapse
+  - expand
+  - scope to this
+  - properties
+   

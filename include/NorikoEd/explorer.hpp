@@ -72,6 +72,12 @@ namespace NkE {
                 ExplorerItem *getParent()            const;
 
         /**
+         * \brief  updates the display value (for Qt::DisplayRole) for the current item
+         * \return \c true if the data was updated, \c false if not
+         */
+        virtual bool setDisplayData(QVariant const &newVal);
+
+        /**
          * \brief inserts a new child item at the given index
          * \param [in] where2Insert the position of where to insert the new item
          * \param [in] childItem child item that is to be added at the given position
@@ -106,7 +112,15 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDisplayData() 
          */
         virtual QVariant getDisplayData() const override;
+        /**
+         * \brief reimplements \c ExplorerItem::getDecorationData() 
+         */
         virtual QVariant getDecorationData() const override;
+
+        /**
+         * \brief reimplements \c ExplorerItem::setDisplayData() 
+         */
+        virtual bool setDisplayData(QVariant const &newVal) override;
     };
 
 
@@ -130,7 +144,15 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDisplayData() 
          */
         virtual QVariant getDisplayData() const override;
+        /**
+         * \brief reimplements \c ExplorerItem::getDecorationData() 
+         */
         virtual QVariant getDecorationData() const override;
+
+        /**
+         * \brief reimplements \c ExplorerItem::setDisplayData() 
+         */
+        virtual bool setDisplayData(QVariant const &newVal) override;
     };
 
 
@@ -151,6 +173,11 @@ namespace NkE {
         explicit ExplorerModel(QObject *parPtr = nullptr);
         ~ExplorerModel() = default;
 
+        /**
+         * \brief reimplements \c QAbstractItemModel::flags()
+         * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#flags
+         */
+        virtual Qt::ItemFlags flags(const QModelIndex &itemIndex) const override;
         /**
          * \brief reimplements \c QAbstractItemModel::index()
          * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#index
@@ -176,6 +203,12 @@ namespace NkE {
          * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#data
          */
         virtual QVariant data(QModelIndex const &modelIndex, int roleId) const override;
+
+        /**
+         * \brief reimplements \c QAbstractItemModel::setData()
+         * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#setData
+         */
+        virtual bool setData(QModelIndex const &modelIndex, QVariant const &newVal, int roleId) override;
     };
 } /* namespace NkE */
 

@@ -71,6 +71,12 @@ namespace NkE {
     }
 
 
+    bool ExplorerItem::setDisplayData(QVariant const &newVal) {
+        /* Do nothing by default. */
+        return false;
+    }
+
+
     void ExplorerItem::insertChildItem(NkInt32 where2Insert, std::unique_ptr<ExplorerItem> &&childItem) {
         m_childItems.insert(m_childItems.cbegin() + where2Insert, std::move(childItem));
     }
@@ -95,6 +101,16 @@ namespace NkE {
     QVariant ExplorerProjectItem::getDecorationData() const {
         return QIcon(":/icons/ico_project.png");
     }
+
+
+    bool ExplorerProjectItem::setDisplayData(QVariant const &newVal) {
+        if (!newVal.isValid())
+            return false;
+
+        /* Update the project's name. */
+        NK_LOG_WARNING("Updating project names in the project explorer view is not yet implemented.");
+        return false;
+    }
 } /* namespace NkE */
 
 
@@ -111,6 +127,15 @@ namespace NkE {
 
     QVariant ExplorerFilterItem::getDecorationData() const {
         return QIcon(":/icons/ico_folderfilter.png");
+    }
+
+
+    bool ExplorerFilterItem::setDisplayData(QVariant const &newVal) {
+        if (!newVal.isValid())
+            return false;
+
+        m_filterName = newVal.toString();
+        return true;
     }
 } /* namespace NkE */
 
@@ -136,6 +161,13 @@ namespace NkE {
         m_rootItem->insertChildItem(0, std::move(a1));
     }
 
+
+    Qt::ItemFlags ExplorerModel::flags(const QModelIndex &itemIndex) const {
+        if (!itemIndex.isValid())
+            return Qt::NoItemFlags;
+
+        return Qt::ItemIsEditable | QAbstractItemModel::flags(itemIndex);
+    }
 
     QModelIndex ExplorerModel::index(int rowPos, int colPos, const QModelIndex &parIndex) const {
         if (!hasIndex(rowPos, colPos, parIndex))
@@ -205,6 +237,34 @@ namespace NkE {
 
         return QVariant{};
     }
+
+
+    bool ExplorerModel::setData(QModelIndex const &modelIndex, QVariant const &newVal, int roleId) {
+        if (!modelIndex.isValid())
+            return false;
+
+        /* Update the data. */
+        bool editRes = false;
+        auto itemPtr = static_cast<ExplorerItem *>(modelIndex.internalPointer());
+        switch (roleId) {
+            case Qt::EditRole:
+            case Qt::DisplayRole:
+                editRes = itemPtr->setDisplayData(newVal);
+                
+                break;
+        }
+        
+        /*
+         * Emit dataChanged signal as per requirements.
+         * See: https://doc.qt.io/qt-6/qabstractitemmodel.html#setData
+         */
+        if (editRes) {
+            emit dataChanged(modelIndex, modelIndex, { Qt::DisplayRole, Qt::EditRole });
+
+            return true;
+        }
+        return false;
+    }
 } /* namespace NkE */
 
 
@@ -214,6 +274,7 @@ namespace NkE {
         : DockableContainer("Project Explorer", Qt::RightDockWidgetArea, parPtr)
     {
         setupUi(contentWidget());
+        mbMain->setVisible(false);
         explModelPtr->setParent(this);
 
         /* Connect signals for the search bar. */
@@ -230,8 +291,12 @@ namespace NkE {
         });
         
         /* Setup dynamic widgets. */
+        actSearchOptions->setMenu(menuSearchOptions);
+        leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
         leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
+        leSearch->addAction(actRegEx, QLineEdit::TrailingPosition);
 
+        /* Setup model. */
         tvExplorer->setModel(explModelPtr);
         tvExplorer->expandAll();
         NK_LOG_INFO("startup: project explorer");

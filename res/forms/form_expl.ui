@@ -77,17 +77,37 @@
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
-   <addaction name="actBackward"/>
-   <addaction name="actForward"/>
+   <addaction name="actionactSwitchView"/>
    <addaction name="separator"/>
    <addaction name="actCollapseAll"/>
    <addaction name="actExpandAll"/>
    <addaction name="actShowFilesOnly"/>
+   <addaction name="actShowSearchBar"/>
    <addaction name="separator"/>
    <addaction name="actItemProperties"/>
    <addaction name="actPreviewOnSel"/>
    <addaction name="separator"/>
    <addaction name="actViewSettings"/>
+  </widget>
+  <widget class="QMenuBar" name="mbMain">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>577</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuSearchOptions">
+    <property name="title">
+     <string>menuSearchOptions</string>
+    </property>
+    <addaction name="actEnableRegex"/>
+    <addaction name="separator"/>
+    <addaction name="actSearchExpl"/>
+    <addaction name="actSearchFiles"/>
+   </widget>
+   <addaction name="menuSearchOptions"/>
   </widget>
   <action name="actCollapseAll">
    <property name="icon">
@@ -191,31 +211,94 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actBackward">
+  <action name="actShowSearchBar">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_backward.png</normaloff>:/icons/ico_backward.png</iconset>
+     <normaloff>:/icons/ico_search.png</normaloff>:/icons/ico_search.png</iconset>
    </property>
    <property name="text">
-    <string>Backward</string>
-   </property>
-   <property name="toolTip">
-    <string>Go back</string>
+    <string>Show search bar</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actForward">
+  <action name="actionactSwitchView">
    <property name="icon">
     <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_forward.png</normaloff>:/icons/ico_forward.png</iconset>
+     <normaloff>:/icons/ico_views.png</normaloff>:/icons/ico_views.png</iconset>
    </property>
    <property name="text">
-    <string>Forward</string>
+    <string>actSwitchView</string>
    </property>
    <property name="toolTip">
-    <string>Go forward</string>
+    <string>Switch view</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actRegEx">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_regex.png</normaloff>:/icons/ico_regex.png</iconset>
+   </property>
+   <property name="text">
+    <string>Support regular expressions</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actEnableRegex">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_regex.png</normaloff>:/icons/ico_regex.png</iconset>
+   </property>
+   <property name="text">
+    <string>Enable regular expressions</string>
+   </property>
+  </action>
+  <action name="actSearchExpl">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_views.png</normaloff>:/icons/ico_views.png</iconset>
+   </property>
+   <property name="text">
+    <string>Search in project explorer</string>
+   </property>
+  </action>
+  <action name="actSearchFiles">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_folder.png</normaloff>:/icons/ico_folder.png</iconset>
+   </property>
+   <property name="text">
+    <string>Search in files</string>
+   </property>
+  </action>
+  <action name="actSearchOptions">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_settings.png</normaloff>:/icons/ico_settings.png</iconset>
+   </property>
+   <property name="text">
+    <string>Search Options</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
