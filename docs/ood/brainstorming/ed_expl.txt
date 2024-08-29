@@ -13,24 +13,24 @@
 
 - context menus
  - project
-  - add new
-  - add existing
-  - add filter
-  - copy
+  --- add new
+  --- add existing
+  --- add filter
+  + copy
   - duplicate
-  - remove
-  - delete from disk
-  - cut
-  - close
-  - save
-  - deploy
-  - rename
-  - set as startup project
-  - backup
-  - collapse
-  - expand
-  - scope to this
-  - properties
+  --- remove
+  --- delete from disk
+  + cut
+  --- close
+  --- save
+  + deploy
+  --- rename
+  + set as startup project
+  + backup
+  --- collapse
+  --- expand
+  --- scope to this
+  --- properties
  - filter
   - add new
   - add existing

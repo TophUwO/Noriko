@@ -24,5 +24,6 @@
         <file>icons/ico_savedb.png</file>
         <file>icons/ico_trash.png</file>
         <file>icons/ico_rename.png</file>
+        <file>icons/ico_home.png</file>
     </qresource>
 </RCC>

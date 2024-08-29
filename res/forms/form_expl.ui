@@ -78,6 +78,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actSwitchView"/>
+   <addaction name="actHomeView"/>
    <addaction name="separator"/>
    <addaction name="actCollapseAll"/>
    <addaction name="actExpandAll"/>
@@ -122,6 +123,7 @@
     <addaction name="actProjSaveAll"/>
     <addaction name="actSaveProjectFile"/>
     <addaction name="actSaveAssetDb"/>
+    <addaction name="separator"/>
     <addaction name="actProjDelete"/>
     <addaction name="actRename"/>
     <addaction name="actProjClose"/>
@@ -386,7 +388,7 @@
   </action>
   <action name="actScopeToThis">
    <property name="text">
-    <string>Scope to this</string>
+    <string>Set selected item as root item</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+3</string>
@@ -441,6 +443,21 @@
    </property>
    <property name="text">
     <string>Save asset database</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actHomeView">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_home.png</normaloff>:/icons/ico_home.png</iconset>
+   </property>
+   <property name="text">
+    <string>Go to home view</string>
+   </property>
+   <property name="toolTip">
+    <string>Return to root view</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
