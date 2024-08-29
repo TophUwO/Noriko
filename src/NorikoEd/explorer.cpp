@@ -47,6 +47,10 @@ namespace NkE {
         return QVariant{};
     }
 
+    ExplorerItem::Type ExplorerItem::getItemType() const {
+        return Type::Generic;
+    }
+
     NkSize ExplorerItem::getChildCount() const {
         return (NkSize)m_childItems.size();
     }
@@ -103,6 +107,10 @@ namespace NkE {
         return m_projItem->getProjectName();
     }
 
+    ExplorerItem::Type ExplorerProjectItem::getItemType() const {
+        return Type::Project;
+    }
+
     QVariant ExplorerProjectItem::getDecorationData() const {
         return QIcon(":/icons/ico_project.png");
     }
@@ -132,6 +140,10 @@ namespace NkE {
 
     QVariant ExplorerFilterItem::getDecorationData() const {
         return QIcon(":/icons/ico_folderfilter.png");
+    }
+
+    ExplorerItem::Type ExplorerFilterItem::getItemType() const {
+        return Type::Filter;
     }
 
 
@@ -404,8 +416,10 @@ namespace NkE {
         connect(actCaseSensitivity, &QAction::triggered, this, &ExplorerWidget::on_actCaseSensitivity_triggered);
         /* Connect slots triggered indirectly by other widgets. */
         connect(leSearch, &QLineEdit::textChanged, this, &ExplorerWidget::on_leSearch_textChanged);
+        connect(tvExplorer, &QTreeView::customContextMenuRequested, this, &ExplorerWidget::on_customCxtMenu_requested);
 
         /* Setup view. */
+        tvExplorer->setContextMenuPolicy(Qt::CustomContextMenu);
         tvExplorer->itemDelegate()->deleteLater();
         tvExplorer->setItemDelegate(new priv::ExplorerItemDelegate(tvExplorer));
         tvExplorer->setModel(new priv::ExplorerFilterModel(explModelPtr, this));
@@ -471,6 +485,40 @@ namespace NkE {
         }
     }
 
+
+    void ExplorerWidget::on_customCxtMenu_requested(QPoint const &mousePos) {
+        /* Get the proxy index. */
+        QModelIndex const itemAtPos = tvExplorer->indexAt(mousePos);
+        if (!itemAtPos.isValid() || itemAtPos.constInternalPointer() == nullptr) {
+            NK_LOG_WARNING("The Explorer widget's context menu is not yet implemented.");
+
+            return;
+        }
+
+        /* Get the actual item index from the proxy index. */
+        if (priv::ExplorerFilterModel *modelPtr = dynamic_cast<priv::ExplorerFilterModel *>(tvExplorer->model())) {
+            QModelIndex sourceItemInd = modelPtr->mapToSource(itemAtPos);
+            ExplorerItem *itemPtr = static_cast<ExplorerItem *>(sourceItemInd.internalPointer());
+            if (!sourceItemInd.isValid() || itemPtr == nullptr)
+                return;
+
+            /* Call the appropriate context menu based on the item type. */
+            QMenu *reqCxtMenu = nullptr;
+            switch (itemPtr->getItemType()) {
+                case ExplorerItem::Type::Project: reqCxtMenu = menuCxtProject; break;
+                default:
+                    NK_LOG_WARNING(
+                        "Custom context menus for type %i is not yet implemented.",
+                        static_cast<int>(itemPtr->getItemType())
+                    );
+
+                    return;
+            }
+
+            /* Execute the selected context menu. */
+            reqCxtMenu->exec(tvExplorer->viewport()->mapToGlobal(mousePos));
+        }
+    }
 
     void ExplorerWidget::on_leSearch_textChanged(QString const &newText) {
         /* Update "Control search bar" action. */

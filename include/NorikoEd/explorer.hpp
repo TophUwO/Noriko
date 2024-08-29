@@ -51,6 +51,18 @@ namespace NkE {
 
     public:
         /**
+         * \enum  ExplorerItem::Type
+         * \brief explorer item type IDs (used for category identification when assigning
+         *        custom context menus, etc.)
+         */
+        enum class Type {
+            Generic, /**< generic type */
+            
+            Project, /**< project item type ID */
+            Filter   /**< filter item type ID */
+        };
+
+        /**
          * \brief constructs a new explorer item
          * \param [in] parPtr pointer to the parent item
          */
@@ -60,16 +72,20 @@ namespace NkE {
         /**
          * \brief gets the data used for the Qt::DisplayRole of the overarching model 
          */
-        virtual QVariant      getDisplayData()       const;
+        virtual QVariant getDisplayData() const;
         /**
          * \brief gets the decoration data (i.e., the item's icon) for use inside the
          *        view 
          */
-        virtual QVariant      getDecorationData()    const;
-                NkSize        getChildCount()        const;
-                NkInt32       getItemRow()           const;
-                ExplorerItem *getChildAt(int rowPos) const;
-                ExplorerItem *getParent()            const;
+        virtual QVariant getDecorationData() const;
+        /**
+         * \brief retrieves the numeric item type ID 
+         */
+        virtual ExplorerItem::Type  getItemType()          const;
+                NkSize              getChildCount()        const;
+                NkInt32             getItemRow()           const;
+                ExplorerItem       *getChildAt(int rowPos) const;
+                ExplorerItem       *getParent()            const;
 
         /**
          * \brief  updates the display value (for Qt::DisplayRole) for the current item
@@ -116,6 +132,10 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDecorationData() 
          */
         virtual QVariant getDecorationData() const override;
+        /**
+         * \brief reimplements \c ExplorerItem::getItemType() 
+         */
+        virtual ExplorerItem::Type getItemType() const override;
 
         /**
          * \brief reimplements \c ExplorerItem::setDisplayData() 
@@ -148,6 +168,10 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::getDecorationData() 
          */
         virtual QVariant getDecorationData() const override;
+        /**
+         * \brief reimplements \c ExplorerItem::getItemType() 
+         */
+        virtual ExplorerItem::Type getItemType() const override;
 
         /**
          * \brief reimplements \c ExplorerItem::setDisplayData() 
@@ -252,6 +276,7 @@ namespace NkE {
         void on_actCtrlSearchBar_triggered();
         void on_actCaseSensitivity_triggered(bool isChecked = false);
 
+        void on_customCxtMenu_requested(QPoint const &mousePos = QPoint());
         void on_leSearch_textChanged(QString const &newText = "");
     };
 } /* namespace NkE */

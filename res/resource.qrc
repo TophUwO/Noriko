@@ -16,5 +16,13 @@
         <file>icons/ico_regex.png</file>
         <file>icons/ico_delete.png</file>
         <file>icons/ico_casesens.png</file>
+        <file>icons/ico_documentnew.png</file>
+        <file>icons/ico_documentadd.png</file>
+        <file>icons/ico_close.png</file>
+        <file>icons/ico_saveall.png</file>
+        <file>icons/ico_saveproj.png</file>
+        <file>icons/ico_savedb.png</file>
+        <file>icons/ico_trash.png</file>
+        <file>icons/ico_rename.png</file>
     </qresource>
 </RCC>
