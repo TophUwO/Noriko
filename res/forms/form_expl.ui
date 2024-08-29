@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>577</width>
-    <height>712</height>
+    <width>718</width>
+    <height>705</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -82,10 +82,8 @@
    <addaction name="separator"/>
    <addaction name="actCollapseAll"/>
    <addaction name="actExpandAll"/>
-   <addaction name="actShowFilesOnly"/>
    <addaction name="actShowSearchBar"/>
    <addaction name="separator"/>
-   <addaction name="actItemProperties"/>
    <addaction name="actPreviewOnSel"/>
    <addaction name="separator"/>
    <addaction name="actViewSettings"/>
@@ -95,7 +93,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>577</width>
+     <width>718</width>
      <height>21</height>
     </rect>
    </property>
@@ -117,20 +115,32 @@
      <addaction name="actAddNewItem"/>
      <addaction name="actAddExistingItem"/>
      <addaction name="actAddFilter"/>
+     <addaction name="separator"/>
+     <addaction name="actImportFromOtherProj"/>
     </widget>
     <addaction name="menuAdd_new"/>
     <addaction name="separator"/>
     <addaction name="actProjSaveAll"/>
     <addaction name="actSaveProjectFile"/>
     <addaction name="actSaveAssetDb"/>
+    <addaction name="actSaveToOtherDir"/>
     <addaction name="separator"/>
-    <addaction name="actProjDelete"/>
+    <addaction name="actCut"/>
+    <addaction name="actPaste"/>
     <addaction name="actRename"/>
+    <addaction name="actRemoveFromView"/>
     <addaction name="actProjClose"/>
+    <addaction name="actProjDelete"/>
     <addaction name="separator"/>
+    <addaction name="actOpenInNewView"/>
     <addaction name="actExpand"/>
+    <addaction name="actExpandAllDesc"/>
     <addaction name="actCollapse"/>
+    <addaction name="actCollapseAllDesc"/>
     <addaction name="actScopeToThis"/>
+    <addaction name="separator"/>
+    <addaction name="actOpenInFileExplorer"/>
+    <addaction name="actOpenInTerminal"/>
     <addaction name="separator"/>
     <addaction name="actItemProperties"/>
    </widget>
@@ -172,7 +182,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resource.qrc">
+    <iconset>
      <normaloff>:/icons/ico_show_only_files.png</normaloff>:/icons/ico_show_only_files.png</iconset>
    </property>
    <property name="text">
@@ -187,6 +197,9 @@
   </action>
   <action name="actPreviewOnSel">
    <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
     <bool>true</bool>
    </property>
    <property name="icon">
@@ -204,10 +217,6 @@
    </property>
   </action>
   <action name="actItemProperties">
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_properties.png</normaloff>:/icons/ico_properties.png</iconset>
-   </property>
    <property name="text">
     <string>Item Properties</string>
    </property>
@@ -365,33 +374,33 @@
   <action name="actExpand">
    <property name="icon">
     <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_expandall.png</normaloff>:/icons/ico_expandall.png</iconset>
+     <normaloff>:/icons/ico_expand.png</normaloff>:/icons/ico_expand.png</iconset>
    </property>
    <property name="text">
     <string>Expand</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+1</string>
+    <string>Ctrl+Shift+Right</string>
    </property>
   </action>
   <action name="actCollapse">
    <property name="icon">
     <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_collapseall.png</normaloff>:/icons/ico_collapseall.png</iconset>
+     <normaloff>:/icons/ico_collapse.png</normaloff>:/icons/ico_collapse.png</iconset>
    </property>
    <property name="text">
     <string>Collapse</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+2</string>
+    <string>Ctrl+Shift+Left</string>
    </property>
   </action>
   <action name="actScopeToThis">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="text">
     <string>Set selected item as root item</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+3</string>
    </property>
   </action>
   <action name="actAddExistingItem">
@@ -403,7 +412,7 @@
     <string>Existing item</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+N</string>
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actAddFilter">
@@ -414,6 +423,9 @@
    <property name="text">
     <string>Filter</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+N</string>
+   </property>
   </action>
   <action name="actProjClose">
    <property name="icon">
@@ -421,14 +433,10 @@
      <normaloff>:/icons/ico_close.png</normaloff>:/icons/ico_close.png</iconset>
    </property>
    <property name="text">
-    <string>Close</string>
+    <string>Close all open items</string>
    </property>
   </action>
   <action name="actSaveProjectFile">
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_saveproj.png</normaloff>:/icons/ico_saveproj.png</iconset>
-   </property>
    <property name="text">
     <string>Save project file</string>
    </property>
@@ -437,10 +445,6 @@
    </property>
   </action>
   <action name="actSaveAssetDb">
-   <property name="icon">
-    <iconset resource="../resource.qrc">
-     <normaloff>:/icons/ico_savedb.png</normaloff>:/icons/ico_savedb.png</iconset>
-   </property>
    <property name="text">
     <string>Save asset database</string>
    </property>
@@ -461,6 +465,95 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actOpenInFileExplorer">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_fileexpl.png</normaloff>:/icons/ico_fileexpl.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open in File Explorer</string>
+   </property>
+  </action>
+  <action name="actOpenInTerminal">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_terminal.png</normaloff>:/icons/ico_terminal.png</iconset>
+   </property>
+   <property name="text">
+    <string>Open in Terminal</string>
+   </property>
+  </action>
+  <action name="actRemoveFromView">
+   <property name="text">
+    <string>Remove from view</string>
+   </property>
+  </action>
+  <action name="actExpandAllDesc">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_expandall.png</normaloff>:/icons/ico_expandall.png</iconset>
+   </property>
+   <property name="text">
+    <string>Expand all descendants</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Right</string>
+   </property>
+  </action>
+  <action name="actCollapseAllDesc">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_collapseall.png</normaloff>:/icons/ico_collapseall.png</iconset>
+   </property>
+   <property name="text">
+    <string>Collapse all descendants</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Left</string>
+   </property>
+  </action>
+  <action name="actPaste">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_pasteitem.png</normaloff>:/icons/ico_pasteitem.png</iconset>
+   </property>
+   <property name="text">
+    <string>Paste</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+V</string>
+   </property>
+  </action>
+  <action name="actCut">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_cut.png</normaloff>:/icons/ico_cut.png</iconset>
+   </property>
+   <property name="text">
+    <string>Cut</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+X</string>
+   </property>
+  </action>
+  <action name="actImportFromOtherProj">
+   <property name="text">
+    <string>Import from other project</string>
+   </property>
+  </action>
+  <action name="actSaveToOtherDir">
+   <property name="text">
+    <string>Save to other directory</string>
+   </property>
+  </action>
+  <action name="actOpenInNewView">
+   <property name="text">
+    <string>Open in new view</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
    </property>
   </action>
  </widget>

@@ -1,13 +1,11 @@
 <RCC>
     <qresource prefix="/">
-        <file>icons/ico_folder.png</file>
         <file>icons/ico_folderadd.png</file>
         <file>icons/ico_folderfilter.png</file>
         <file>icons/ico_folderrem.png</file>
         <file>icons/ico_project.png</file>
         <file>icons/ico_collapseall.png</file>
         <file>icons/ico_expandall.png</file>
-        <file>icons/ico_show_only_files.png</file>
         <file>icons/ico_preview.png</file>
         <file>icons/ico_properties.png</file>
         <file>icons/ico_settings.png</file>
@@ -20,10 +18,14 @@
         <file>icons/ico_documentadd.png</file>
         <file>icons/ico_close.png</file>
         <file>icons/ico_saveall.png</file>
-        <file>icons/ico_saveproj.png</file>
-        <file>icons/ico_savedb.png</file>
         <file>icons/ico_trash.png</file>
         <file>icons/ico_rename.png</file>
         <file>icons/ico_home.png</file>
+        <file>icons/ico_collapse.png</file>
+        <file>icons/ico_expand.png</file>
+        <file>icons/ico_terminal.png</file>
+        <file>icons/ico_fileexpl.png</file>
+        <file>icons/ico_pasteitem.png</file>
+        <file>icons/ico_cut.png</file>
     </qresource>
 </RCC>

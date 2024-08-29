@@ -389,7 +389,7 @@ namespace NkE::priv {
                 return false;
 
             /* Get child index. */
-            QModelIndex currModelIndex   = sourceModel()->index(sourceRowNum, 0, srcParentIndex);
+            QModelIndex currModelIndex = sourceModel()->index(sourceRowNum, 0, srcParentIndex);
             ::NkE::ExplorerItem *itemPtr = static_cast<::NkE::ExplorerItem *>(currModelIndex.internalPointer());
 
             return itemPtr->getDisplayData().toString().contains(filterRegularExpression());

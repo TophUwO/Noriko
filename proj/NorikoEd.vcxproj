@@ -5,21 +5,16 @@
       <Configuration>Debug</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Deploy|x64">
-      <Configuration>Deploy</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{25595DB3-4DA5-423D-AB3C-95E670F5D126}</ProjectGuid>
+    <ProjectGuid>{618F2B86-8B44-4996-880C-B87537F32957}</ProjectGuid>
     <Keyword>QtVS_v304</Keyword>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">10.0</WindowsTargetPlatformVersion>
-    <WindowsTargetPlatformVersion Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">10.0</WindowsTargetPlatformVersion>
     <QtMsBuild Condition="'$(QtMsBuild)'=='' OR !Exists('$(QtMsBuild)\qt.targets')">$(MSBuildProjectDirectory)\QtMsBuild</QtMsBuild>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -36,30 +31,18 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v143</PlatformToolset>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt_defaults.props')">
     <Import Project="$(QtMsBuild)\qt_defaults.props" />
   </ImportGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="QtSettings">
     <QtInstall>6.7.2_msvc2019_64</QtInstall>
-    <QtModules>core;testlib;widgets</QtModules>
+    <QtModules>core;widgets</QtModules>
     <QtBuildConfig>debug</QtBuildConfig>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="QtSettings">
     <QtInstall>6.7.2_msvc2019_64</QtInstall>
-    <QtModules>core;testlib;widgets</QtModules>
-    <QtBuildConfig>release</QtBuildConfig>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="QtSettings">
-    <QtInstall>6.7.2_msvc2019_64</QtInstall>
-    <QtModules>core;testlib;widgets</QtModules>
+    <QtModules>core;widgets</QtModules>
     <QtBuildConfig>release</QtBuildConfig>
   </PropertyGroup>
   <Target Name="QtMsBuildNotFound" BeforeTargets="CustomBuild;ClCompile" Condition="!Exists('$(QtMsBuild)\qt.targets') or !Exists('$(QtMsBuild)\qt.props')">
@@ -75,54 +58,34 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="$(QtMsBuild)\Qt.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="PropertySheets">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(QtMsBuild)\Qt.props" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
+    <LibraryPath>..\bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
+    <LibraryPath>..\bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">
-    <IncludePath>$(SolutionDir);$(VC_IncludePath);$(WindowsSDK_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
-    <OutDir>..\bin\</OutDir>
-    <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <LanguageStandard>$(Qt_STDCPP_)</LanguageStandard>
-      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>nkmain64r.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">
-    <ClCompile>
-      <LanguageStandard>$(Qt_STDCPP_)</LanguageStandard>
-      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-    </ClCompile>
-    <Link>
-      <AdditionalDependencies>nkmain_x64.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
     <Link>
       <AdditionalDependencies>nkmain64d.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
     </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <PreprocessorDefinitions>NK_EDITOR;NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>nkmain64r.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
     <ClCompile>
@@ -132,27 +95,11 @@
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
-      <SubSystem>Console</SubSystem>
+      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'" Label="Configuration">
-    <ClCompile>
-      <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <ConformanceMode>true</ConformanceMode>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="Configuration">
     <ClCompile>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <WarningLevel>Level3</WarningLevel>
@@ -169,11 +116,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\application.hpp" />
+    <QtMoc Include="..\include\NorikoEd\common.hpp" />
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp" />
+    <QtMoc Include="..\include\NorikoEd\explorer.hpp" />
+    <QtMoc Include="..\include\NorikoEd\project.hpp" />
+    <QtMoc Include="..\include\NorikoEd\window.hpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="..\src\NorikoEd\application.cpp" />
     <ClCompile Include="..\src\NorikoEd\dialog.cpp" />
     <QtMoc Include="..\src\NorikoEd\explorer.cpp">
-      <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">input</DynamicSource>
-      <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">input</DynamicSource>
       <QtMocFileName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(Filename).moc</QtMocFileName>
       <DynamicSource Condition="'$(Configuration)|$(Platform)'=='Release|x64'">input</DynamicSource>
@@ -184,31 +137,13 @@
     <ClCompile Include="..\src\NorikoEd\window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\application.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <QtUic Include="..\res\forms\form_dlg_projnew.ui" />
     <QtUic Include="..\res\forms\form_dlg_projopen.ui" />
     <QtUic Include="..\res\forms\form_expl.ui" />
     <QtUic Include="..\res\forms\form_window.ui" />
   </ItemGroup>
   <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\window.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\common.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\project.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\explorer.hpp" />
-  </ItemGroup>
-  <ItemGroup>
     <QtRcc Include="..\res\resource.qrc" />
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\dialog.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

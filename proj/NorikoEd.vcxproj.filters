@@ -9,6 +9,10 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
     <Filter Include="Form Files">
       <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
       <Extensions>ui</Extensions>
@@ -18,57 +22,27 @@
       <Extensions>ts</Extensions>
     </Filter>
     <Filter Include="Form Files\dialogs">
-      <UniqueIdentifier>{91e3c9bf-a843-40d8-a9d9-c61aaac6f24c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <UniqueIdentifier>{878d5e9a-6241-4a25-89d9-cb5da821fa8b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\NorikoEd\main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\NorikoEd\application.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\NorikoEd\window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\NorikoEd\project.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\NorikoEd\dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <QtMoc Include="..\include\NorikoEd\application.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\window.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\common.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\project.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\explorer.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\dialog.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
-    <QtMoc Include="..\src\NorikoEd\explorer.cpp">
+    <ClCompile Include="..\src\NorikoEd\main.cpp">
       <Filter>Source Files</Filter>
-    </QtMoc>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\project.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <QtUic Include="..\res\forms\form_window.ui">
-      <Filter>Form Files</Filter>
-    </QtUic>
     <QtUic Include="..\res\forms\form_dlg_projnew.ui">
       <Filter>Form Files\dialogs</Filter>
     </QtUic>
@@ -78,10 +52,36 @@
     <QtUic Include="..\res\forms\form_expl.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="..\res\forms\form_window.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="..\res\resource.qrc">
       <Filter>Resource Files</Filter>
     </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\src\NorikoEd\explorer.cpp">
+      <Filter>Source Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\application.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\common.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\dialog.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\project.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\window.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\explorer.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>
