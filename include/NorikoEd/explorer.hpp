@@ -266,7 +266,8 @@ namespace NkE {
          */
         void int_setupDynamicWidgets();
         /**
-         * \brief  retrieves the source item that is mapped to the given proxy item
+         * \brief  retrieves the source item index that is mapped to the given proxy item
+         *         index
          * \param  [in] proxyIndex index into the proxy model
          * \return item as given type or \c nullptr if there was an error
          */
@@ -281,6 +282,13 @@ namespace NkE {
 
             return nullptr;
         }
+        /**
+         * \brief expands or collapses all items starting from the given root index
+         * \param [in] rootIndex model index of where to start expanding/collapsing
+         * \param [in] isExpand whether or not to expand (<tt>true</tt>) or collapse
+         *             (<tt>false</tt>) the tree items
+         */
+        void int_expandOrCollapseRecursively(QModelIndex const &rootIndex, bool isExpand);
 
     public:
         /**
@@ -297,11 +305,18 @@ namespace NkE {
         void on_actExpandAll_triggered();
         void on_actShowSearchBar_triggered(bool isChecked = false);
         void on_actCtrlSearchBar_triggered();
+        void on_actHomeView_triggered();
         /* search bar actions */
         void on_actEnableRegex_triggered(bool isChecked = false);
         void on_actCaseSensitivity_triggered(bool isChecked = false);
         /* project context menu actions */
         void on_actOpenInFileExplorer_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actExpand_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actCollapse_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actExpandAllDesc_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actCollapseAllDesc_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actScopeToThis_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actRename_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
 
         /* miscellaneous widget slots */
         void on_customCxtMenu_requested(QPoint const &mousePos = QPoint());

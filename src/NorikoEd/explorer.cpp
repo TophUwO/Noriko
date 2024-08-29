@@ -422,6 +422,7 @@ namespace NkE {
         connect(actEnableRegex, &QAction::triggered, this, &ExplorerWidget::on_actEnableRegex_triggered);
         connect(actCtrlSearchBar, &QAction::triggered, this, &ExplorerWidget::on_actCtrlSearchBar_triggered);
         connect(actCaseSensitivity, &QAction::triggered, this, &ExplorerWidget::on_actCaseSensitivity_triggered);
+        connect(actHomeView, &QAction::triggered, this, &ExplorerWidget::on_actHomeView_triggered);
         /* Connect slots triggered indirectly by other widgets. */
         connect(leSearch, &QLineEdit::textChanged, this, &ExplorerWidget::on_leSearch_textChanged);
         connect(tvExplorer, &QTreeView::customContextMenuRequested, this, &ExplorerWidget::on_customCxtMenu_requested);
@@ -448,6 +449,22 @@ namespace NkE {
 
         leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
         leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
+    }
+
+    void ExplorerWidget::int_expandOrCollapseRecursively(QModelIndex const &rootIndex, bool isExpand) {
+        if (!rootIndex.isValid() || !tvExplorer->model()->hasChildren())
+            return;
+
+        /* Expand current item. */
+        (void)(isExpand ? tvExplorer->expand(rootIndex) : tvExplorer->collapse(rootIndex));
+
+        /* Get pointer to underlying item. */
+        int currRowCount = tvExplorer->model()->rowCount(rootIndex);
+        for (int i = 0; i < currRowCount; i++) {
+            QModelIndex const currChildInd = tvExplorer->model()->index(i, 0, rootIndex);
+
+            int_expandOrCollapseRecursively(currChildInd, isExpand);
+        }
     }
 
     
@@ -479,6 +496,12 @@ namespace NkE {
             leSearch->clear();
     }
 
+    void ExplorerWidget::on_actHomeView_triggered() {
+        tvExplorer->setRootIndex(QModelIndex());
+
+        actHomeView->setVisible(false);
+    }
+
 
     void ExplorerWidget::on_actEnableRegex_triggered(bool isChecked) {
         on_leSearch_textChanged(leSearch->text());
@@ -507,6 +530,42 @@ namespace NkE {
             }
         );
 #endif
+    }
+
+    void ExplorerWidget::on_actExpand_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        ExplorerItem *itemPtr = int_getSourceItem<ExplorerItem>(proxyInd);
+        if (itemPtr == nullptr || itemPtr->getChildCount() == 0)
+            return;
+
+        /* Expand the selected item in the proxy model. */
+        tvExplorer->expand(proxyInd);
+    }
+
+    void ExplorerWidget::on_actCollapse_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        ExplorerItem *itemPtr = int_getSourceItem<ExplorerItem>(proxyInd);
+        if (itemPtr == nullptr || itemPtr->getChildCount() == 0)
+            return;
+
+        /* Collapse the selected item in the proxy model. */
+        tvExplorer->collapse(proxyInd);
+    }
+
+    void ExplorerWidget::on_actExpandAllDesc_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        int_expandOrCollapseRecursively(proxyInd, true);
+    }
+
+    void ExplorerWidget::on_actCollapseAllDesc_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        int_expandOrCollapseRecursively(proxyInd, false);
+    }
+
+    void ExplorerWidget::on_actScopeToThis_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        tvExplorer->setRootIndex(proxyInd);
+
+        actHomeView->setVisible(tvExplorer->rootIndex() != QModelIndex());
+    }
+
+    void ExplorerWidget::on_actRename_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        tvExplorer->edit(proxyInd);
     }
 
 
@@ -559,7 +618,7 @@ namespace NkE {
                 }
 
                 /* Invoke the slot manually. */
-                if (!requiredSlot.invoke(this, sourceItemInd, itemAtPos))
+                if (!requiredSlot.invoke(this, Qt::DirectConnection, sourceItemInd, itemAtPos))
                     NK_LOG_ERROR("Could not invoke meta method '%s'.", requiredSlot.name().constData());
             }
         }

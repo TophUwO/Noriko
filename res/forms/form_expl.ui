@@ -108,7 +108,7 @@
     <property name="title">
      <string>menuCxtProject</string>
     </property>
-    <widget class="QMenu" name="menuAdd_new">
+    <widget class="QMenu" name="menuAddNew">
      <property name="title">
       <string>Add</string>
      </property>
@@ -118,14 +118,13 @@
      <addaction name="separator"/>
      <addaction name="actImportFromOtherProj"/>
     </widget>
-    <addaction name="menuAdd_new"/>
+    <addaction name="menuAddNew"/>
     <addaction name="separator"/>
     <addaction name="actProjSaveAll"/>
     <addaction name="actSaveProjectFile"/>
     <addaction name="actSaveAssetDb"/>
     <addaction name="actSaveToOtherDir"/>
     <addaction name="separator"/>
-    <addaction name="actCut"/>
     <addaction name="actPaste"/>
     <addaction name="actRename"/>
     <addaction name="actRemoveFromView"/>
@@ -379,9 +378,6 @@
    <property name="text">
     <string>Expand</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Right</string>
-   </property>
   </action>
   <action name="actCollapse">
    <property name="icon">
@@ -390,9 +386,6 @@
    </property>
    <property name="text">
     <string>Collapse</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Shift+Left</string>
    </property>
   </action>
   <action name="actScopeToThis">
@@ -478,6 +471,9 @@
    <property name="text">
     <string>Open in File Explorer</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
+   </property>
   </action>
   <action name="actOpenInTerminal">
    <property name="icon">
@@ -486,6 +482,9 @@
    </property>
    <property name="text">
     <string>Open in Terminal</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actRemoveFromView">
@@ -501,9 +500,6 @@
    <property name="text">
     <string>Expand all descendants</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+Right</string>
-   </property>
   </action>
   <action name="actCollapseAllDesc">
    <property name="icon">
@@ -512,9 +508,6 @@
    </property>
    <property name="text">
     <string>Collapse all descendants</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Left</string>
    </property>
   </action>
   <action name="actPaste">
