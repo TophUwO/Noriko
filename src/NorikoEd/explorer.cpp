@@ -589,6 +589,7 @@ namespace NkE {
             QMenu *reqCxtMenu = nullptr;
             switch (itemPtr->getItemType()) {
                 case ExplorerItem::Type::Project: reqCxtMenu = menuCxtProject; break;
+                case ExplorerItem::Type::Filter:  reqCxtMenu = menuCxtFilter;  break;
                 default:
                     NK_LOG_WARNING(
                         "Custom context menus for type %i is not yet implemented.",
@@ -605,8 +606,7 @@ namespace NkE {
                     staticMetaObject.indexOfSlot(
                         QMetaObject::normalizedSignature(QString(
                             "on_%1_triggered(QModelIndex const &, QModelIndex const &)"
-                        ).arg(chosenAct->objectName()).toStdString().c_str()
-                        ).constData()
+                        ).arg(chosenAct->objectName()).toStdString().c_str()).constData()
                     )
                 );
                 if (!requiredSlot.isValid()) {
@@ -619,7 +619,7 @@ namespace NkE {
 
                 /* Invoke the slot manually. */
                 if (!requiredSlot.invoke(this, Qt::DirectConnection, sourceItemInd, itemAtPos))
-                    NK_LOG_ERROR("Could not invoke meta method '%s'.", requiredSlot.name().constData());
+                    NK_LOG_ERROR("Could not invoke meta method '%s()'.", requiredSlot.name().constData());
             }
         }
     }

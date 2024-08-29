@@ -65,9 +65,6 @@
     <QtMoc Include="..\src\NorikoEd\explorer.cpp">
       <Filter>Source Files</Filter>
     </QtMoc>
-    <QtMoc Include="..\include\NorikoEd\application.hpp">
-      <Filter>Header Files</Filter>
-    </QtMoc>
     <QtMoc Include="..\include\NorikoEd\common.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
@@ -81,6 +78,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="..\include\NorikoEd\explorer.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\application.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>

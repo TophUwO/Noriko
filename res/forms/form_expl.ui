@@ -123,7 +123,6 @@
     <addaction name="actProjSaveAll"/>
     <addaction name="actSaveProjectFile"/>
     <addaction name="actSaveAssetDb"/>
-    <addaction name="actSaveToOtherDir"/>
     <addaction name="separator"/>
     <addaction name="actPaste"/>
     <addaction name="actRename"/>
@@ -143,8 +142,40 @@
     <addaction name="separator"/>
     <addaction name="actItemProperties"/>
    </widget>
+   <widget class="QMenu" name="menuCxtFilter">
+    <property name="title">
+     <string>menuCxtFilter</string>
+    </property>
+    <widget class="QMenu" name="menuAdd">
+     <property name="title">
+      <string>Add</string>
+     </property>
+     <addaction name="actAddNewItem"/>
+     <addaction name="actAddExistingItem"/>
+     <addaction name="actAddFilter"/>
+     <addaction name="separator"/>
+     <addaction name="actImportFromOtherProj"/>
+    </widget>
+    <addaction name="menuAdd"/>
+    <addaction name="separator"/>
+    <addaction name="actCut"/>
+    <addaction name="actCopy"/>
+    <addaction name="actPaste"/>
+    <addaction name="actProjDelete"/>
+    <addaction name="actRename"/>
+    <addaction name="separator"/>
+    <addaction name="actOpenInNewView"/>
+    <addaction name="actExpand"/>
+    <addaction name="actExpandAllDesc"/>
+    <addaction name="actCollapse"/>
+    <addaction name="actCollapseAllDesc"/>
+    <addaction name="actScopeToThis"/>
+    <addaction name="separator"/>
+    <addaction name="actItemProperties"/>
+   </widget>
    <addaction name="menuSearchOptions"/>
    <addaction name="menuCxtProject"/>
+   <addaction name="menuCxtFilter"/>
   </widget>
   <action name="actCollapseAll">
    <property name="icon">
@@ -171,24 +202,6 @@
    </property>
    <property name="toolTip">
     <string>Expand all parent items</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="actShowFilesOnly">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>:/icons/ico_show_only_files.png</normaloff>:/icons/ico_show_only_files.png</iconset>
-   </property>
-   <property name="text">
-    <string>Show files only</string>
-   </property>
-   <property name="toolTip">
-    <string>Shows only files; hides all filters</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -522,6 +535,19 @@
     <string>Ctrl+V</string>
    </property>
   </action>
+  <action name="actImportFromOtherProj">
+   <property name="text">
+    <string>Import from other project</string>
+   </property>
+  </action>
+  <action name="actOpenInNewView">
+   <property name="text">
+    <string>Open in new view</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+O</string>
+   </property>
+  </action>
   <action name="actCut">
    <property name="icon">
     <iconset resource="../resource.qrc">
@@ -533,23 +559,23 @@
    <property name="shortcut">
     <string>Ctrl+X</string>
    </property>
-  </action>
-  <action name="actImportFromOtherProj">
-   <property name="text">
-    <string>Import from other project</string>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actSaveToOtherDir">
-   <property name="text">
-    <string>Save to other directory</string>
+  <action name="actCopy">
+   <property name="icon">
+    <iconset resource="../resource.qrc">
+     <normaloff>:/icons/ico_copy.png</normaloff>:/icons/ico_copy.png</iconset>
    </property>
-  </action>
-  <action name="actOpenInNewView">
    <property name="text">
-    <string>Open in new view</string>
+    <string>Copy</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Shift+O</string>
+    <string>Ctrl+C</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

@@ -27,5 +27,6 @@
         <file>icons/ico_fileexpl.png</file>
         <file>icons/ico_pasteitem.png</file>
         <file>icons/ico_cut.png</file>
+        <file>icons/ico_copy.png</file>
     </qresource>
 </RCC>
