@@ -29,6 +29,7 @@
 #include <QVariant>
 #include <QString>
 #include <QAbstractItemModel>
+#include <QSortFilterProxyModel>
 /* Qt forms includes */
 #include <ui_form_expl.h>
 
@@ -141,6 +142,12 @@ namespace NkE {
          * \brief reimplements \c ExplorerItem::setDisplayData() 
          */
         virtual bool setDisplayData(QVariant const &newVal) override;
+
+        /**
+         * \brief retrieves the underlying project object associated with this project
+         *        item
+         */
+        std::shared_ptr<Project> getProject() const;
     };
 
 
@@ -258,6 +265,22 @@ namespace NkE {
          *        done during the Qt Designer stage.
          */
         void int_setupDynamicWidgets();
+        /**
+         * \brief  retrieves the source item that is mapped to the given proxy item
+         * \param  [in] proxyIndex index into the proxy model
+         * \return item as given type or \c nullptr if there was an error
+         */
+        template <class T> T *int_getSourceItem(QModelIndex const &proxyIndex) const {
+            if (QSortFilterProxyModel *modelPtr = dynamic_cast<QSortFilterProxyModel *>(tvExplorer->model())) {
+                QModelIndex const sourceInd = modelPtr->mapToSource(proxyIndex);
+                if (!sourceInd.isValid())
+                    return nullptr;
+
+                return static_cast<T *>(sourceInd.internalPointer());
+            }
+
+            return nullptr;
+        }
 
     public:
         /**
@@ -269,13 +292,18 @@ namespace NkE {
         ~ExplorerWidget();
 
     private slots:
+        /* main toolbar actions */
         void on_actCollapseAll_triggered();
         void on_actExpandAll_triggered();
         void on_actShowSearchBar_triggered(bool isChecked = false);
-        void on_actEnableRegex_triggered(bool isChecked = false);
         void on_actCtrlSearchBar_triggered();
+        /* search bar actions */
+        void on_actEnableRegex_triggered(bool isChecked = false);
         void on_actCaseSensitivity_triggered(bool isChecked = false);
+        /* project context menu actions */
+        void on_actOpenInFileExplorer_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
 
+        /* miscellaneous widget slots */
         void on_customCxtMenu_requested(QPoint const &mousePos = QPoint());
         void on_leSearch_textChanged(QString const &newText = "");
     };

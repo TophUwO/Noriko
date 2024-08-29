@@ -463,6 +463,9 @@
    <property name="toolTip">
     <string>Return to root view</string>
    </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>

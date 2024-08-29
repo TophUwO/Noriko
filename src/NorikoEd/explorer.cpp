@@ -27,6 +27,9 @@
 #include <QMessageBox>
 #include <QStyledItemDelegate>
 #include <QSortFilterProxyModel>
+#include <QMetaMethod>
+#include <QtSystemDetection>
+#include <QProcess>
 
 /* NorikoEd includes */
 #include <include/NorikoEd/explorer.hpp>
@@ -123,6 +126,11 @@ namespace NkE {
         /* Update the project's name. */
         NK_LOG_WARNING("Updating project names in the project explorer view is not yet implemented.");
         return false;
+    }
+
+
+    std::shared_ptr<Project> ExplorerProjectItem::getProject() const {
+        return m_projItem;
     }
 } /* namespace NkE */
 
@@ -464,15 +472,16 @@ namespace NkE {
         }
     }
 
-    void ExplorerWidget::on_actEnableRegex_triggered(bool isChecked) {
-        on_leSearch_textChanged(leSearch->text());
-    }
-
     void ExplorerWidget::on_actCtrlSearchBar_triggered() {
         QString searchBarText = leSearch->text();
 
         if (!searchBarText.isEmpty())
             leSearch->clear();
+    }
+
+
+    void ExplorerWidget::on_actEnableRegex_triggered(bool isChecked) {
+        on_leSearch_textChanged(leSearch->text());
     }
 
     void ExplorerWidget::on_actCaseSensitivity_triggered(bool isChecked) {
@@ -483,6 +492,21 @@ namespace NkE {
 
             tvExplorer->expandAll();
         }
+    }
+
+
+    void ExplorerWidget::on_actOpenInFileExplorer_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        ExplorerProjectItem *projItem = int_getSourceItem<ExplorerProjectItem>(proxyInd);
+        if (projItem == nullptr)
+            return;
+
+#if (defined Q_OS_WIN)
+        /* Start the Windows Explorer set to the root project directory. */
+        QProcess::startDetached("explorer", {
+                QDir::toNativeSeparators(projItem->getProject()->getQualifiedPath().absolutePath())
+            }
+        );
+#endif
     }
 
 
@@ -516,7 +540,28 @@ namespace NkE {
             }
 
             /* Execute the selected context menu. */
-            reqCxtMenu->exec(tvExplorer->viewport()->mapToGlobal(mousePos));
+            if (QAction *chosenAct = reqCxtMenu->exec(tvExplorer->viewport()->mapToGlobal(mousePos))) {
+                /* Get the 'triggered' slot associated with the chosen action. */
+                QMetaMethod requiredSlot = staticMetaObject.method(
+                    staticMetaObject.indexOfSlot(
+                        QMetaObject::normalizedSignature(QString(
+                            "on_%1_triggered(QModelIndex const &, QModelIndex const &)"
+                        ).arg(chosenAct->objectName()).toStdString().c_str()
+                        ).constData()
+                    )
+                );
+                if (!requiredSlot.isValid()) {
+                    NK_LOG_WARNING("Could not find slot index for meta method 'on_%s_triggered()'.",
+                        chosenAct->objectName().toStdString().c_str()
+                    );
+
+                    return;
+                }
+
+                /* Invoke the slot manually. */
+                if (!requiredSlot.invoke(this, sourceItemInd, itemAtPos))
+                    NK_LOG_ERROR("Could not invoke meta method '%s'.", requiredSlot.name().constData());
+            }
         }
     }
 
