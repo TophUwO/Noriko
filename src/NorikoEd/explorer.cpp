@@ -37,21 +37,25 @@
 
 /* implementation of explorer item */
 namespace NkE {
-    ExplorerItem::ExplorerItem(ExplorerItem *parPtr)
-        : mp_parentItem(parPtr)
+    ExplorerItem::ExplorerItem(ExplorerItem::Type typeId, ExplorerItem *parPtr)
+        : mp_parentItem(parPtr), m_itemType(typeId)
     { }
 
 
-    QVariant ExplorerItem::getDisplayData() const {
-        return QVariant{};
-    }
-
-    QVariant ExplorerItem::getDecorationData() const {
-        return QVariant{};
-    }
-
     ExplorerItem::Type ExplorerItem::getItemType() const {
-        return Type::Generic;
+        return m_itemType;
+    }
+
+    QVariant ExplorerItem::getItemData(int colId) const {
+        if (colId > 0)
+            return QVariant{};
+
+        switch (m_itemType) {
+            case ExplorerItem::Type::Filter:
+                return m_internalVal;
+        }
+
+        return QVariant{};
     }
 
     NkSize ExplorerItem::getChildCount() const {
@@ -83,9 +87,30 @@ namespace NkE {
     }
 
 
-    bool ExplorerItem::setDisplayData(QVariant const &newVal) {
-        /* Do nothing by default. */
-        return false;
+    void ExplorerItem::setItemType(ExplorerItem::Type newType) {
+        /* Only allow mutating the item type when the current type is the generic type. */
+        if (m_itemType != ExplorerItem::Type::Generic)
+            return;
+
+        m_itemType = newType;
+    }
+
+    bool ExplorerItem::setItemData(int colId, QVariant const &newVal) {
+        if (colId > 0)
+            return false;
+
+        switch (m_itemType) {
+            case ExplorerItem::Type::Filter:
+                m_internalVal = newVal;
+
+                break;
+            default:
+                NK_LOG_WARNING("Updating data for anything other than filters is currently unsupported.");
+
+                return false;
+        }
+
+        return true;
     }
 
 
@@ -99,87 +124,28 @@ namespace NkE {
 } /* namespace NkE */
 
 
-/* implementation of project (explorer) item */
-namespace NkE {
-    ExplorerProjectItem::ExplorerProjectItem(std::shared_ptr<Project> const &projRef, ExplorerItem *parPtr)
-        : ExplorerItem(parPtr), m_projItem{projRef}
-    { }
-
-
-    QVariant ExplorerProjectItem::getDisplayData() const {
-        return m_projItem->getProjectName();
-    }
-
-    ExplorerItem::Type ExplorerProjectItem::getItemType() const {
-        return Type::Project;
-    }
-
-    QVariant ExplorerProjectItem::getDecorationData() const {
-        return QIcon(":/icons/ico_project.png");
-    }
-
-
-    bool ExplorerProjectItem::setDisplayData(QVariant const &newVal) {
-        if (!newVal.isValid())
-            return false;
-
-        /* Update the project's name. */
-        NK_LOG_WARNING("Updating project names in the project explorer view is not yet implemented.");
-        return false;
-    }
-
-
-    std::shared_ptr<Project> ExplorerProjectItem::getProject() const {
-        return m_projItem;
-    }
-} /* namespace NkE */
-
-
-/* implementation of filter (explorer) item */
-namespace NkE {
-    ExplorerFilterItem::ExplorerFilterItem(QString const &filterName, ExplorerItem *parPtr)
-        : ExplorerItem(parPtr), m_filterName(filterName) 
-    { }
-
-
-    QVariant ExplorerFilterItem::getDisplayData() const {
-        return m_filterName;
-    }
-
-    QVariant ExplorerFilterItem::getDecorationData() const {
-        return QIcon(":/icons/ico_folderfilter.png");
-    }
-
-    ExplorerItem::Type ExplorerFilterItem::getItemType() const {
-        return Type::Filter;
-    }
-
-
-    bool ExplorerFilterItem::setDisplayData(QVariant const &newVal) {
-        if (!newVal.isValid())
-            return false;
-
-        m_filterName = newVal.toString();
-        return true;
-    }
-} /* namespace NkE */
-
-
 /* implementation of the explorer model */
 namespace NkE {
     ExplorerModel::ExplorerModel(QObject *parPtr)
         : QAbstractItemModel(parPtr)
     {
         /* Create root item. */
-        m_rootItem = std::make_unique<ExplorerItem>(nullptr);
+        m_rootItem = std::make_unique<ExplorerItem>(ExplorerItem::Type::Generic, nullptr);
 
         /* Setup example model. */
-        auto a1 = std::make_unique<ExplorerProjectItem>(std::make_shared<Project>("Ace of Spaces", "", "", QDir()), m_rootItem.get());
-        auto a2 = std::make_unique<ExplorerFilterItem>("assets", a1.get());
-        auto a3 = std::make_unique<ExplorerFilterItem>("tilesets", a2.get());
-        auto a4 = std::make_unique<ExplorerFilterItem>("maps", a2.get());
-        auto a5 = std::make_unique<ExplorerFilterItem>("out", a1.get());
-        auto a6 = std::make_unique<ExplorerFilterItem>("OUT", a1.get());
+        auto a1 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, m_rootItem.get());
+        auto a2 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a1.get());
+        auto a3 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a2.get());
+        auto a4 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a2.get());
+        auto a5 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a1.get());
+        auto a6 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a1.get());
+        a1->setItemData(0, "Ace of Spaces");
+        a2->setItemData(0, "assets");
+        a3->setItemData(0, "tilesets");
+        a4->setItemData(0, "maps");
+        a5->setItemData(0, "data");
+        a6->setItemData(0, "docs");
+
         a2->insertChildItem(0, std::move(a3));
         a2->insertChildItem(1, std::move(a4));
         a1->insertChildItem(0, std::move(a2));
@@ -267,8 +233,14 @@ namespace NkE {
          */
         switch (roleId) {
             case Qt::EditRole:
-            case Qt::DisplayRole:    return itemPtr->getDisplayData();
-            case Qt::DecorationRole: return itemPtr->getDecorationData();
+            case Qt::DisplayRole:
+                return itemPtr->getItemData(0);
+            case Qt::DecorationRole:
+                switch (itemPtr->getItemType()) {
+                    case ExplorerItem::Type::Filter: return QIcon(":/icons/ico_folderfilter.png");
+                }
+
+                break;
         }
 
         return QVariant{};
@@ -284,7 +256,7 @@ namespace NkE {
         ExplorerItem *itemPtr = getItemPointer(modelIndex);
         switch (roleId) {
             case Qt::EditRole:
-                editRes = itemPtr->setDisplayData(newVal);
+                editRes = itemPtr->setItemData(0, newVal);
                 
                 break;
         }
@@ -294,8 +266,22 @@ namespace NkE {
          * See: https://doc.qt.io/qt-6/qabstractitemmodel.html#setData
          */
         if (editRes)
-            emit dataChanged(modelIndex, modelIndex, { Qt::DisplayRole, Qt::EditRole });
+            emit dataChanged(modelIndex, modelIndex, { Qt::DisplayRole, Qt::DecorationRole, Qt::EditRole });
         return editRes;
+    }
+
+
+    bool ExplorerModel::insertRows(int where2Insert, int numOfRows, const QModelIndex &parIndex) {
+        /* Get item index. */
+        ExplorerItem *itemPtr = getItemPointer(parIndex);
+        if (itemPtr == nullptr || numOfRows > 1)
+            false;
+
+        /* Insert the rows. */
+        beginInsertRows(parIndex, where2Insert, where2Insert + numOfRows - 1);
+        itemPtr->insertChildItem(where2Insert, std::make_unique<ExplorerItem>(ExplorerItem::Type::Generic, itemPtr));
+        endInsertRows();
+        return true;
     }
 } /* namespace NkE */
 
@@ -400,7 +386,7 @@ namespace NkE::priv {
             QModelIndex currModelIndex = sourceModel()->index(sourceRowNum, 0, srcParentIndex);
             ::NkE::ExplorerItem *itemPtr = static_cast<::NkE::ExplorerItem *>(currModelIndex.internalPointer());
 
-            return itemPtr->getDisplayData().toString().contains(filterRegularExpression());
+            return itemPtr->getItemData(0).toString().contains(filterRegularExpression());
         }
     };
 }
@@ -411,6 +397,15 @@ namespace NkE {
     ExplorerWidget::ExplorerWidget(ExplorerModel *explModelPtr, QWidget *parPtr)
         : DockableContainer("Project Explorer", Qt::RightDockWidgetArea, parPtr)
     {
+#if (defined _DEBUG)
+        /* Initialize model tester (only used in debug mode). */
+        mp_itemModelTester = new QAbstractItemModelTester(
+            explModelPtr,
+            QAbstractItemModelTester::FailureReportingMode::Fatal,
+            this
+        );
+#endif
+
         setupUi(contentWidget());
         /* Setup dynamic widgets. */
         int_setupDynamicWidgets();
@@ -449,6 +444,18 @@ namespace NkE {
 
         leSearch->addAction(actSearchOptions, QLineEdit::TrailingPosition);
         leSearch->addAction(actCtrlSearchBar, QLineEdit::TrailingPosition);
+    }
+
+    ExplorerItem *ExplorerWidget::int_getSourceItem(QModelIndex const &proxyIndex) const {
+        if (QSortFilterProxyModel *modelPtr = dynamic_cast<QSortFilterProxyModel *>(tvExplorer->model())) {
+            QModelIndex const sourceInd = modelPtr->mapToSource(proxyIndex);
+            if (!sourceInd.isValid())
+                return nullptr;
+
+            return static_cast<ExplorerItem *>(sourceInd.internalPointer());
+        }
+
+        return nullptr;
     }
 
     void ExplorerWidget::int_expandOrCollapseRecursively(QModelIndex const &rootIndex, bool isExpand) {
@@ -519,11 +526,11 @@ namespace NkE {
 
 
     void ExplorerWidget::on_actOpenInFileExplorer_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
-        ExplorerProjectItem *projItem = int_getSourceItem<ExplorerProjectItem>(proxyInd);
+        ExplorerItem *projItem = int_getSourceItem(proxyInd);
         if (projItem == nullptr)
             return;
 
-#if (defined Q_OS_WIN)
+#if (0 && defined Q_OS_WIN)
         /* Start the Windows Explorer set to the root project directory. */
         QProcess::startDetached("explorer", {
                 QDir::toNativeSeparators(projItem->getProject()->getQualifiedPath().absolutePath())
@@ -533,7 +540,7 @@ namespace NkE {
     }
 
     void ExplorerWidget::on_actExpand_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
-        ExplorerItem *itemPtr = int_getSourceItem<ExplorerItem>(proxyInd);
+        ExplorerItem *itemPtr = int_getSourceItem(proxyInd);
         if (itemPtr == nullptr || itemPtr->getChildCount() == 0)
             return;
 
@@ -542,7 +549,7 @@ namespace NkE {
     }
 
     void ExplorerWidget::on_actCollapse_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
-        ExplorerItem *itemPtr = int_getSourceItem<ExplorerItem>(proxyInd);
+        ExplorerItem *itemPtr = int_getSourceItem(proxyInd);
         if (itemPtr == nullptr || itemPtr->getChildCount() == 0)
             return;
 
@@ -568,12 +575,42 @@ namespace NkE {
         tvExplorer->edit(proxyInd);
     }
 
+    void ExplorerWidget::on_actAddFilter_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd) {
+        /* Get parent item of source model. */
+        ExplorerItem *itemPtr = int_getSourceItem(proxyInd);
+        if (itemPtr == nullptr)
+            return;
+
+        /* Insert new filter. */
+        priv::ExplorerFilterModel *proxyModel = dynamic_cast<priv::ExplorerFilterModel *>(tvExplorer->model());
+        if (proxyModel == nullptr)
+            return;
+        if (ExplorerModel *explModel = dynamic_cast<ExplorerModel *>(proxyModel->sourceModel())) {
+            explModel->insertRow(static_cast<int>(itemPtr->getChildCount()), srcInd);
+
+            /* Get the model index of the filter that was just inserted. */
+            QModelIndex filterIndex = explModel->index(static_cast<int>(itemPtr->getChildCount()) - 1, 0, srcInd);
+            if (!filterIndex.isValid())
+                return;
+            
+            /* Expand the parent item so that we can see the item ans edit it. */
+            tvExplorer->expand(proxyInd);
+
+            /* Set default name and immediately start editor so that the user can edit it. */
+            ExplorerItem *underlyingItem = static_cast<ExplorerItem *>(filterIndex.internalPointer());
+            underlyingItem->setItemType(ExplorerItem::Type::Filter);
+            explModel->setData(filterIndex, QString("NewFilter"), Qt::EditRole);
+            tvExplorer->edit(proxyModel->mapFromSource(filterIndex));
+        }
+    }
+
 
     void ExplorerWidget::on_customCxtMenu_requested(QPoint const &mousePos) {
         /* Get the proxy index. */
         QModelIndex const itemAtPos = tvExplorer->indexAt(mousePos);
         if (!itemAtPos.isValid() || itemAtPos.constInternalPointer() == nullptr) {
-            NK_LOG_WARNING("The Explorer widget's context menu is not yet implemented.");
+            /* Mouse was not on an item; invoke view context menu. */
+            menuCxtView->exec(tvExplorer->viewport()->mapToGlobal(mousePos));
 
             return;
         }
@@ -616,7 +653,7 @@ namespace NkE {
 
                     return;
                 }
-
+                
                 /* Invoke the slot manually. */
                 if (!requiredSlot.invoke(this, Qt::DirectConnection, sourceItemInd, itemAtPos))
                     NK_LOG_ERROR("Could not invoke meta method '%s()'.", requiredSlot.name().constData());

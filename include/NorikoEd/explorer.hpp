@@ -30,6 +30,7 @@
 #include <QString>
 #include <QAbstractItemModel>
 #include <QSortFilterProxyModel>
+#include <QAbstractItemModelTester>
 /* Qt forms includes */
 #include <ui_form_expl.h>
 
@@ -43,56 +44,52 @@ namespace NkE {
     /**
      * \class ExplorerItem
      * \brief represents a generic explorer item for use in the explorer view model
-     * \note  This class should only ever be instantiated for use as the root item for
-     *        an item view that uses explorer items.
      */
     class ExplorerItem {
-        std::vector<std::unique_ptr<ExplorerItem>>  m_childItems;  /**< list of direct children */
-        ExplorerItem                               *mp_parentItem; /**< pointer to the parent item */
-
     public:
         /**
-         * \enum  ExplorerItem::Type
-         * \brief explorer item type IDs (used for category identification when assigning
-         *        custom context menus, etc.)
-         */
+        * \enum  ExplorerItem::Type
+        * \brief explorer item type IDs (used for category identification when assigning
+        *        custom context menus, etc.)
+        */
         enum class Type {
             Generic, /**< generic type */
-            
+
             Project, /**< project item type ID */
             Filter   /**< filter item type ID */
         };
 
+    private:
+        using ExplorerItemVector = std::vector<std::unique_ptr<class ExplorerItem>>;
+
+        ExplorerItem::Type  m_itemType;    /**< item type */
+        ExplorerItemVector  m_childItems;  /**< list of direct children */
+        ExplorerItem       *mp_parentItem; /**< pointer to the parent item */
+        QVariant            m_internalVal; /**<  */
+
+    public:
         /**
          * \brief constructs a new explorer item
          * \param [in] parPtr pointer to the parent item
          */
-        explicit ExplorerItem(ExplorerItem *parPtr = nullptr);
+        explicit ExplorerItem(ExplorerItem::Type typeId, ExplorerItem *parPtr = nullptr);
         virtual ~ExplorerItem() = default;
 
-        /**
-         * \brief gets the data used for the Qt::DisplayRole of the overarching model 
-         */
-        virtual QVariant getDisplayData() const;
-        /**
-         * \brief gets the decoration data (i.e., the item's icon) for use inside the
-         *        view 
-         */
-        virtual QVariant getDecorationData() const;
-        /**
-         * \brief retrieves the numeric item type ID 
-         */
-        virtual ExplorerItem::Type  getItemType()          const;
-                NkSize              getChildCount()        const;
-                NkInt32             getItemRow()           const;
-                ExplorerItem       *getChildAt(int rowPos) const;
-                ExplorerItem       *getParent()            const;
+        ExplorerItem::Type  getItemType()          const;
+        QVariant            getItemData(int colId) const;
+        NkSize              getChildCount()        const;
+        NkInt32             getItemRow()           const;
+        ExplorerItem       *getChildAt(int rowPos) const;
+        ExplorerItem       *getParent()            const;
 
         /**
-         * \brief  updates the display value (for Qt::DisplayRole) for the current item
-         * \return \c true if the data was updated, \c false if not
+         * \brief mutates the type of the current item
+         * \param [in] newType ID of the new item type
+         * \note  This function only supports mutating the item's type when the current
+         *        item type is <tt>ExplorerItem::Type::Generic</tt>.
          */
-        virtual bool setDisplayData(QVariant const &newVal);
+        void setItemType(ExplorerItem::Type newType);
+        bool setItemData(int colId, QVariant const &newVal);
 
         /**
          * \brief inserts a new child item at the given index
@@ -106,84 +103,6 @@ namespace NkE {
          * \note  The item, if removed, is deleted.
          */
         void removeChildItem(NkInt32 where2Remove);
-    };
-
-
-    /**
-     * \class ExplorerProjectItem
-     * \brief represents the project item type
-     */
-    class ExplorerProjectItem : public ExplorerItem {
-        std::shared_ptr<Project> m_projItem;
-
-    public:
-        /**
-         * \brief constructs a new project item
-         * \param [in] projRef reference to the project object
-         * \param [in] parPtr pointer to the parent item
-         */
-        explicit ExplorerProjectItem(std::shared_ptr<Project> const &projRef, ExplorerItem *parPtr = nullptr);
-        ~ExplorerProjectItem() = default;
-
-        /**
-         * \brief reimplements \c ExplorerItem::getDisplayData() 
-         */
-        virtual QVariant getDisplayData() const override;
-        /**
-         * \brief reimplements \c ExplorerItem::getDecorationData() 
-         */
-        virtual QVariant getDecorationData() const override;
-        /**
-         * \brief reimplements \c ExplorerItem::getItemType() 
-         */
-        virtual ExplorerItem::Type getItemType() const override;
-
-        /**
-         * \brief reimplements \c ExplorerItem::setDisplayData() 
-         */
-        virtual bool setDisplayData(QVariant const &newVal) override;
-
-        /**
-         * \brief retrieves the underlying project object associated with this project
-         *        item
-         */
-        std::shared_ptr<Project> getProject() const;
-    };
-
-
-    /**
-     * \class ExplorerFilterItem
-     * \brief represents the filter (virtual directory) item type
-     */
-    class ExplorerFilterItem : public ExplorerItem {
-        QString m_filterName; /**< name (display representation) of the filter */
-
-    public:
-        /**
-         * \brief constructs a new filter item
-         * \param [in] filterName name of the new filter
-         * \param [in] parPtr pointer to the parent item
-         */
-        explicit ExplorerFilterItem(QString const &filterName, ExplorerItem *parPtr = nullptr);
-        ~ExplorerFilterItem() = default;
-
-        /**
-         * \brief reimplements \c ExplorerItem::getDisplayData() 
-         */
-        virtual QVariant getDisplayData() const override;
-        /**
-         * \brief reimplements \c ExplorerItem::getDecorationData() 
-         */
-        virtual QVariant getDecorationData() const override;
-        /**
-         * \brief reimplements \c ExplorerItem::getItemType() 
-         */
-        virtual ExplorerItem::Type getItemType() const override;
-
-        /**
-         * \brief reimplements \c ExplorerItem::setDisplayData() 
-         */
-        virtual bool setDisplayData(QVariant const &newVal) override;
     };
 
 
@@ -247,6 +166,14 @@ namespace NkE {
          * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#setData
          */
         virtual bool setData(QModelIndex const &modelIndex, QVariant const &newVal, int roleId) override;
+
+        /**
+         * \brief reimplements \c QAbstractItemModel::insertRows()
+         * \see   https://doc.qt.io/qt-6/qabstractitemmodel.html#insertRows
+         * \note  This method currently only supports inserting one row.
+         * \todo  Implement support for inserting multiple rows.
+         */
+        virtual bool insertRows(int where2Insert, int numOfRows, const QModelIndex &parIndex = QModelIndex()) override;
     };
 } /* namespace NkE */
 
@@ -271,17 +198,7 @@ namespace NkE {
          * \param  [in] proxyIndex index into the proxy model
          * \return item as given type or \c nullptr if there was an error
          */
-        template <class T> T *int_getSourceItem(QModelIndex const &proxyIndex) const {
-            if (QSortFilterProxyModel *modelPtr = dynamic_cast<QSortFilterProxyModel *>(tvExplorer->model())) {
-                QModelIndex const sourceInd = modelPtr->mapToSource(proxyIndex);
-                if (!sourceInd.isValid())
-                    return nullptr;
-
-                return static_cast<T *>(sourceInd.internalPointer());
-            }
-
-            return nullptr;
-        }
+        ExplorerItem *int_getSourceItem(QModelIndex const &proxyIndex) const;
         /**
          * \brief expands or collapses all items starting from the given root index
          * \param [in] rootIndex model index of where to start expanding/collapsing
@@ -289,6 +206,10 @@ namespace NkE {
          *             (<tt>false</tt>) the tree items
          */
         void int_expandOrCollapseRecursively(QModelIndex const &rootIndex, bool isExpand);
+
+#if (defined _DEBUG)
+        QAbstractItemModelTester *mp_itemModelTester; /**< item model tester for debugging */
+#endif
 
     public:
         /**
@@ -317,6 +238,7 @@ namespace NkE {
         void on_actCollapseAllDesc_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
         void on_actScopeToThis_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
         void on_actRename_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
+        void on_actAddFilter_triggered(QModelIndex const &srcInd, QModelIndex const &proxyInd);
 
         /* miscellaneous widget slots */
         void on_customCxtMenu_requested(QPoint const &mousePos = QPoint());

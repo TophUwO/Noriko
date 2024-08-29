@@ -108,7 +108,7 @@
     <property name="title">
      <string>menuCxtProject</string>
     </property>
-    <widget class="QMenu" name="menuAddNew">
+    <widget class="QMenu" name="menuProjAdd">
      <property name="title">
       <string>Add</string>
      </property>
@@ -118,7 +118,7 @@
      <addaction name="separator"/>
      <addaction name="actImportFromOtherProj"/>
     </widget>
-    <addaction name="menuAddNew"/>
+    <addaction name="menuProjAdd"/>
     <addaction name="separator"/>
     <addaction name="actProjSaveAll"/>
     <addaction name="actSaveProjectFile"/>
@@ -140,13 +140,15 @@
     <addaction name="actOpenInFileExplorer"/>
     <addaction name="actOpenInTerminal"/>
     <addaction name="separator"/>
+    <addaction name="actUnloadProject"/>
+    <addaction name="separator"/>
     <addaction name="actItemProperties"/>
    </widget>
    <widget class="QMenu" name="menuCxtFilter">
     <property name="title">
      <string>menuCxtFilter</string>
     </property>
-    <widget class="QMenu" name="menuAdd">
+    <widget class="QMenu" name="menuFilterAdd">
      <property name="title">
       <string>Add</string>
      </property>
@@ -156,7 +158,7 @@
      <addaction name="separator"/>
      <addaction name="actImportFromOtherProj"/>
     </widget>
-    <addaction name="menuAdd"/>
+    <addaction name="menuFilterAdd"/>
     <addaction name="separator"/>
     <addaction name="actCut"/>
     <addaction name="actCopy"/>
@@ -173,9 +175,33 @@
     <addaction name="separator"/>
     <addaction name="actItemProperties"/>
    </widget>
+   <widget class="QMenu" name="menuCxtView">
+    <property name="title">
+     <string>menuCxtView</string>
+    </property>
+    <widget class="QMenu" name="menuViewAdd">
+     <property name="title">
+      <string>Add</string>
+     </property>
+     <addaction name="actAddNewProject"/>
+     <addaction name="actAddExistingProject"/>
+    </widget>
+    <addaction name="menuViewAdd"/>
+    <addaction name="separator"/>
+    <addaction name="actHomeView"/>
+    <addaction name="actExpandAll"/>
+    <addaction name="actCollapseAll"/>
+    <addaction name="separator"/>
+    <addaction name="actPreviewOnSel"/>
+    <addaction name="separator"/>
+    <addaction name="actUnloadAllProjects"/>
+    <addaction name="separator"/>
+    <addaction name="actViewSettings"/>
+   </widget>
    <addaction name="menuSearchOptions"/>
    <addaction name="menuCxtProject"/>
    <addaction name="menuCxtFilter"/>
+   <addaction name="menuCxtView"/>
   </widget>
   <action name="actCollapseAll">
    <property name="icon">
@@ -576,6 +602,26 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="actUnloadProject">
+   <property name="text">
+    <string>Unload project</string>
+   </property>
+  </action>
+  <action name="actUnloadAllProjects">
+   <property name="text">
+    <string>Unload all projects</string>
+   </property>
+  </action>
+  <action name="actAddNewProject">
+   <property name="text">
+    <string>New Project</string>
+   </property>
+  </action>
+  <action name="actAddExistingProject">
+   <property name="text">
+    <string>Existing Project</string>
    </property>
   </action>
  </widget>
