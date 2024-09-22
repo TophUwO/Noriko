@@ -21,14 +21,15 @@
 /* Noriko includes */
 #include <include/Noriko/def.h>
 #include <include/Noriko/error.h>
+#include <include/Noriko/util.h>
 
 
 /**
- * \brief callback definition for desstroying keys and/or elements
+ * \brief callback definition for destroying keys and/or elements
  * \param [in,out] keyPtr pointer to the key
  * \param [in,out] valPtr pointer to the value
  */
-typedef NkVoid (NK_CALL *NkHashtableFreeFn)(union NkHashtableKey *keyPtr, NkVoid *valPtr);
+typedef NkVoid (NK_CALL *NkHashtableFreeFn)(_Inout_opt_ union NkHashtableKey *keyPtr, _Inout_opt_ NkVoid *valPtr);
 /**
  * \brief  callback definition for when the implementation iterates over a range of
  *         elements
@@ -37,7 +38,7 @@ typedef NkVoid (NK_CALL *NkHashtableFreeFn)(union NkHashtableKey *keyPtr, NkVoid
  * \note   If the function returns non-zero, the implementation will stop iterating and
  *         propagate the return code of this callback to the caller.
  */
-typedef NkErrorCode (NK_CALL *NkHashtableIterFn)(struct NkHashtablePair *pairPtr);
+typedef NkErrorCode (NK_CALL *NkHashtableIterFn)(_Inout_ struct NkHashtablePair *pairPtr);
 
 /**
  * \enum  NkHashtableKeyType
@@ -50,6 +51,7 @@ NK_NATIVE typedef _In_range_(0, __NkHtKeyTy_Count__ - 1) enum NkHashtableKeyType
     NkHtKeyTy_String,     /**< type ID for string key */
     NkHtKeyTy_StringView, /**< type ID for string view key */
     NkHtKeyTy_Pointer,    /**< type ID for generic pointer key */
+    NkHtKeyTy_Uuid,       /**< type ID for UUID key */
 
     __NkHtKeyTy_Count__   /**< *only used internally* */
 } NkHashtableKeyType;
@@ -79,6 +81,7 @@ NK_NATIVE typedef union NkHashtableKey {
     char         *mp_strKey;   /**< string value key */
     NkStringView *mp_svKey;    /**< string view key */
     NkVoid       *mp_ptrKey;   /**< pointer value key */
+    NkUuid       *mp_uuidKey;  /**< UUID key type */
 } NkHashtableKey;
 
 /**

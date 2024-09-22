@@ -19,6 +19,10 @@
 
 #pragma once
 
+/* Windows-specific includes */
+#include <msxml6.h>
+#include <comutil.h>
+
 /* Qt includes */
 #include <QWidget>
 #include <QDockWidget>
@@ -64,6 +68,7 @@ namespace NkE {
             /* Set widget flags. */
             setVisible(true);
             setWidget(mp_contWidget);
+
             /*
              * If the direct parent is a main window, let the dock widget dock itself to
              * its default area if specified.
@@ -87,7 +92,8 @@ namespace NkE {
      * \brief represents an item with a universally unique identifier (UUID)
      */
     class UniversallyNamedItem {
-        NkUuid m_uuidRep; /**< underlying UUID structure */
+        Q_GADGET
+        Q_PROPERTY(NkUuid UUID READ getUuid); /**< underlying UUID structure */
 
     public:
         /**
@@ -126,7 +132,18 @@ namespace NkE {
 
             return tmpBuf;
         }
+
+        /**
+         * \brief returns the underlying UUID object
+         */
+        NkUuid const &getUuid() const { return m_uuidRep; }
+
+    private:
+        NkUuid m_uuidRep; /**< underlying UUID representation */
     };
 } /* namespace NkE */
+
+
+Q_DECLARE_METATYPE(NkUuid);
 
 

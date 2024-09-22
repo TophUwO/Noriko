@@ -109,8 +109,8 @@ namespace NkE::dlg {
         m_parPath = leRootPath->text();
 
         /* Update state of error labels. */
-        lblInvWkTitle->setVisible(leWkTitle->text().isEmpty());
-        lblInvRootPath->setVisible(m_parPath.isEmpty() || !QDir(m_parPath).exists());
+        //lblInvWkTitle->setVisible(leWkTitle->text().isEmpty());
+        //lblInvRootPath->setVisible(m_parPath.isEmpty() || !QDir(m_parPath).exists());
 
         /* Update state of 'Ok' button. */
         btnOk->setEnabled(!leWkTitle->text().isEmpty() && !(m_parPath.isEmpty() || !QDir(m_parPath).exists()));

@@ -51,6 +51,7 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NoOperation)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ManuallyAborted)),
 
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AccessDenied)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_NotImplemented)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InParameter)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_OutParameter)),
@@ -73,7 +74,12 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_SynchInit)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnexpectedCharacter)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvalidIdentifier)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClosingTokenNotFound))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClosingTokenNotFound)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InterfacePureVirtual)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InterfaceNotImpl)),    
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnknownClass)),        
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassAlreadyReg)),     
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassNotReg))       
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -87,6 +93,7 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("no operation was carried out"),
     NK_MAKE_STRING_VIEW("operation was manually aborted by user or callback"),
 
+    NK_MAKE_STRING_VIEW("cannot access resource"),
     NK_MAKE_STRING_VIEW("requested feature is not (yet) implemented"),
     NK_MAKE_STRING_VIEW("at least one erroneous input (read-only) parameter (e.g., int, char *)"),
     NK_MAKE_STRING_VIEW("at least one erroneous output (write-only) parameter (e.g., void *)"),
@@ -109,7 +116,13 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("error while initializing synchronization object (mtx, ...)"),
     NK_MAKE_STRING_VIEW("unexpected character during string parsing"),
     NK_MAKE_STRING_VIEW("invalid/empty identifier during string parsing"),
-    NK_MAKE_STRING_VIEW("closing token for compound literal not found")
+    NK_MAKE_STRING_VIEW("closing token for compound literal not found"),
+    NK_MAKE_STRING_VIEW("interface is marked as 'pure-virtual' and cannot be instantiated"),
+    NK_MAKE_STRING_VIEW("current class does not implement the specified interface"),
+    NK_MAKE_STRING_VIEW("class is unknown to the current class factory instance"),
+    NK_MAKE_STRING_VIEW("class is already registered in the global NkOM runtime"),
+    NK_MAKE_STRING_VIEW("class is not registered in the global NkOM runtime"),
+
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

@@ -88,7 +88,28 @@ NK_NATIVE typedef struct __NkInt_Variant {
  */
 static_assert(
     sizeof(NkVariant) == sizeof(__NkInt_Variant) && _Alignof(NkVariant) == _Alignof(__NkInt_Variant),
-    "Size or alignment mismatch between \"NkVariant\" and \"__NkInt_Variant\". Check definitions."
+    "Size and/or alignment mismatch between \"NkVariant\" and \"__NkInt_Variant\". Check definitions."
+);
+
+/**
+ * \union __NkInt_Uuid
+ * \brief auxiliary data-structure used only internally in order to do certain operations
+ *        on the UUID itself (such as generation, formatting, converting, etc.)
+ * \note  While the public definition is designed to make static instantiation as easy as
+ *        possible, this internal implementation is supposed to make it easier to read
+ *        from or write data to the UUID structure itself.
+ */
+NK_NATIVE typedef union __NkInt_Uuid {
+    NkUint64 m_asUi64[2];  /**< allow writing 8 bytes at the same time (used when generating UUID) */
+    NkByte   m_asByte[16]; /**< allow accessing individual bytes (used when formatting and converting) */
+} __NkInt_Uuid;
+/*
+ * Verify that the alignment and size requirements of the internal representation are
+ * congruent with those of the public implementation.
+ */
+static_assert(
+    sizeof(NkUuid) == sizeof(__NkInt_Uuid) && alignof(NkUuid) == alignof(__NkInt_Uuid),
+    "Size and/or alignment mismatch between \"NkUuid\" and \"__NkInt_Uuid\". Check definitions."
 );
 
 
@@ -235,20 +256,31 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {
 NkVoid NK_CALL NkUuidGenerate(_Out_ NkUuid *uuidPtr) {
     NK_ASSERT(uuidPtr != NULL, NkErr_OutParameter);
 
+    /* Cast UUID struct to internal representation. */
+    __NkInt_Uuid *intUuid = (__NkInt_Uuid *)uuidPtr;
     /* Generate two random numbers. */
     NK_SYNCHRONIZED(gl_RandContext.m_mtxLock, {
-        __NkInt_PRNGNextNoLock(&uuidPtr->m_asUi64[0]);
-        __NkInt_PRNGNextNoLock(&uuidPtr->m_asUi64[1]);
+        __NkInt_PRNGNextNoLock(&intUuid->m_asUi64[0]);
+        __NkInt_PRNGNextNoLock(&intUuid->m_asUi64[1]);
     });
 
     /* Adjust version field. This implementation generates version 4 UUIDs. */
-    uuidPtr->m_asByte[6] = 0b0100 << 4 | uuidPtr->m_asByte[6] & 0x0F;
-    uuidPtr->m_asByte[8] = 0b0010 << 6 | uuidPtr->m_asByte[8] & 0x3F;
+    intUuid->m_asByte[6] = 0b0100 << 4 | intUuid->m_asByte[6] & 0x0F;
+    intUuid->m_asByte[8] = 0b0010 << 6 | intUuid->m_asByte[8] & 0x3F;
 }
 
 NkBoolean NK_CALL NkUuidIsEqual(_In_ NkUuid const *fUuid, _In_ NkUuid const *sUuid) {
-    /* Two UUIDs are equal if all their bits are equal. */
-    return fUuid == sUuid || !memcmp(fUuid, sUuid, sizeof *fUuid);
+    NK_ASSERT(fUuid != NULL, NkErr_InParameter);
+    NK_ASSERT(sUuid != NULL, NkErr_InParameter);
+    static_assert(
+        sizeof(NkUint64) == 8 && alignof(NkUint64) == 8,
+        "Size and alignment requirement of type \"long long unsigned\" must be 8."
+    );
+
+    return fUuid == sUuid || (NkBoolean)(
+           ((NkUint64 *)fUuid)[0] == ((NkUint64 *)sUuid)[0]
+        && ((NkUint64 *)fUuid)[1] == ((NkUint64 *)sUuid)[1]
+    );
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidAsStr, _Out_ NkUuid *uuidPtr) {
@@ -272,7 +304,7 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidA
             ['d'] = 0xD, ['D'] = 0xD, ['e'] = 0xE, ['E'] = 0xE,
             ['f'] = 0xF, ['F'] = 0xF
         };
-        uuidPtr->m_asByte[j] = gl_NibbleTable[*uuidAsStr] << 4 | gl_NibbleTable[*(uuidAsStr + 1)];
+        ((__NkInt_Uuid *)uuidPtr)->m_asByte[j] = gl_NibbleTable[*uuidAsStr] << 4 | gl_NibbleTable[*(uuidAsStr + 1)];
         uuidAsStr += 2;
     }
     if (i != 32) {
@@ -293,8 +325,8 @@ NkVoid NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *st
         if (i == 4 || i == 6 || i == 8 || i == 10)
             *strBuf++ = '-';
 
-        *strBuf++ = "0123456789abcdef"[uuidPtr->m_asByte[i] >> 4];
-        *strBuf++ = "0123456789abcdef"[uuidPtr->m_asByte[i] & 0x0F];
+        *strBuf++ = "0123456789abcdef"[((__NkInt_Uuid *)uuidPtr)->m_asByte[i] >> 4];
+        *strBuf++ = "0123456789abcdef"[((__NkInt_Uuid *)uuidPtr)->m_asByte[i] & 0x0F];
     }
     *strBuf = 0x00;
 }

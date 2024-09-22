@@ -28,5 +28,7 @@
         <file>icons/ico_pasteitem.png</file>
         <file>icons/ico_cut.png</file>
         <file>icons/ico_copy.png</file>
+        <file>schemas/xml/session.xsd</file>
+        <file>icons/ico_session.png</file>
     </qresource>
 </RCC>

@@ -387,14 +387,16 @@ NK_NATIVE NK_API _Return_ok_ enum NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 
 
 
 /**
- * \union NkUuid
+ * \struct NkUuid
  * \brief represents the UUID data-structure
  */
-NK_NATIVE typedef union NkUuid {
-    NkByte   m_asByte[16]; /**< access UUID per byte */
-    NkUint32 m_asUi32[4];  /**< access UUID per word */
-    NkUint64 m_asUi64[2];  /**< access UUID per doubleword */
+NK_NATIVE typedef struct NkUuid {
+    NkUint32 m_fBlock;  /**< first block of the UUID (8 hex digits) */
+    NkUint16 m_sBlock;  /**< second block (4 hex digits) */
+    NkUint16 m_tBlock;  /**< third block (4 hex digits) */
+    NkUint64 m_ffBlock; /**< fourth and fifth block (4 + 12 hex digits) */
 } NkUuid;
+/**< \endcond */
 
 /**
  * \brief  generates a new UUID

@@ -32,8 +32,8 @@
 
 
 namespace NkE {
-    Project::Project(QString const &wkTitle, QString const &author, QString const &brDesc, QDir const &dirRoot)
-        : m_projName(wkTitle), m_projAuthor(author), m_projDesc(brDesc), m_qualPath(dirRoot)
+    Project::Project(QString const &wkTitle, QString const &author, QString const &brDesc, QString const &dirRoot)
+        : m_workingTitle(wkTitle), m_authoringOrg(author), m_productDescription(brDesc), m_qualifiedPath(dirRoot)
     { }
 
     Project::Project(
@@ -42,8 +42,8 @@ namespace NkE {
         QString const &author,
         QString const &brDesc,
         QString const &dirRoot
-    ) : UniversallyNamedItem(uuidStr), m_projName(wkTitle), m_projAuthor(author), m_projDesc(brDesc),
-        m_qualPath(dirRoot)
+    ) : UniversallyNamedItem(uuidStr), m_workingTitle(wkTitle), m_authoringOrg(author), m_productDescription(brDesc),
+        m_qualifiedPath(dirRoot)
     { }
 
 
@@ -58,10 +58,10 @@ namespace NkE {
 
         writer.writeStartElement("nkproject");
         writer.writeTextElement("uuid", uuidToString());
-        writer.writeTextElement("working_title", m_projName);
-        writer.writeTextElement("project_author", m_projAuthor);
-        writer.writeTextElement("product_description", m_projDesc);
-        writer.writeTextElement("rootpath", m_qualPath.absolutePath());
+        writer.writeTextElement("working_title", m_workingTitle);
+        writer.writeTextElement("project_author", m_authoringOrg);
+        writer.writeTextElement("product_description", m_productDescription);
+        writer.writeTextElement("rootpath", m_qualifiedPath);
         writer.writeEndElement();
 
         writer.writeEndDocument();
@@ -108,7 +108,7 @@ namespace NkE {
         }
 
         /* Add project to manager. */
-        Project proj{ wkTitle, author, prodDesc, qualDirRoot };
+        Project proj{ wkTitle, author, prodDesc, QDir::toNativeSeparators(qualDirRoot.absolutePath()) };
         if (!ProjectManager::int_WriteProjectFile(proj)) {
             QMessageBox::critical(
                 nullptr,
@@ -211,9 +211,9 @@ namespace NkE {
 
     bool ProjectManager::int_WriteProjectFile(Project const &projRef) {
         QFile projFile(
-            projRef.getQualifiedPath().absolutePath()
+            projRef.getQualifiedPath()
                 + "/"
-                + ProjectManager::ConvertWorkingTitle(projRef.getProjectName())
+                + ProjectManager::ConvertWorkingTitle(projRef.getWorkingTitle())
                 + ".nkproj"
         );
 

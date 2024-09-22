@@ -35,21 +35,20 @@ namespace NkE {
         setVisible(true);
 
         /* Query global components. */
-        m_projManInst  = dynamic_cast<Application *>(QApplication::instance())->getProjectManagerInstance();
         m_projExplInst = std::make_shared<ExplorerWidget>(new ExplorerModel(this), this);
     }
 
 
     void MainWindow::on_actionProjNew_triggered() {
-        dlg::NewProjectDialog newProjDlg(m_projManInst.get(), this);
+        //dlg::NewProjectDialog newProjDlg(m_projManInst.get(), this);
 
-        newProjDlg.exec();
+        //newProjDlg.exec();
     }
 
     void MainWindow::on_actionProjOpen_triggered() {
-        dlg::OpenProjectDialog openProjDlg(m_projManInst.get(), this);
+        //dlg::OpenProjectDialog openProjDlg(m_projManInst.get(), this);
 
-        openProjDlg.exec();
+        //openProjDlg.exec();
     }
 
     void MainWindow::on_actionFileExit_triggered() {

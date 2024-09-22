@@ -35,6 +35,7 @@ int main(int argc, char **argv, char **env) {
     NkTimerInitialize();
     NkAllocInitialize();
     NkPRNGInitialize();
+    NkOMInitialize(NK_TRUE);
     NkEnvParse(argc, argv, env);
 
     /* Query target platform properties. */
@@ -44,6 +45,7 @@ int main(int argc, char **argv, char **env) {
 
     system("pause");
     NkEnvCleanup();
+    NkOMUninitialize();
     NkPRNGUninitialize();
     NkAllocUninitialize();
     NkTimerUninitialize();

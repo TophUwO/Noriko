@@ -26,6 +26,7 @@
 /* Noriko includes */
 #include <include/Noriko/noriko.h>
 /* NorikoEd includes */
+#include <include/NorikoEd/session.hpp>
 #include <include/NorikoEd/project.hpp>
 #include <include/NorikoEd/explorer.hpp>
 
@@ -38,7 +39,6 @@ namespace NkE {
     class MainWindow : public QMainWindow, private Ui_MainWindow {
         Q_OBJECT
 
-        std::shared_ptr<ProjectManager> m_projManInst;  /**< global project manager instance */
         std::shared_ptr<ExplorerWidget> m_projExplInst; /**< global project explorer widget instance */
 
     public:

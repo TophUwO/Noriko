@@ -44,7 +44,8 @@
 
 /* Use SALv2 on MSVC platform. */
 /** \cond */
-#if (__has_include(<sal.h>))
+#if ((defined _WIN32) && (defined __has_include) && __has_include(<sal.h>))
+    #define NK_USE_SAL
     #include <sal.h>
 
     #define _Return_ok_             _Check_return_ _Success_(return == NkErr_Ok)
@@ -106,6 +107,15 @@
     #define _Pre_maybevalid_
     #define _Outptr_result_maybenull_
     #define _Outptr_opt_result_maybenull_
+#endif
+
+/*
+ * Define compatibility macros for _Alignof and _Alignas (since they are not valid in
+ * C++).
+ */
+#if (!defined __cplusplus)
+    #define alignas(x) _Alignas(x)
+    #define alignof(x) _Alignof(x)
 #endif
 /** \endcond */
 

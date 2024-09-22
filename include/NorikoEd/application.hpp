@@ -42,7 +42,6 @@ namespace NkE {
 
         NkPlatformInformation           m_platInfo; /**< Noriko platform information */
         std::unique_ptr<MainWindow>     m_mainWnd;  /**< main window */
-        std::shared_ptr<ProjectManager> m_projMan;  /**< project manager */
 
     public:
         /**
@@ -58,8 +57,6 @@ namespace NkE {
          * \return error code for host platform
          */
         NkErrorCode runApplication();
-
-        std::shared_ptr<ProjectManager> getProjectManagerInstance() const;
     };
 } /* namespace NkE */
 

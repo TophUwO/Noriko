@@ -151,6 +151,7 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_HashtableGetKeySizeInBytes(
         case NkHtKeyTy_Pointer:    return sizeof(NkVoid *);
         case NkHtKeyTy_String:     return (NkSize)strlen(keyPtr->mp_strKey);
         case NkHtKeyTy_StringView: return keyPtr->mp_svKey->m_sizeInBytes;
+        case NkHtKeyTy_Uuid:       return sizeof(NkUuid);
         default:
             /* Should never happen. */
 #pragma warning (suppress: 4127)
@@ -174,8 +175,8 @@ NK_INTERNAL NkUint32 __NkInt_HashtableHash(
 ) {
     char const unsigned *ni = NULL;
     switch (kType) {
-        case NkHtKeyTy_String:     ni = (char const unsigned *)keyPtr->mp_strKey;             break;
-        case NkHtKeyTy_StringView: ni = (char const unsigned *)keyPtr->mp_svKey->mp_dataPtr;  break;
+        case NkHtKeyTy_String:     ni = (char const unsigned *)keyPtr->mp_strKey;            break;
+        case NkHtKeyTy_StringView: ni = (char const unsigned *)keyPtr->mp_svKey->mp_dataPtr; break;
         default:
             ni = (char const unsigned *)keyPtr;
     }
@@ -376,6 +377,7 @@ NK_INTERNAL NkBoolean __NkInt_HashtableCompareKeys(
         case NkHtKeyTy_String:     return !strcmp(fkPtr->mp_strKey, skPtr->mp_strKey);
         case NkHtKeyTy_StringView: return !NkStringViewCompare(fkPtr->mp_svKey, skPtr->mp_svKey);
         case NkHtKeyTy_Pointer:    return fkPtr->mp_ptrKey == skPtr->mp_ptrKey;
+        case NkHtKeyTy_Uuid:       return NkUuidIsEqual(fkPtr->mp_uuidKey, skPtr->mp_uuidKey);
         default:
 #pragma warning (suppress: 4127)
             NK_ASSERT_EXTRA(

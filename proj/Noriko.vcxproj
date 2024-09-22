@@ -284,10 +284,13 @@
     <ClInclude Include="..\include\Noriko\dstruct\vector.h" />
     <ClInclude Include="..\include\Noriko\error.h" />
     <ClInclude Include="..\include\Noriko\log.h" />
+    <ClInclude Include="..\include\Noriko\nkom.h" />
     <ClInclude Include="..\include\Noriko\noriko.h" />
     <ClInclude Include="..\include\Noriko\platform.h" />
     <ClInclude Include="..\include\Noriko\sort.h" />
-    <ClInclude Include="..\include\Noriko\timer.h" />
+    <ClInclude Include="..\include\Noriko\timer.h">
+      <FileType>CppHeader</FileType>
+    </ClInclude>
     <ClInclude Include="..\include\Noriko\util.h" />
   </ItemGroup>
   <ItemGroup>
@@ -297,6 +300,7 @@
     <ClCompile Include="..\src\Noriko\dstruct\vector.c" />
     <ClCompile Include="..\src\Noriko\error.c" />
     <ClCompile Include="..\src\Noriko\log.c" />
+    <ClCompile Include="..\src\Noriko\nkom.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
     <ClCompile Include="..\src\Noriko\sort.c" />
     <ClCompile Include="..\src\Noriko\timer.c" />

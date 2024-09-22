@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <!-- BEGIN TYPE DEFINITIONS -->
+    <!-- defines all possible object types that can be specified in the object tree -->
+    <xsd:simpleType name="objType">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="project" />
+            <xsd:enumeration value="filter" />
+            <xsd:enumeration value="element" />
+        </xsd:restriction>
+    </xsd:simpleType>
+    <!-- defines the complex object type -->
+    <xsd:complexType name="object">
+        <xsd:sequence>
+            <xsd:element name="object" type="object" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
+        <xsd:attribute name="type" type="objType" use="required" />
+        <xsd:attribute name="alias" type="xsd:string" use="optional" />
+        <xsd:attribute name="url" type="xsd:anyURI" use="optional" />
+    </xsd:complexType>
+    <!-- END TYPE DEFINITIONS -->
+
+    <!-- BEGIN OBJECT DEFINITIONS -->
+    <!-- defines the session object; there can only be one session object per session file -->
+    <xsd:element name="session">
+        <xsd:complexType>
+            <xsd:all>
+                <!-- definition of UUID element; Noriko only supports Version 4 UUIDs -->
+                <xsd:element name="uuid">
+                    <xsd:simpleType>
+                        <xsd:restriction base="xsd:string">
+                            <xsd:pattern value="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-4[a-fA-F0-9]{3}-[89ab][a-fA-F0-9]{3}-[a-fA-F0-9]{12}"/>
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:element>
+                <!-- definition of session name element -->
+                <xsd:element name="name">
+                    <xsd:simpleType>
+                        <!-- must be at least 1 character in length -->
+                        <xsd:restriction base="xsd:string">
+                            <xsd:minLength value="1" />
+                        </xsd:restriction>
+                    </xsd:simpleType>
+                </xsd:element>
+                <!-- definition of documentation field for the session object -->
+                <xsd:element name="documentation" type="xsd:string" />
+                <!-- definition of the root object of the object tree -->
+                <xsd:element name="objects" minOccurs="1" maxOccurs="1">
+                    <xsd:complexType>
+                        <xsd:sequence>
+                            <xsd:element name="object" type="object" minOccurs="0" maxOccurs="unbounded" />
+                        </xsd:sequence>
+                    </xsd:complexType>
+                </xsd:element>
+            </xsd:all>
+        </xsd:complexType>
+    </xsd:element>
+    <!-- END OBJECT DEFINITIONS -->
+</xsd:schema>
+
+

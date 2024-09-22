@@ -1,23 +1,23 @@
 /**********************************************************************
-* Noriko - cross-platform 2-D role-playing game (RPG) game engine    *
-*          for desktop and mobile console platforms                  *
-*                                                                    *
-* (c) 2024 TophUwO <tophuwo01@gmail.com>. All rights reserved.       *
-*                                                                    *
-* The source code is licensed under the Apache License 2.0. Refer    *
-* to the LICENSE file in the root directory of this project. If this *
-* file is not present, visit                                         *
-*     https://www.apache.org/licenses/LICENSE-2.0                    *
-**********************************************************************/
+ * Noriko - cross-platform 2-D role-playing game (RPG) game engine    *
+ *          for desktop and mobile console platforms                  *
+ *                                                                    *
+ * (c) 2024 TophUwO <tophuwo01@gmail.com>. All rights reserved.       *
+ *                                                                    *
+ * The source code is licensed under the Apache License 2.0. Refer    *
+ * to the LICENSE file in the root directory of this project. If this *
+ * file is not present, visit                                         *
+ *     https://www.apache.org/licenses/LICENSE-2.0                    *
+ **********************************************************************/
 
 /**
-* \file  explorer.hpp
-* \brief defines the public API for the project explorer widget
-* 
-* The project explorer widget is one of NorikoEd's central widgets. It manages the
-* project and asset organization within the application. It is responsible for displaying
-* the contents of projects according to their internal structure and and organization.
-*/
+ * \file  explorer.hpp
+ * \brief defines the public API for the project explorer widget
+ * 
+ * The project explorer widget is one of NorikoEd's central widgets. It manages the
+ * project and asset organization within the application. It is responsible for displaying
+ * the contents of projects according to their internal structure and and organization.
+ */
 
 
 #pragma once
@@ -37,6 +37,7 @@
 /* NorikoEd includes */
 #include <include/NorikoEd/common.hpp>
 #include <include/NorikoEd/project.hpp>
+#include <include/NorikoEd/session.hpp>
 
 
 /* definition of ExplorerModel */
@@ -55,6 +56,7 @@ namespace NkE {
         enum class Type {
             Generic, /**< generic type */
 
+            Session, /**< session item ID */
             Project, /**< project item type ID */
             Filter   /**< filter item type ID */
         };
@@ -219,6 +221,8 @@ namespace NkE {
          */
         explicit ExplorerWidget(ExplorerModel *explModelPtr, QWidget *parPtr = nullptr);
         ~ExplorerWidget();
+
+        void createSession(QString const &name);
 
     private slots:
         /* main toolbar actions */

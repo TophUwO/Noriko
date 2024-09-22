@@ -28,7 +28,6 @@ namespace NkE {
         NK_IGNORE_RETURN_VALUE(NkLogInitialize());
 
         /* Create main components. */
-        m_projMan = std::make_shared<ProjectManager>();
         m_mainWnd = std::make_unique<MainWindow>("NorikoEd indev");
 
         /* Initialize other Noriko components. */
@@ -47,11 +46,6 @@ namespace NkE {
         setStyle("fusion");
 
         return (NkErrorCode)exec();
-    }
-
-
-    std::shared_ptr<ProjectManager> Application::getProjectManagerInstance() const {
-        return m_projMan;
     }
 
 

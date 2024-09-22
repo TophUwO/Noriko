@@ -38,10 +38,11 @@ namespace NkE {
      * \note  The project represents the top-most organizational node in the object tree.
      */
     class Project : public UniversallyNamedItem {
-        QDir    m_qualPath;   /**< qualified root path */
-        QString m_projName;   /**< project name */
-        QString m_projAuthor; /**< authoring organization name */
-        QString m_projDesc;   /**< brief project description */
+        Q_GADGET
+        Q_PROPERTY(QString path READ getQualifiedPath);
+        Q_PROPERTY(QString title READ getWorkingTitle);
+        Q_PROPERTY(QString author READ getAuthoringOrg);
+        Q_PROPERTY(QString description READ getProductDescription);
 
     public:
         /**
@@ -51,7 +52,7 @@ namespace NkE {
          * \param [in] brDesc brief description of the finished product
          * \param [in] dirRoot root directory on the filesystem
          */
-        explicit Project(QString const &wkTitle, QString const &author, QString const &brDesc, QDir const &dirRoot);
+        explicit Project(QString const &wkTitle, QString const &author, QString const &brDesc, QString const &dirRoot);
         /**
          * \brief constructs a new project instance from the given parameters but with a
          *        custom UUID
@@ -79,10 +80,16 @@ namespace NkE {
          */
         bool writeRootXmlDocument(QIODevice *ioDevPtr) const;
 
-        QDir    getQualifiedPath() const { return m_qualPath; }
-        QString getProjectName()   const { return m_projName; }
-        QString getProjectAuthor() const { return m_projAuthor; }
-        QString getProjectDesc()   const { return m_projDesc; }
+        QString const &getQualifiedPath()      const { return m_qualifiedPath; }
+        QString const &getWorkingTitle()       const { return m_workingTitle; }
+        QString const &getAuthoringOrg()       const { return m_authoringOrg; }
+        QString const &getProductDescription() const { return m_productDescription; }
+
+    private:
+        QString m_qualifiedPath;
+        QString m_workingTitle;
+        QString m_authoringOrg;
+        QString m_productDescription;
     };
 
 
@@ -120,7 +127,7 @@ namespace NkE {
          * \param  [in] dirRoot root directory (must exist)
          * \return \c true if the product could be created in its entirety, \c false if
          *         there was an error
-         * \note   This function may show message boxes that could block the main thead.
+         * \note   This function may show message boxes that could block the main thread.
          */
         bool createProject(
             QString const &wkTitle,

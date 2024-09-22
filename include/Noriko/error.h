@@ -92,6 +92,7 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_NoOperation,          /**< function did nothing */
     NkErr_ManuallyAborted,      /**< operation was manually aborted by user or callback */
 
+    NkErr_AccessDenied,         /**< access to resource is denied */
     NkErr_NotImplemented,       /**< feature not implemented */
     NkErr_InParameter,          /**< erroneous input parameter */
     NkErr_OutParameter,         /**< erroneous output parameter */
@@ -115,6 +116,11 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_UnexpectedCharacter,  /**< unexpected character during parsing */
     NkErr_InvalidIdentifier,    /**< invalid identifier during parsing */
     NkErr_ClosingTokenNotFound, /**< could not find closing token for compound */
+    NkErr_InterfacePureVirtual, /**< interface is marked as 'pure-virtual'; cannot be instantiated */
+    NkErr_InterfaceNotImpl,     /**< class does not implement the specified interface */
+    NkErr_UnknownClass,         /**< class is unknown to the current class factory instance */
+    NkErr_ClassAlreadyReg,      /**< class is already registered in the global NkOM runtime */
+    NkErr_ClassNotReg,          /**< class is not registered in the global NkOM runtime */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;

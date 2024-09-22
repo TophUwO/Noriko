@@ -1,23 +1,24 @@
 /**********************************************************************
-* Noriko - cross-platform 2-D role-playing game (RPG) game engine    *
-*          for desktop and mobile console platforms                  *
-*                                                                    *
-* (c) 2024 TophUwO <tophuwo01@gmail.com>. All rights reserved.       *
-*                                                                    *
-* The source code is licensed under the Apache License 2.0. Refer    *
-* to the LICENSE file in the root directory of this project. If this *
-* file is not present, visit                                         *
-*     https://www.apache.org/licenses/LICENSE-2.0                    *
-**********************************************************************/
+ * Noriko - cross-platform 2-D role-playing game (RPG) game engine    *
+ *          for desktop and mobile console platforms                  *
+ *                                                                    *
+ * (c) 2024 TophUwO <tophuwo01@gmail.com>. All rights reserved.       *
+ *                                                                    *
+ * The source code is licensed under the Apache License 2.0. Refer    *
+ * to the LICENSE file in the root directory of this project. If this *
+ * file is not present, visit                                         *
+ *     https://www.apache.org/licenses/LICENSE-2.0                    *
+ **********************************************************************/
 
 /**
-* \file  explorer.cpp
-* \brief implements the public API for the project explorer widget
-* 
-* The project explorer widget is one of NorikoEd's central widgets. It manages the
-* project and asset organization within the application. It is responsible for displaying
-* the contents of projects according to their internal structure and and organization.
-*/
+ * \file  explorer.cpp
+ * \brief implements the public API for the project explorer widget
+ * 
+ * The project explorer widget is one of NorikoEd's central widgets. It manages the
+ * project and asset organization within the application. It is responsible for
+ * displaying the contents of projects according to their internal structure and and
+ * organization.
+ */
 
 
 /* stdlib includes */
@@ -51,6 +52,7 @@ namespace NkE {
             return QVariant{};
 
         switch (m_itemType) {
+            case ExplorerItem::Type::Session:
             case ExplorerItem::Type::Filter:
                 return m_internalVal;
         }
@@ -100,6 +102,7 @@ namespace NkE {
             return false;
 
         switch (m_itemType) {
+            case ExplorerItem::Type::Session:
             case ExplorerItem::Type::Filter:
                 m_internalVal = newVal;
 
@@ -132,7 +135,7 @@ namespace NkE {
         /* Create root item. */
         m_rootItem = std::make_unique<ExplorerItem>(ExplorerItem::Type::Generic, nullptr);
 
-        /* Setup example model. */
+        ///* Setup example model. */
         auto a1 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, m_rootItem.get());
         auto a2 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a1.get());
         auto a3 = std::make_unique<ExplorerItem>(ExplorerItem::Type::Filter, a2.get());
@@ -237,6 +240,7 @@ namespace NkE {
                 return itemPtr->getItemData(0);
             case Qt::DecorationRole:
                 switch (itemPtr->getItemType()) {
+                    case ExplorerItem::Type::Session: return QIcon(":/icons/ico_session.png");
                     case ExplorerItem::Type::Filter: return QIcon(":/icons/ico_folderfilter.png");
                 }
 
@@ -248,13 +252,14 @@ namespace NkE {
 
 
     bool ExplorerModel::setData(QModelIndex const &modelIndex, QVariant const &newVal, int roleId) {
-        if (roleId != Qt::EditRole)
-            return false;
+        //if (roleId != Qt::EditRole)
+        //    return false;
 
         /* Update the data. */
         bool editRes = false;
         ExplorerItem *itemPtr = getItemPointer(modelIndex);
         switch (roleId) {
+            case Qt::DisplayRole:
             case Qt::EditRole:
                 editRes = itemPtr->setItemData(0, newVal);
                 
@@ -429,6 +434,7 @@ namespace NkE {
         tvExplorer->setModel(new priv::ExplorerFilterModel(explModelPtr, this));
         tvExplorer->expandAll();
 
+        createSession("NewSession1");
         NK_LOG_INFO("startup: project explorer");
     }
 
@@ -472,6 +478,11 @@ namespace NkE {
 
             int_expandOrCollapseRecursively(currChildInd, isExpand);
         }
+    }
+
+
+    void ExplorerWidget::createSession(QString const &name) {
+
     }
 
     
@@ -593,7 +604,7 @@ namespace NkE {
             if (!filterIndex.isValid())
                 return;
             
-            /* Expand the parent item so that we can see the item ans edit it. */
+            /* Expand the parent item so that we can see the item and edit it. */
             tvExplorer->expand(proxyInd);
 
             /* Set default name and immediately start editor so that the user can edit it. */

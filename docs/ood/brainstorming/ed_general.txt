@@ -1,0 +1,1 @@
+- use QUuid in editor and convert to NkUuid where necessary

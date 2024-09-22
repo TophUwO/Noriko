@@ -8,4 +8,4 @@
   + backup
 
 - show selected root item as topmost in "Scope to this" view
-   
+- add 'session node' that can contain multiple projects that are loaded whenever the session is loaded (kinda like the solution type in vs)

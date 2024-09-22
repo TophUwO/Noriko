@@ -41,6 +41,9 @@
     <ClCompile Include="..\src\NorikoEd\window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\NorikoEd\session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="..\res\forms\form_dlg_projnew.ui">
@@ -81,6 +84,9 @@
       <Filter>Header Files</Filter>
     </QtMoc>
     <QtMoc Include="..\include\NorikoEd\application.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\session.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
