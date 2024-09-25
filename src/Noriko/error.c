@@ -131,7 +131,9 @@ static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "
  * \brief  formats the fatal error message that is then shown to the user
  * \param  [in] errCxtPtr pointer to a NkFatalErrorContext structure containing additional
  *              information on the error (used for formatting)
- * \return pointer to the formatted string buffer (*NUL*-terminated)
+ * \param  [out] outBuf destination buffer of the formatted error message; must be at
+ *         least \c NK_ERROR_MSGBUF bytes in size (incl. <tt>NUL</tt>-terminator)
+ * \return pointer to the formatted string buffer (<tt>NUL</tt>-terminated)
  * \see    NkFatalErrorContext
  */
 NK_INTERNAL char const *__NkInt_FormatFatalErrorMessage(

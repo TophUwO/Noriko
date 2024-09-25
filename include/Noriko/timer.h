@@ -147,4 +147,11 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkTimerRestart(_Inout_ NkTimer *tiPtr)
  */
 NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrecision precId);
 
+/**
+ * \brief  returns the raw value of the current high-precision timestamp
+ * \return numeric value of the timestamp, or \c 0 if there is no high-precision timer
+ *         available on the current platform
+ */
+NK_NATIVE NK_API NkUint64 NK_CALL NkGetCurrentTime(NkVoid);
+
 

@@ -33,27 +33,6 @@
 #include <include/Noriko/util.h>
 #include <include/Noriko/error.h>
 
-/** \cond */
-/* On Windows, the user has the choice to use SAL for static code analysis. */
-#if (defined NK_USE_SAL)
-    /* Define some custom annotations for use in the API. */
-    #define _Validattrib_ _In_range_(NkOM_AttrNone + 1, __NkOM_AttrCount__ - 1)
-#else
-    #define _Validattrib_
-#endif
-/** \endcond */
-
-
-/**
- */
-NK_NATIVE typedef enum NkOMStaticAttribute {
-    NkOM_AttrNone = 0,
-
-    NkOM_AttrStandardMemoryAlignment,
-
-    __NkOM_AttrCount__
-} NkOMStaticAttribute;
-
 
 /**
  * \typedef NkOMRefCount
@@ -73,11 +52,11 @@ NK_NATIVE typedef int NkOMRefCount;
  *         info associated with the given IID/CLSID.
  */
 NK_NATIVE typedef struct NkOMImplementationInfo {
-    NkUuid *mp_uuidRef;         /**< IID/CLSID */
+    NkUuid    *mp_uuidRef;       /**< IID/CLSID */
 
     /* The following are for use as class infos only. */
-    NkSize    m_structSize;     /**< size of the internal structure */
-    NkBoolean m_isAggSupported; /**< whether or not aggregation is supported */
+    NkSize     m_structSize;     /**< size of the internal structure */
+    NkBoolean  m_isAggSupported; /**< whether or not aggregation is supported */
 } NkOMImplementationInfo;
 
 
@@ -104,13 +83,25 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  */
 #define NKOM_CLSIDOF(className) ((NkUuid const *)&__##className##_CLSID__)
 /**
+ * \def   NKOM_OFFSETOF(self, ifaceName)
+ * \brief calculates the offset of a specific interface's VTable in a struct definition
+ * \param self name of the structure
+ * \param ifaceName name of the interface
+ * \note  Use the name of the interface that was used when the interface was declared,
+ *        i.e., when using <tt>NKOM_DECLARE_INTERFACE()</tt>.
  */
 #define NKOM_OFFSETOF(self, ifaceName) ((NkSize)((char *)&((self *)0)->ifaceName##_Iface - (char *)0))
 /**
+ * \def   NKOM_VTABLEOF(ifaceName)
+ * \brief evaluates to the canonical name of the VTable structure for the given interface
+ *        name
+ * \param ifaceName name of the interface
+ * \note  Use the name of the interface that was used when the interface was declared,
+ *        i.e., when using <tt>NKOM_DECLARE_INTERFACE()</tt>.
  */
 #define NKOM_VTABLEOF(ifaceName) __gl_##ifaceName##_VTable__
 /**
- * \def   NK_DECLARE_INTERFACE
+ * \def   NKOM_DECLARE_INTERFACE
  * \brief auxiliary macro used to define new interfaces
  *
  * An interface is a data-structure that consists only of function pointers. Use this
@@ -126,21 +117,21 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  *  \li The interface's ID (or <tt>IID</tt> for short) must be non-zero for it to be
  *      valid.
  */
-#define NKOM_DECLARE_INTERFACE(ifaceName)                                        \
+#define NKOM_DECLARE_INTERFACE(ifaceName)                                      \
     NK_NATIVE typedef struct ifaceName ifaceName;                              \
     NK_NATIVE NK_API NkUuid const __##ifaceName##_IID__;                       \
     NK_NATIVE NK_API NkUuid const __##ifaceName##_CLSID__;                     \
     NK_NATIVE struct ifaceName { struct __##ifaceName##_VTable__ const *VT; }; \
     NK_NATIVE struct __##ifaceName##_VTable__
 /**
- * \def   NK_DEFINE_VTABLE(ifaceName)
+ * \def   NKOM_DEFINE_VTABLE(ifaceName)
  * \brief convenience macro for defining the static internal VTable for an interface
  *        of which the name is provided
  * \param ifaceName name of the interface
  */
 #define NKOM_DEFINE_VTABLE(ifaceName) static struct __##ifaceName##_VTable__ const NK_VTABLEOF(ifaceName) =
 /**
- * \def   NK_IMPLEMENTS(ifaceName)
+ * \def   NKOM_IMPLEMENTS(ifaceName)
  * \brief auxiliary macro which inserts a pointer to the VTable of the given interface
  *        into a structure definition
  * 
@@ -148,7 +139,7 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  */
 #define NKOM_IMPLEMENTS(ifaceName) struct ifaceName ifaceName##_Iface
 /**
- * \def   NK_EXTENDS(className)
+ * \def   NKOM_EXTENDS(className)
  * \brief auxiliary macro which inserts a pointer to an object by class name
  * 
  * This macro is useful when extending existing class instances or when you want a
@@ -157,18 +148,18 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  */
 #define NKOM_EXTENDS(className) struct clsName *##className##_Obj
 /**
- * \def   NK_DEFINE_IID(ifaceName, ...)
+ * \def   NKOM_DEFINE_IID(ifaceName, ...)
  * \brief sets the constant interface ID for the given interface
  * \param ifaceName name of the interface that will be associated with the given UUID
  * 
  * \par Remarks
- *   The following is an example use of <tt>NK_DEFINE_IID</tt>:
+ *   The following is an example use of <tt>NKOM_DEFINE_IID</tt>:
  *   \code{.c}
  *   // in myinterface.h
  *   #include <nkom.h>
  * 
  *   
- *   NK_DECLARE_INTERFACE(NkIMyInterface) {
+ *   NKOM_DECLARE_INTERFACE(NkIMyInterface) {
  *       ...
  *   };
  * 
@@ -178,12 +169,12 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  *   #include <nkom.h>
  * 
  * 
- *   NK_DEFINE_IID(NkIMyInterface, { 0x1bb7e7bb, 0xcdaf, 0x47c0, 0x8dfca82c09bf30bb });
+ *   NKOM_DEFINE_IID(NkIMyInterface, { 0x1bb7e7bb, 0xcdaf, 0x47c0, 0x8dfca82c09bf30bb });
  *   \endcode
  */
 #define NKOM_DEFINE_IID(ifaceName, ...) NK_NATIVE NkUuid const __##ifaceName##_IID__ = __VA_ARGS__
 /**
- * \def   NK_DEFINE_CLSID(className, ...)
+ * \def   NKOM_DEFINE_CLSID(className, ...)
  * \brief sets the constant class ID for a specific implementation of an interface
  * \param className name of the class that will be associated with the given UUID
  *
@@ -193,7 +184,7 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  *   no default implementation exists, set the CLSID of the interface itself to all
  *   zeroes like so:
  *   \code{.c}
- *   NK_DEFINE_CLSID(NkIMyInterface, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
+ *   NKOM_DEFINE_CLSID(NkIMyInterface, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
  *   \endcode
  *   If there actually is no default implementation but the CLSID is not all zeroes, then
  *   that poses a violation of NkOM conventions. If the CLSID is not all zeroes, then
@@ -246,18 +237,18 @@ NKOM_DECLARE_INTERFACE(NkIBase) {
      *   <th>Error Condition</th>
      *  </tr>
      *  <tr>
-     *   <td>\c NkOM_ErrUnknownInterface</td>
+     *   <td>\c NkErr_UnknownInterface</td>
      *   <td>The given IID does not identify an interface known to the NkOM runtime.</td>
      *  </tr>
      *  <tr>
-     *   <td>\c NkOM_ErrInterfaceNotImpl</td>
+     *   <td>\c NkErr_InterfaceNotImpl</td>
      *   <td>
      *    The current class instance does not implement the interface of which the
      *    IID is specified.
      *   </td>
      *  </tr>
      *  <tr>
-     *   <td>\c NkOM_ErrInvalidParameter</td>
+     *   <td>\c NkErr_InvalidParameter</td>
      *   <td>
      *    If the function validates the arguments, then it can return this error code as
      *    an alternative to simply leaving the behavior undefined.
@@ -266,7 +257,7 @@ NKOM_DECLARE_INTERFACE(NkIBase) {
      * </table>
      * 
      * \par Remarks
-     *   If the function succeeds, the function returns \c NkOM_Ok and \c *resPtr will
+     *   If the function succeeds, the function returns \c NkErr_Ok and \c *resPtr will
      *   be initialized to a non-<tt>NULL</tt> value that points to the queried interface
      *   VTable.<br>
      *   If the function fails, the function returns non-zero and \c *resPtr will be
@@ -286,15 +277,14 @@ NKOM_DECLARE_INTERFACE(NkIBase) {
      *   <ol>
      *    <li>
      *     It must be <em>reflexive</em>. This means that if you query an object for
-     *     interface an <tt>NkIInterfaceA</tt>, this succeeds, and use the queried
-     *     interface to query for <tt>NkIInterfaceA</tt> again, then the second query
-     *     must succeed as well.
+     *     interface an <tt>A</tt>, this succeeds, and use the queried interface to query
+     *     for <tt>A</tt> again, then the second query must succeed as well.
      *    </li>
      *    <li>
      *     It must be <em>symmetric</em>. This means if you query an object for an
-     *     interface <tt>NkIInterfaceB</tt> using the object's <tt>NkIInterfaceA</tt>,
-     *     this query succeeds, and you use the queried <tt>NkIInterfaceB</tt> interface
-     *     to query for <tt>NkIInterfaceA</tt>, then this second query must succeed, too.
+     *     interface <tt>B</tt> using the object's <tt>A</tt>, this query succeeds, and
+     *     you use the queried <tt>B</tt> interface to query for <tt>A</tt>, then this
+     *     second query must succeed, too.
      *    </li>
      *    <li>
      *     It must be <em>transitive</em>. That is, if you successfully query for an
@@ -602,54 +592,15 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
  * initialized. This happens through calling <tt>NkOMInitialize()</tt> once per process
  * at startup.
  * 
- * \param  [in,out] globalAlloc pointer to the allocator used
- * \param  [in,out] globalModLoader pointer to the module loader used
- * \param  [in] enableDebugLayer whether or not to enable debugging tools like memory
- *              allocation observers, etc.
- * \return \c NkOM_ErrOk on success, non-zero on failure<br>
- *         Furthermore, the following error codes can be returned under specific
- *         circumstances:
- * <table>
- * </table>
- * 
- * \par Remarks
- *   Despite the name, some of NkOM's features can be used without having to call
- *   <tt>NkOMInitialize()</tt>. Such calls are:
- *    <ul>
- *     <li>
- *      <tt>NkOMAllocateMemory()</tt>, <tt>NkOMReallocateMemory()</tt>,
- *      <tt>NkOMFreeMemory()</tt>, <tt>NkOMGetStandardMemoryAlignment()</tt>
- *     </li>
- *     <li><tt>NkOMCompareUUIDs()</tt>, <tt>NkOMIsPureVirtual()</tt></li>
- *     <li>
- *      <tt>NkOMCreateInstance()</tt> with either <tt>NK_CLSIDOF(NkIAllocator)</tt>
- *      or <tt>NK_CLSIDOF(NkIModuleLoader)</tt>
- *     </li>
- *     <li>
- *      <tt>NkOMQueryFactoryForClass()</tt> with either <tt>NK_CLSIDOF(NkIAllocator)</tt>
- *      or <tt>NK_CLSIDOF(NkIModuleLoader)</tt>
- *     </li>
- *     <li><tt>NkOMQueryErrorDescription()</tt></li>
- *    </ul>
- *   There is generally no need to provide custom implementations for either the memory
- *   allocator or the module loader, for the NkOM provides full default implementations
- *   for the given object. Instances of these default implementations can be created
- *   using <tt>NkOMCreateInstance()</tt> by passing the default class IDs of the
- *   interfaces they implement. That is, pass <tt>NK_CLSIDOF(NkIAllocator)</tt> for the
- *   default memory allocator and <tt>NK_CLSIDOF(NkIModuleLoader)</tt> for the module
- *   loader. The new instances can then be used to extend the default implementations to
- *   run user code. Finally, set the extended implementations as the respective objects
- *   using <tt>NkOMInitialize()</tt>.
- * 
- * \note  \li The parameters passed to this function are immutable for the duration of
- *            the session. A session is marked by a pair of
- *            <tt>NkOMInitialize()</tt>/<tt>NkOMUninitialize()</tt>. A new session can be
- *            started by calling <tt>NkOMInitialize()</tt> again after having called
- *            <tt>NkOMUninitialize()</tt>.
- * \note  \li The reference counts of \c globalAlloc and \c globalModLoader are
- *            incremented.
- * \note  \li Calling this function more than once without having called
- *            <tt>NkOMUninitialize()</tt> in between results in a no-op.
+ * \param  [in] enableDebugLayer whether or not to enable debugging tools
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li The parameters passed to this function are immutable for the duration of
+ *             the session. A session is marked by a pair of
+ *             <tt>NkOMInitialize()</tt>/<tt>NkOMUninitialize()</tt>. A new session can
+ *             be started by calling <tt>NkOMInitialize()</tt> again after having called
+ *             <tt>NkOMUninitialize()</tt>.
+ * \note   \li Calling this function more than once without having called
+ *             <tt>NkOMUninitialize()</tt> in between results in a no-op.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer);
 /**
@@ -689,7 +640,7 @@ NK_NATIVE NK_API NkSize NK_CALL NkOMQueryImplementationIndex(
 
 
 /**
- * \mainpage NkOM introduction
+ * \page NkOMIntro NkOM introduction
  * 
  * The <em>Noriko Object Model</em> (NkOM) is a cross-platform object model designed to
  * imitate what's informally known as the "lightweight COM-approach". COM (Component

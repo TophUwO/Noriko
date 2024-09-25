@@ -34,6 +34,8 @@
 #include <include/Noriko/log.h>
 #include <include/Noriko/env.h>
 #include <include/Noriko/nkom.h>
+#include <include/Noriko/event.h>
+#include <include/Noriko/layer.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>

@@ -271,7 +271,7 @@ NK_NATIVE NK_API NkVoid *NK_CALL NkVectorFindIf(
     _Inout_opt_ NkVoid *extraParam
 );
 /**
- * \brief   filters the vector for elementss satisfying the provided predicate
+ * \brief   filters the vector for elements satisfying the provided predicate
  * \param   [in] vecPtr pointer to the NkVector instance of which the elements are to be
  *               filtered
  * \param   [in] sInd first index of the filter range

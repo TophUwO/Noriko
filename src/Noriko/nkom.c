@@ -35,6 +35,7 @@
 
 /* Noriko includes */
 #include <include/Noriko/log.h>
+
 #include <include/Noriko/dstruct/htable.h>
 
 /* NkOM includes */
@@ -75,6 +76,7 @@ struct __NkOM_StaticContext {
     NkBoolean    m_isInitialized;  /**< whether or not NkOM is initialized */
     NkBoolean    m_isDebugEnabled; /**< whether or not integrated debugging facilities are enabled */
 
+    NK_DECL_LOCK(m_clsRegLock);    /**< synchronization object for class registry */
     NkHashtable *mp_classReg;      /**< global class registry */
 };
 
@@ -110,6 +112,9 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer) 
             .mp_classReg      = NULL
         };
 
+        /* Initialize synchronization primitive for the class registry. */
+        NK_INITLOCK(gl_NkOMContext.m_clsRegLock);
+
         /* Initialize the class registry. */
         NkErrorCode errCode = NkHashtableCreate(
             &(NkHashtableProperties const){
@@ -128,8 +133,6 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer) 
             return errCode;
         }
 
-        /* If the threading model is 'multi-threaded', initialize the mutexes. */
-        /* \todo implement mt */
         NK_LOG_INFO("startup: Noriko Object Model (NkOM)");
         return NkErr_Ok;
     }
@@ -139,6 +142,9 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer) 
 
 _Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(void) {
     if (InterlockedExchange8((CHAR volatile *)&gl_NkOMContext.m_isInitialized, NK_FALSE) == NK_TRUE) {
+        /* Destroy synchonization primitive for the class registry. */
+        NK_DESTROYLOCK(gl_NkOMContext.m_clsRegLock);
+
         /* Destroy the class registry. */
         NkHashtableDestroy(&gl_NkOMContext.mp_classReg);
 
@@ -177,6 +183,10 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
      */
     NkIBase *tmpResPtr;
     errCode = reqClsFac->VT->CreateInstance(reqClsFac, clsId, ctrlInst, &tmpResPtr);
+    /*
+     * Since NkOMQueryFactoryForClass() increments the factory's ref-count, we must
+     * decrement it after we are done with the factory.
+     */
     reqClsFac->VT->Release(reqClsFac);
     if (errCode != NkErr_Ok)
         return errCode;
@@ -228,12 +238,17 @@ _Return_ok_ NkErrorCode NK_CALL NkOMQueryFactoryForClass(
     NK_ASSERT(clsidPtr != NULL, NkErr_InParameter);
     NK_ASSERT(clsFacPtr != NULL, NkErr_OutptrParameter);
 
+    NK_LOCK(gl_NkOMContext.m_clsRegLock);
     if (NkHashtableAt(gl_NkOMContext.mp_classReg, &(NkHashtableKey){ .mp_ptrKey = clsidPtr }, clsFacPtr) == NkErr_Ok) {
+        NK_UNLOCK(gl_NkOMContext.m_clsRegLock);
+
         /* Add a reference to the class factory. */
         (*clsFacPtr)->VT->AddRef(*clsFacPtr);
-
         return NkErr_Ok;
-    } else return NkErr_ClassNotReg;
+    }
+    
+    NK_UNLOCK(gl_NkOMContext.m_clsRegLock);
+    return NkErr_ClassNotReg;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkOMInstallClassFactory(_Inout_ NkIClassFactory *clsFac) {
@@ -243,6 +258,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInstallClassFactory(_Inout_ NkIClassFactory 
     );
     NK_ASSERT(clsFac != NULL, NkErr_InOutParameter);
 
+    NkErrorCode errCode;
     /*
      * Go through all of the instantiable classes and add a class entry of the given
      * class ID associated with the current factory.
@@ -250,12 +266,14 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInstallClassFactory(_Inout_ NkIClassFactory 
     NkUuid const **clsidArr = clsFac->VT->QueryInstantiableClasses(clsFac);
     for (NkSize i = 0; clsidArr[i] != NULL; i++) {
         /** \todo check if class already exists */
-        NkErrorCode const errCode = NkHashtableInsert(
-            gl_NkOMContext.mp_classReg,
-            &(NkHashtablePair){
-                .m_keyVal    = { .mp_ptrKey = clsidArr[i] },
-                .mp_valuePtr = clsFac
-            }
+        NK_SYNCHRONIZED(gl_NkOMContext.m_clsRegLock,
+            errCode = NkHashtableInsert(
+                gl_NkOMContext.mp_classReg,
+                &(NkHashtablePair){
+                    .m_keyVal    = { .mp_ptrKey = clsidArr[i] },
+                    .mp_valuePtr = clsFac
+                }
+            );
         );
 
         if (errCode != NkErr_Ok) {
@@ -286,9 +304,11 @@ _Return_ok_ NkErrorCode NK_CALL NkOMUninstallClassFactory(_Inout_ NkIClassFactor
      */
     NkUuid const **clsidArr = clsFac->VT->QueryInstantiableClasses(clsFac);
     for (NkSize i = 0; clsidArr[i] != NULL; i++) {
-        NK_IGNORE_RETURN_VALUE(NkHashtableErase(gl_NkOMContext.mp_classReg, &(NkHashtableKey){
-            .mp_uuidKey = clsidArr[i]
-        }));
+        NK_SYNCHRONIZED(gl_NkOMContext.m_clsRegLock,
+            NK_IGNORE_RETURN_VALUE(NkHashtableErase(gl_NkOMContext.mp_classReg, &(NkHashtableKey){
+                .mp_uuidKey = clsidArr[i]
+            }));
+        );
 
         clsFac->VT->Release(clsFac);
     }

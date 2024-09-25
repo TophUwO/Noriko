@@ -279,6 +279,7 @@ NkVoid NK_CALL NkTimerRestart(_Inout_ NkTimer *tiPtr) {
     NkTimerStart(tiPtr);
 }
 
+
 NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrecision precId) {
     NK_ASSERT(tiPtr != NULL, NkErr_InParameter);
     NK_ASSERT(((__NkInt_Timer *)tiPtr)->m_type == NkTiType_Elapsed, NkErr_ObjectType);
@@ -299,6 +300,14 @@ NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrec
 
     /* Convert to requested precision. */
     return timeDiff / (gl_tdContext.m_timerFrequency / (NkDouble)precId);
+}
+
+
+NkUint64 NK_CALL NkGetCurrentTime(NkVoid) {
+    NkUint64 res;
+    NK_IGNORE_RETURN_VALUE(__NkInt_TimerGetClock(&res));
+
+    return res;
 }
 
 

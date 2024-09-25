@@ -37,6 +37,7 @@ int main(int argc, char **argv, char **env) {
     NkPRNGInitialize();
     NkOMInitialize(NK_TRUE);
     NkEnvParse(argc, argv, env);
+    NkLayerstackStartup();
 
     /* Query target platform properties. */
     NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
@@ -44,6 +45,7 @@ int main(int argc, char **argv, char **env) {
     NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.m_prodFullInfoStr.mp_dataPtr);
 
     system("pause");
+    NkLayerstackShutdown();
     NkEnvCleanup();
     NkOMUninitialize();
     NkPRNGUninitialize();

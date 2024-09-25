@@ -306,7 +306,6 @@ NK_INTERNAL NkVoid __NkInt_EnvParseOptionArray(
             goto lbl_DELPAIR;
         }
 
-        //NK_LOG_CRITICAL("i[%u]: %.*s", i, keyPtr->m_sizeInBytes, keyPtr->mp_dataPtr);
         /* Add to hash table. */
         errCode = NkHashtableInsert(
             gl_EnvStore,
@@ -355,6 +354,7 @@ _Return_ok_ NkErrorCode NK_CALL NkEnvParse(_In_ int argc, _In_reads_(argc) char 
         envp,
         NK_FALSE
     );
+    /* Parse all command-line arguments. */
     __NkInt_EnvParseOptionArray(argc - 1, &argv[1], NK_TRUE);
     return NkErr_Ok;
 }

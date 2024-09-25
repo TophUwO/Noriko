@@ -115,11 +115,11 @@ NK_INTERNAL NkErrorCode __NkInt_VectorTryFreeRange(
     _In_opt_ NkSize eInd
 ) {
     /* If the parameters are somehow invalid, do nothing. */
-    if (vecPtr->mp_fnDest == NULL || sInd == eInd)
+    if (vecPtr->mp_fnDest == NULL)
         return NkErr_NoOperation;
 
     /* Destroy elements in the given range. */
-    for (NkSize i = sInd; i < eInd; i++)
+    for (NkSize i = sInd; i <= eInd; i++)
         (*vecPtr->mp_fnDest)(vecPtr->mp_dataPtr[i]);
 
     return NkErr_Ok;
@@ -228,7 +228,8 @@ NkVoid NK_CALL NkVectorDestroy(_Uninit_ptr_ NkVector **vecPtr) {
         return;
 
     /* Destroy elements if possible. */
-    __NkInt_VectorTryFreeRange(*vecPtr, NK_VECTOR_BEGIN(*vecPtr), NK_VECTOR_END(*vecPtr) - 1);
+    if ((*vecPtr)->m_elemCount > 0)
+        __NkInt_VectorTryFreeRange(*vecPtr, NK_VECTOR_BEGIN(*vecPtr), NK_VECTOR_END(*vecPtr) - 1);
 
     /* Free parent structure and buffer memory. */
     NkGPFree((*vecPtr)->mp_dataPtr);
@@ -354,7 +355,7 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
          * constraints posed on the return value by NkVectorErase().
          */
         elemArray[0] = NULL;
-    }  else return NkErr_NoOperation;
+    } else return NkErr_NoOperation;
 
     return NkErr_Ok;
 }

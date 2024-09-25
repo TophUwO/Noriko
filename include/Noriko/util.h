@@ -280,6 +280,34 @@ NK_NATIVE typedef struct NkRgbaColor {
 
 
 /**
+ * \struct NkPoint2D
+ * \brief  represents a point in 2D-space
+ * 
+ * \par Remarks
+ *   This structure does not imply a unit on its value, e.g., it can mean a point in
+ *   <em>pixel space</em> or a point in <em>tile space</em>.
+ */
+NK_NATIVE typedef struct NkPoint2D {
+    NkInt64 m_xCoord; /**< x-coordinate */
+    NkInt64 m_yCoord; /**< y-coordinate */
+} NkPoint2D;
+
+
+/**
+ * \struct NkSize2D
+ * \brief  represents a size (i.e., non-negative extents) in 2D-space
+ * 
+ * \par Remarks
+ *   This structure does not imply a unit on its value, e.g., it can mean a size in
+ *   <em>pixel space</em> or a point in <em>tile space</em>.
+ */
+NK_NATIVE typedef struct NkSize2D {
+    NkUint64 m_width;  /**< width value */
+    NkUint64 m_height; /**< height value */
+} NkSize2D;
+
+
+/**
  * \brief   adds two signed 32-bit integers while employing an overflow check
  * \param   [in] s1 first summand
  * \param   [in] s2 second summand
@@ -396,7 +424,7 @@ NK_NATIVE typedef struct NkUuid {
     NkUint16 m_tBlock;  /**< third block (4 hex digits) */
     NkUint64 m_ffBlock; /**< fourth and fifth block (4 + 12 hex digits) */
 } NkUuid;
-/**< \endcond */
+
 
 /**
  * \brief  generates a new UUID
