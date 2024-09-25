@@ -294,6 +294,7 @@
       <FileType>CppHeader</FileType>
     </ClInclude>
     <ClInclude Include="..\include\Noriko\util.h" />
+    <ClInclude Include="..\include\Noriko\window.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />

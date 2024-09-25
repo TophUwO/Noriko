@@ -33,16 +33,21 @@ int main(int argc, char **argv, char **envp) {
 
     /* Startup the engine component. */
     NkErrorCode errCode = NkApplicationStartup(&(NkApplicationSpecification const){
-        .m_structSize     = sizeof(NkApplicationSpecification),
-        .m_enableDbgTools = NK_TRUE,
-        .m_vpExtents      = { 60, 40 },
-        .m_glTileSize     = { 16, 16 },
-        .m_wndTitle       = NK_MAKE_STRING_VIEW("Noriko Sandbox"),
-        .m_wndPos         = { INT64_MAX, INT64_MAX },
-        .m_argc           = argc,
-        .mp_argv          = argv,
-        .mp_envp          = envp,
-        .m_workingDir     = NK_MAKE_STRING_VIEW("$(appDir)")
+        .m_structSize      = sizeof(NkApplicationSpecification),
+        .m_enableDbgTools  = NK_TRUE,
+        .m_vpAlignment     = NkVpAlign_Default,
+        .m_vpExtents       = { 60, 40 },
+        .m_glTileSize      = { 16, 16 },
+        .m_allowedWndModes = NkWndMode_All,
+        .m_initialWndMode  = NkWndMode_Normal | NkWndMode_Visible,
+        .m_wndFlags        = NkWndFlag_Default,
+        .mp_nativeHandle   = NULL,
+        .m_wndTitle        = NK_MAKE_STRING_VIEW("Noriko Sandbox"),
+        .m_wndPos          = { INT64_MAX, INT64_MAX },
+        .m_argc            = argc,
+        .mp_argv           = argv,
+        .mp_envp           = envp,
+        .m_workingDir      = NK_MAKE_STRING_VIEW("$(appDir)")
     });
     if (errCode != NkErr_Ok)
         goto lbl_END;

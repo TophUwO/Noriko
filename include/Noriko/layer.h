@@ -105,7 +105,7 @@ NKOM_DECLARE_INTERFACE(NkILayer) {
     NkErrorCode (NK_CALL *OnEvent)(_Inout_ NkILayer *self, _In_ NkEvent const *evPtr);
     /**
      */
-    NkErrorCode (NK_CALL *OnRender)(_Inout_ NkILayer *self, NkFloat timestep);
+    NkErrorCode (NK_CALL *OnRender)(_Inout_ NkILayer *self, _In_ NkFloat deltaTime);
 };
 
 

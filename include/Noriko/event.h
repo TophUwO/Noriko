@@ -33,6 +33,7 @@
 #include <include/Noriko/util.h>
 #include <include/Noriko/error.h>
 #include <include/Noriko/nkom.h>
+#include <include/Noriko/window.h>
 
 
 /**
@@ -99,10 +100,11 @@ NK_NATIVE typedef enum NkEventCategory {
  * \brief  represents the additional data used by some window events
  */
 NK_NATIVE typedef struct NkWindowEvent {
-    NkPoint2D m_wndPos;       /**< global window position (screen coordinates) */
-    NkSize2D  m_wndSize;      /**< window size (in pixels, client area only) */
-    NkSize2D  m_totalWndSize; /**< total window size (in pixels, incl. non-client area, etc.) */
-    NkUint32  m_wndState;     /**< \todo current window state */
+    NkIWindow *mp_wndRef;      /**< reference to the Noriko window handle */
+    NkPoint2D  m_wndPos;       /**< global window position (screen coordinates) */
+    NkSize2D   m_wndSize;      /**< window size (in pixels, client area only) */
+    NkSize2D   m_totalWndSize; /**< total window size (in pixels, incl. non-client area, etc.) */
+    NkUint32   m_wndState;     /**< \todo current window state */
 } NkWindowEvent;
 
 /**

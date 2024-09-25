@@ -36,6 +36,7 @@
 #include <include/Noriko/nkom.h>
 #include <include/Noriko/event.h>
 #include <include/Noriko/layer.h>
+#include <include/Noriko/window.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -46,21 +47,21 @@
  * \brief  represents global configuration options passed to the Noriko startup routine
  */
 NK_NATIVE typedef struct NkApplicationSpecification {
-    NkSize         m_structSize;     /**< size of this structure */
-    NkBoolean      m_enableDbgTools; /**< whether or not to enable debugging tools */
-    /* NkViewportAlignment  m_vpAlignment; */
-    NkSize2D       m_vpExtents;      /**< size in tiles of the viewport */
-    NkSize2D       m_glTileSize;     /**< global tile size of the viewport */
-    /* NkWindowMode         m_allowedWndModes; */
-    /* NkWindowMode         m_initialWndMode; */
-    /* NkWindowFlags        m_wndFlags; */
-    /* NkNativeWindowHandle m_nativeHandle; */
-    NkStringView   m_wndTitle;       /**< main window title */
-    NkPoint2D      m_wndPos;         /**< main window position (relative to virtual desktop) */
-    int            m_argc;           /**< number of command-line parameters */
-    char         **mp_argv;          /**< command-line parameters */
-    char         **mp_envp;          /**< (optional) environment variables */
-    NkStringView   m_workingDir;     /**< default working directory */
+    NkSize                 m_structSize;      /**< size of this structure, in bytes */
+    NkBoolean              m_enableDbgTools;  /**< whether or not to enable debugging tools */
+    NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
+    NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
+    NkSize2D               m_glTileSize;      /**< global tile size of the main window viewport */
+    NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
+    NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
+    NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
+    NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
+    NkStringView           m_wndTitle;        /**< main window title */
+    NkPoint2D              m_wndPos;          /**< main window position (relative to virtual desktop) */
+    int                    m_argc;            /**< number of command-line parameters */
+    char                 **mp_argv;           /**< command-line parameters */
+    char                 **mp_envp;           /**< (optional) environment variables */
+    NkStringView           m_workingDir;      /**< default working directory */
 } NkApplicationSpecification;
 
 

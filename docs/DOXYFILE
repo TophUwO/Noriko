@@ -2513,7 +2513,9 @@ PREDEFINED             = _Struct_size_bytes_(x)= \
                          "NKOM_DECLARE_INTERFACE(name)=struct name" \
                          _Inout_= \
                          _Return_ok_= \
-                         _In_=
+                         _In_= \
+                         _Inout_opt_= \
+                         _Out_=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
