@@ -183,8 +183,10 @@ _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid) {
     return __NkInt_TimerInitializeStaticContext();
 }
 
-NkVoid NK_CALL NkTimerUninitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid) {
     NK_LOG_INFO("shutdown: timing device context");
+
+    return NkErr_Ok;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkTimerCreate(

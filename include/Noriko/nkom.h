@@ -300,7 +300,7 @@ NKOM_DECLARE_INTERFACE(NkIBase) {
      *          parameters generally invokes undefined behavior unless otherwise
      *          specified in the documentation for a concrete interface.
      */
-    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkIBase *self, _In_ NkUuid const *iId, _Outptr_ void **resPtr);
+    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkIBase *self, _In_ NkUuid const *iId, _Outptr_ NkVoid **resPtr);
     /**
      * \brief   increments the reference count of the current instance
      * 
@@ -374,7 +374,7 @@ NKOM_DECLARE_INTERFACE(NkIInitializable) {
     NkErrorCode (NK_CALL *QueryInterface)(
         _Inout_  NkIInitializable *self,
         _In_     NkUuid const *iId,
-        _Outptr_ void **resPtr
+        _Outptr_ NkVoid **resPtr
     );
     /**
      * \brief reimplements <tt>NkIBase::AddRef()</tt> 
@@ -415,7 +415,7 @@ NKOM_DECLARE_INTERFACE(NkIInitializable) {
      *              must be able to properly handle <tt>initParam</tt> being
      *              <tt>NULL</tt>.
      */
-    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIInitializable *self, _Inout_opt_ void *initParam);
+    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIInitializable *self, _Inout_opt_ NkVoid *initParam);
 };
 
 /**
@@ -439,7 +439,7 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
     NkErrorCode (NK_CALL *QueryInterface)(
         _Inout_  NkIClassFactory *self,
         _In_     NkUuid const *iId,
-        _Outptr_ void **resPtr
+        _Outptr_ NkVoid **resPtr
     );
     /**
      * \brief reimplements <tt>NkIBase::AddRef()</tt> 
@@ -592,7 +592,6 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
  * initialized. This happens through calling <tt>NkOMInitialize()</tt> once per process
  * at startup.
  * 
- * \param  [in] enableDebugLayer whether or not to enable debugging tools
  * \return \c NkErr_Ok on success, non-zero on failure
  * \note   \li The parameters passed to this function are immutable for the duration of
  *             the session. A session is marked by a pair of
@@ -602,17 +601,17 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
  * \note   \li Calling this function more than once without having called
  *             <tt>NkOMUninitialize()</tt> in between results in a no-op.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid);
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(void);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(NkVoid);
 /**
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
     _In_        NkUuid const *clsId,
     _Inout_opt_ NkIBase *ctrlInst,
     _In_        NkUuid const *iId,
-    _Inout_opt_ void *initParam,
+    _Inout_opt_ NkVoid *initParam,
     _Outptr_    NkIBase **resPtr
 );
 /**

@@ -297,6 +297,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />
+    <ClCompile Include="..\src\Noriko\application.c" />
     <ClCompile Include="..\src\Noriko\env.c" />
     <ClCompile Include="..\src\Noriko\dstruct\htable.c" />
     <ClCompile Include="..\src\Noriko\dstruct\vector.c" />

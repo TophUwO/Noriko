@@ -527,7 +527,7 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid) {
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkAllocUninitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkAllocUninitialize(NkVoid) {
     NK_LOG_INFO("shutdown: allocators");
 
     /* Free all memory pools. */
@@ -539,8 +539,10 @@ NkVoid NK_CALL NkAllocUninitialize(NkVoid) {
         NkGPFree(gl_PoolAllocCxt.m_memPools[i].mp_blockPtr);
         ++j;
     }
+
     /* Destroy lock. */
     NK_DESTROYLOCK(gl_PoolAllocCxt.m_mtxLock);
+    return NkErr_Ok;
 }
 
 
@@ -744,7 +746,7 @@ NkVoid NK_CALL NkPoolFree(_Inout_opt_ NkVoid *memPtr) {
 
         poolPtr->m_fFreeInd = poolPtr->m_fFreeInd > blockIndex ? blockIndex : poolPtr->m_fFreeInd;
         NK_LOG_TRACE(
-            "Freed memory %u memory blocks [starting from %u] (0x%p) [blsz=%u] in pool index [%u] (0x%p).",
+            "Freed %u memory blocks [starting from %u] (0x%p) [blsz=%u] in pool index [%u] (0x%p).",
             blockCount,
             blockIndex,
             memPtr,

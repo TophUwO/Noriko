@@ -107,5 +107,8 @@
     <ClCompile Include="..\src\Noriko\layer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Noriko\application.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

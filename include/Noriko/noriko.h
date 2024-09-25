@@ -41,3 +41,41 @@
 #include <include/Noriko/dstruct/htable.h>
 
 
+/**
+ * \struct NkApplicationSpecification
+ * \brief  represents global configuration options passed to the Noriko startup routine
+ */
+NK_NATIVE typedef struct NkApplicationSpecification {
+    NkSize         m_structSize;     /**< size of this structure */
+    NkBoolean      m_enableDbgTools; /**< whether or not to enable debugging tools */
+    /* NkViewportAlignment  m_vpAlignment; */
+    NkSize2D       m_vpExtents;      /**< size in tiles of the viewport */
+    NkSize2D       m_glTileSize;     /**< global tile size of the viewport */
+    /* NkWindowMode         m_allowedWndModes; */
+    /* NkWindowMode         m_initialWndMode; */
+    /* NkWindowFlags        m_wndFlags; */
+    /* NkNativeWindowHandle m_nativeHandle; */
+    NkStringView   m_wndTitle;       /**< main window title */
+    NkPoint2D      m_wndPos;         /**< main window position (relative to virtual desktop) */
+    int            m_argc;           /**< number of command-line parameters */
+    char         **mp_argv;          /**< command-line parameters */
+    char         **mp_envp;          /**< (optional) environment variables */
+    NkStringView   m_workingDir;     /**< default working directory */
+} NkApplicationSpecification;
+
+
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationStartup(_In_ NkApplicationSpecification const *specsPtr);
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid);
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid);
+
+/**
+ */
+NK_NATIVE NK_API NkApplicationSpecification const *NK_CALL NkApplicationQuerySpecification(NkVoid);
+
+

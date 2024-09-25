@@ -89,15 +89,15 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkLayerstackShutdown(NkVoid) {
-    NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
-
+_Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid) {
     NK_LOG_INFO("shutdown: layer stack");
 
     /* Destroy the synchronization primitive. */
     NK_DESTROYLOCK(gl_LayerStack.m_mtxLock);
     /* Destroy the layer vector, releasing all layers still present in the stack. */
     NkVectorDestroy(&gl_LayerStack.mp_layerStack);
+
+    return NkErr_Ok;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In_ NkSize whereInd) {

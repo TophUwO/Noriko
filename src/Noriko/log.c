@@ -291,7 +291,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkLogUninitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkLogUninitialize(NkVoid) {
     NK_LOG_INFO("shutdown: logging");
 
     /*
@@ -308,6 +308,7 @@ NkVoid NK_CALL NkLogUninitialize(NkVoid) {
     }
 
     NK_DESTROYLOCK(gl_LogContext.m_mtxLock);
+    return NkErr_Ok;
 }
 
 NkVoid NK_CALL NkLogQueryContext(_Out_ NkLogContext *cxtStructPtr) {

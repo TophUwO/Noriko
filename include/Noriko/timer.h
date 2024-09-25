@@ -73,10 +73,11 @@ NK_NATIVE typedef struct NkTimer {
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid);
 /**
  * \brief  uninitializes the global timing device context
+ * \return \c NkErr_Ok on success, non-zero on failure
  * \note   This function should be run once from the main thread after all child threads
  *         have been killed.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkTimerUninitialize(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid);
 /**
  * \brief   creates a new timing device with the specified properties
  * \param   [in] tiType type ID of the new timer

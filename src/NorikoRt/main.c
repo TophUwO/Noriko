@@ -25,34 +25,34 @@
 #include <include/Noriko/noriko.h>
 
 
-int main(int argc, char **argv, char **env) {
+int main(int argc, char **argv, char **envp) {
     /* Enable Visual Studio memory leak detector. */
 #if (defined _DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-    NkLogInitialize();
-    NkTimerInitialize();
-    NkAllocInitialize();
-    NkPRNGInitialize();
-    NkOMInitialize(NK_TRUE);
-    NkEnvParse(argc, argv, env);
-    NkLayerstackStartup();
+    /* Startup the engine component. */
+    NkErrorCode errCode = NkApplicationStartup(&(NkApplicationSpecification const){
+        .m_structSize     = sizeof(NkApplicationSpecification),
+        .m_enableDbgTools = NK_TRUE,
+        .m_vpExtents      = { 60, 40 },
+        .m_glTileSize     = { 16, 16 },
+        .m_wndTitle       = NK_MAKE_STRING_VIEW("Noriko Sandbox"),
+        .m_wndPos         = { INT64_MAX, INT64_MAX },
+        .m_argc           = argc,
+        .mp_argv          = argv,
+        .mp_envp          = envp,
+        .m_workingDir     = NK_MAKE_STRING_VIEW("$(appDir)")
+    });
+    if (errCode != NkErr_Ok)
+        goto lbl_END;
 
-    /* Query target platform properties. */
-    NkPlatformInformation targetPlatformInfo = { .m_structSize = sizeof targetPlatformInfo };
-    NkQueryPlatformInformation(&targetPlatformInfo);
-    NK_LOG_INFO("NorikoRt powered by %s", targetPlatformInfo.m_prodFullInfoStr.mp_dataPtr);
+    /* Start the main loop. */
+    errCode = NkApplicationRun();
 
-    system("pause");
-    NkLayerstackShutdown();
-    NkEnvCleanup();
-    NkOMUninitialize();
-    NkPRNGUninitialize();
-    NkAllocUninitialize();
-    NkTimerUninitialize();
-    NkLogUninitialize();
-    return 0;
+lbl_END:
+    NK_IGNORE_RETURN_VALUE(NkApplicationShutdown());
+    return errCode;
 }
 
 

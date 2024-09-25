@@ -31,6 +31,7 @@
 #include <include/Noriko/env.h>
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/noriko.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -325,10 +326,12 @@ lbl_DELPAIR:
 /** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkEnvParse(_In_ int argc, _In_reads_(argc) char **argv, _In_to_null_ char **envp) {
-    NK_ASSERT(argc > 0, NkErr_InParameter);
-    NK_ASSERT(argv != NULL, NkErr_InptrParameter);
+_Return_ok_ NkErrorCode NK_CALL NkEnvStartup(NkVoid) {
     NK_ASSERT(gl_EnvStore == NULL, NkErr_ComponentState);
+    NK_LOG_INFO("startup: command-line");
+
+    /* Query the required information from the application specification. */
+    NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
 
     /* Initialize the key-value store. */
     NkErrorCode errCode = NkErr_Ok;
@@ -350,17 +353,20 @@ _Return_ok_ NkErrorCode NK_CALL NkEnvParse(_In_ int argc, _In_reads_(argc) char 
      * environment variable.
      */
     __NkInt_EnvParseOptionArray(
-        (NkUint32)NkArrayGetDynCount((NkVoid const **)envp),
-        envp,
+        (NkUint32)NkArrayGetDynCount((NkVoid const **)appSpecs->mp_envp),
+        appSpecs->mp_envp,
         NK_FALSE
     );
     /* Parse all command-line arguments. */
-    __NkInt_EnvParseOptionArray(argc - 1, &argv[1], NK_TRUE);
+    __NkInt_EnvParseOptionArray(appSpecs->m_argc - 1, &appSpecs->mp_argv[1], NK_TRUE);
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkEnvCleanup(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkEnvShutdown(NkVoid) {
+    NK_LOG_INFO("shutdown: command-line");
+
     NkHashtableDestroy(&gl_EnvStore);
+    return NkErr_Ok;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkEnvGetValue(_In_z_ char const *keyStr, _Out_ NkVariant *valPtr) {

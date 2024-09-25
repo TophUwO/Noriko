@@ -223,10 +223,11 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid);
  * \brief   uninitializes the logging facility
  * \note    Call this function only once during application shutdown as late as possible
  *          from the main thread.
+ * \return  \c NkErr_Ok on success, non-zero on failure
  * \warning Calling this function without having called \c NkLogInitialize() before is
  *          undefined behavior.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkLogUninitialize(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogUninitialize(NkVoid);
 /**
  * \brief   queries the static log context
  * \param   [in] cxtStructPtr pointer to a NkLogContext instance that will receive the

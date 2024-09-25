@@ -237,11 +237,12 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkPRNGUninitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkPRNGUninitialize(NkVoid) {
     /* Destroy mutex. */
     NK_DESTROYLOCK(gl_RandContext.m_mtxLock);
 
     NK_LOG_INFO("shutdown: PRNG");
+    return NkErr_Ok;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {

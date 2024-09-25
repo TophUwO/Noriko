@@ -157,6 +157,8 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_HashtableGetKeySizeInBytes(
 #pragma warning (suppress: 4127)
             NK_ASSERT_EXTRA(NK_FALSE, NkErr_ObjectState, "Invalid key type. Should not happen.");
     }
+
+    return SIZE_MAX;
 }
 
 /**

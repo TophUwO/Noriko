@@ -398,12 +398,13 @@ NK_NATIVE NK_API NK_INLINE _Return_false_ NkBoolean NK_CALL NkCheckedUint64Add(
  */
 NK_NATIVE NK_API _Return_ok_ enum NkErrorCode NK_CALL NkPRNGInitialize(NkVoid);
 /**
- * \brief uninitializes the random number generator
- * \note  \li After this call, it is no longer safe to call <tt>NkPRNGNext()</tt>.
- * \note  \li Call this function once from the main thread just before the application
- *            exits.
+ * \brief  uninitializes the random number generator
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li After this call, it is no longer safe to call <tt>NkPRNGNext()</tt>.
+ * \note   \li Call this function once from the main thread just before the application
+ *             exits.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkPRNGUninitialize(NkVoid);
+NK_NATIVE NK_API _Return_ok_ enum NkErrorCode NK_CALL NkPRNGUninitialize(NkVoid);
 /**
  * \brief  retrieves the next number in the random number sequence
  * \param  [in] outPtr pointer to an NkUint64 variable that will receive the random

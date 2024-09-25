@@ -11,7 +11,6 @@
  *     https://opensource.org/license/bsd-3-clause                        *
  **************************************************************************/
 
-/** \cond INTERNAL */
 /**
  * \file  nkom.c
  * \brief implements the public API for the Noriko Object Model (NkOM), aka. the NkOM
@@ -34,9 +33,7 @@
 #endif
 
 /* Noriko includes */
-#include <include/Noriko/log.h>
-
-#include <include/Noriko/dstruct/htable.h>
+#include <include/Noriko/noriko.h>
 
 /* NkOM includes */
 #include <include/Noriko/nkom.h>
@@ -46,7 +43,7 @@
  * This section defines the interface- and class IDs for the interfaces and classes that
  * come shipped with the NkOM runtime.
  */
-#pragma region Default Interface and Class IDs
+#pragma region Default Interface- and Class IDs
 // { 00000000-0000-0000-0000-000000000000 }
 static NKOM_DEFINE_IID(NkINull, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
 // { 00000000-0000-0000-0000-000000000000 }
@@ -65,9 +62,10 @@ NKOM_DEFINE_CLSID(NkIBase, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
 NKOM_DEFINE_CLSID(NkIInitializable, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
 // { 00000000-0000-0000-0000-000000000000 }
 NKOM_DEFINE_CLSID(NkIClassFactory, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
-#pragma endregion (Default Interface and Class IDs)
+#pragma endregion (Default Interface- and Class IDs)
 
 
+/** \cond INTERNAL */
 /**
  * \struct __NkOM_StaticContext
  * \brief  represents the global (process-wide) NkOM context
@@ -101,14 +99,18 @@ static NkVoid NK_CALL __NkOM_DestroyClsFacFn(_Inout_opt_ NkHashtableKey *keyPtr,
     if (valPtr != NULL)
         ((NkIClassFactory *)valPtr)->VT->Release((NkIClassFactory *)valPtr);
 }
+/** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer) {
+_Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid) {
     if (InterlockedExchange8((CHAR volatile *)&gl_NkOMContext.m_isInitialized, NK_TRUE) == NK_FALSE) {
+        /* Query application specification for debugging flag. */
+        NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
+
         /* Initialize the static context. */
         gl_NkOMContext = (struct __NkOM_StaticContext){
             .m_isInitialized  = NK_TRUE,
-            .m_isDebugEnabled = enableDebugLayer,
+            .m_isDebugEnabled = appSpecs->m_enableDbgTools,
             .mp_classReg      = NULL
         };
 
@@ -140,7 +142,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(_In_ NkBoolean enableDebugLayer) 
     return NkErr_NoOperation;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(void) {
+_Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(NkVoid) {
     if (InterlockedExchange8((CHAR volatile *)&gl_NkOMContext.m_isInitialized, NK_FALSE) == NK_TRUE) {
         /* Destroy synchonization primitive for the class registry. */
         NK_DESTROYLOCK(gl_NkOMContext.m_clsRegLock);
@@ -159,7 +161,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
     _In_        NkUuid const *clsId,
     _Inout_opt_ NkIBase *ctrlInst,
     _In_        NkUuid const *iId,
-    _Inout_opt_ void *initParam,
+    _Inout_opt_ NkVoid *initParam,
     _Outptr_    NkIBase **resPtr
 ) {
     NK_ASSERT(
@@ -196,7 +198,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
      * run its initialize method. If this fails, it is not an error.
      */
     NkIInitializable *initRef;
-    if (tmpResPtr->VT->QueryInterface(tmpResPtr, NKOM_IIDOF(NkIInitializable), (void **)&initRef) != NkErr_Ok) {
+    if (tmpResPtr->VT->QueryInterface(tmpResPtr, NKOM_IIDOF(NkIInitializable), (NkVoid **)&initRef) != NkErr_Ok) {
         /*
          * If initialization fails, decrement the object's ref-count. It must now be one.
          * In the next step, it will be decremented again, causing it to hit zero,
@@ -214,7 +216,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
     }
 
     /* Finally, query the interface that we will use to communicate with the object. */
-    if (!errCode && (errCode = tmpResPtr->VT->QueryInterface(tmpResPtr, iId, (void **)resPtr)) != NkErr_Ok) {
+    if (!errCode && (errCode = tmpResPtr->VT->QueryInterface(tmpResPtr, iId, (NkVoid **)resPtr)) != NkErr_Ok) {
         /*
          * Interface is not implemented or something else went wrong. Ref-count not
          * increased; release once to destroy the object altogether.

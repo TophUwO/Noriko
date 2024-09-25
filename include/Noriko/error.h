@@ -80,6 +80,34 @@
     #define NK_ASSERT_EXTRA(expr, ec, extra)
     #define NK_ASSERT(expr, ec)
 #endif
+/**
+ * \def   NK_WEAK_ASSERT(expr, sev, msg, ...)
+ * \brief validates that a condition is satisfied; if it isn't, print error message and
+ *        continue
+ * \param errCodeVar error code variable to update potentially
+ * \param errCode numeric error code to update \c errCodeVar with
+ * \param expr expression to evaluate
+ * \param sev message severity
+ * \param msg string representation of the error message
+ *
+ * \par Remarks
+ *   \c sev can be one of the following values (case-sensitive):
+ *   <ul>
+ *    <li>\c NONE
+ *    <li>\c TRACE
+ *    <li>\c DEBUG
+ *    <li>\c INFO
+ *    <li>\c WARNING
+ *    <li>\c ERROR
+ *    <li>\c CRITICAL
+ *   </ul>
+ */
+#define NK_WEAK_ASSERT(errCodeVar, errCode, expr, sev, msg, ...) \
+    do { if (!(expr)) {                                          \
+        NK_LOG_##sev(msg, ##__VA_ARGS__);                        \
+                                                                 \
+        errCodeVar = errCode;                                    \
+    } } while (0)
 
 
 /**
