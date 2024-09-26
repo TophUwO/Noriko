@@ -66,6 +66,7 @@ NK_NATIVE typedef enum NkWindowFlags {
 
     NkWndFlag_MessageOnlyWnd = 1 << 0,
     NkWndFlag_AlwaysOnTop    = 1 << 1,
+    NkWndFlag_MainWindow     = 1 << 2,
 
     __NkWndFlag_Count__
 } NkWindowFlags;
@@ -89,7 +90,6 @@ NK_NATIVE typedef enum NkViewportAlignment {
 NK_NATIVE typedef struct NkWindowSpecification {
     NkSize                 m_structSize;      /**< size of this structure, in bytes */
     NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
-    NkBoolean              m_isMainWnd;       /**< whether or not the window is supposed to be the main window */
     NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
     NkSize2D               m_glTileSize;      /**< global tile size of the main window viewport */
     NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
@@ -110,11 +110,7 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
      */
-    NkErrorCode (NK_CALL *QueryInterface)(
-        _Inout_  NkIWindow *self,
-        _In_     NkUuid const *iId,
-        _Outptr_ NkVoid **resPtr
-    );
+    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkIWindow *self, _In_ NkUuid const *iId, _Outptr_ NkVoid **resPtr);
     /**
      * \brief reimplements <tt>NkIBase::AddRef()</tt>
      */
@@ -127,11 +123,8 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      * \brief reimplements <tt>NkIInitializable::Initialize()</tt>
      */
-    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIWindow *self, _Inout_opt_ NkWindowSpecification *wndSpecsPtr);
+    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIWindow *self, _Inout_opt_ NkVoid *initParam);
 
-    /**
-     */
-    NkVoid (NK_CALL *OnEvent)(_Inout_ NkIWindow *self, _In_ struct NkEvent const *evPtr);
     /**
      */
     NkVoid (NK_CALL *OnUpdate)(_Inout_ NkIWindow *self, _In_ NkFloat deltaTime);
@@ -159,47 +152,22 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      */
     NkErrorCode (NK_CALL *SetWindowPosition)(_Inout_ NkIWindow *self, _In_ NkPoint2D const newWndPos);
-    /**
-     */
-    NkErrorCode (NK_CALL *GetWindowSize)(_Inout_ NkIWindow *self, _Out_ NkSize2D *resPtr);
-    /**
-     */
-    NkErrorCode (NK_CALL *SetWindowSize)(_Inout_ NkIWindow *self, _In_ NkSize2D newWndSize);
 };
 
 
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysStartup(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid);
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysShutdown(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid);
+
 /**
+ * \brief  queries the static window instance
+ * \return pointer to the static window instance
+ * \note   Before using the window instance obtained by this function for the first time,
+ *         call \c NkWindowStartup() once to actually create the platform window.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysCreateWindow(_In_ NkWindowSpecification const *wndSpecPtr);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysDestroyWindow(_Inout_ NkIWindow *wndRef);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysUpdate(_In_ NkFloat deltaTime);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowSysProcessEvent(_In_ struct NkEvent const *evPtr);
-/**
- */
-NK_NATIVE NK_API NkIWindow *NK_CALL NkWindowSysQueryMainWindow(NkVoid);
-/**
- */
-NK_NATIVE NK_API NkStringView const *NK_CALL NkWindowSysQueryIdentifierForWindow(_In_ NkIWindow const *wndHandle);
-/**
- */
-NK_NATIVE NK_API NkIWindow *NK_CALL NkWindowSysQueryWindow(_In_ NkStringView wndIdent);
-/**
- */
-NK_NATIVE NK_API NkErrorCode NK_CALL NkWindowSysEnumerateWindows(
-    _In_        NkErrorCode (NK_CALL *enumFn)(_Inout_ NkIWindow *, _In_ NkSize, _In_ NkSize, _Inout_opt_ NkVoid *),
-    _Inout_opt_ NkVoid *extraCxtPtr
-);
+NK_NATIVE NK_API NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
 
 

@@ -56,6 +56,7 @@ NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,    &NkPRNGUninitialize   },
     { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,        &NkEnvShutdown        },
     { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,      &NkOMUninitialize     },
+    { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
     { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown }
 };
 /**
@@ -146,9 +147,9 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 
     for (;;) {
         /* First, dispatch windows messages. */
-        while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
+        while (PeekMessageA(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
             TranslateMessage(&currMsg);
-            DispatchMessage(&currMsg);
+            DispatchMessageA(&currMsg);
 
             /*
              * Check if the message was actually the Windows 'WM_QUIT' message. This is
@@ -166,7 +167,15 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 lbl_CLEANUP:
     return errCode;
 #else
-    #error Missing main-loop implementation for this platform.
+    #error Implementation for 'NkApplicationRun()' missing on this platform.
+#endif
+}
+
+NkVoid NK_CALL NkApplicationExit(_Ecode_range_ NkErrorCode errCode) {
+#if (defined NK_TARGET_WINDOWS)
+    PostQuitMessage((int)errCode);
+#else
+    #error Implementation for 'NkApplicationExit()' missing on this platform.
 #endif
 }
 

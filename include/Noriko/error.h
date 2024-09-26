@@ -149,6 +149,8 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_UnknownClass,         /**< class is unknown to the current class factory instance */
     NkErr_ClassAlreadyReg,      /**< class is already registered in the global NkOM runtime */
     NkErr_ClassNotReg,          /**< class is not registered in the global NkOM runtime */
+    NkErr_RegWindowClass,       /**< could not register window class */
+    NkErr_CreateNativeWindow,   /**< could not create native window */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;

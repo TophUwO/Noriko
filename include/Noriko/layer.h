@@ -61,13 +61,13 @@ NKOM_DECLARE_INTERFACE(NkILayer) {
     /**
      * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
      */
-    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkILayer *self, _In_ NkUuid const *iId, _Outptr_ void **resPtr);
+    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkILayer *self, _In_ NkUuid const *iId, _Outptr_ NkVoid **resPtr);
     /**
-     * \brief reimplements <tt>NkIBase::AddRef()</tt> 
+     * \brief reimplements <tt>NkIBase::AddRef()</tt>
      */
     NkOMRefCount (NK_CALL *AddRef)(_Inout_ NkILayer *self);
     /**
-     * \brief reimplements <tt>NkIBase::Release()</tt> 
+     * \brief reimplements <tt>NkIBase::Release()</tt>
      */
     NkOMRefCount (NK_CALL *Release)(_Inout_ NkILayer *self);
 

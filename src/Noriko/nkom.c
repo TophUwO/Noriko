@@ -70,23 +70,23 @@ NKOM_DEFINE_CLSID(NkIClassFactory, { 0x00000000, 0x0000, 0x0000, 0x0000000000000
  * \struct __NkOM_StaticContext
  * \brief  represents the global (process-wide) NkOM context
  */
-struct __NkOM_StaticContext {
+NK_NATIVE typedef struct __NkOM_StaticContext {
     NkBoolean    m_isInitialized;  /**< whether or not NkOM is initialized */
     NkBoolean    m_isDebugEnabled; /**< whether or not integrated debugging facilities are enabled */
 
     NK_DECL_LOCK(m_clsRegLock);    /**< synchronization object for class registry */
     NkHashtable *mp_classReg;      /**< global class registry */
-};
+} __NkOM_StaticContext;
 
 /**
  * \brief actual instance of the static global NkOM context 
  */
-static struct __NkOM_StaticContext gl_NkOMContext;
+NK_INTERNAL __NkOM_StaticContext gl_NkOMContext;
 
 
 /**
  */
-static NkVoid NK_CALL __NkOM_DestroyClsFacFn(_Inout_opt_ NkHashtableKey *keyPtr, _Inout_opt_ NkVoid *valPtr) {
+NK_INTERNAL NkVoid NK_CALL __NkOM_DestroyClsFacFn(_Inout_opt_ NkHashtableKey *keyPtr, _Inout_opt_ NkVoid *valPtr) {
     NK_UNREFERENCED_PARAMETER(keyPtr);
 
     /*
@@ -108,7 +108,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid) {
         NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
 
         /* Initialize the static context. */
-        gl_NkOMContext = (struct __NkOM_StaticContext){
+        gl_NkOMContext = (__NkOM_StaticContext){
             .m_isInitialized  = NK_TRUE,
             .m_isDebugEnabled = appSpecs->m_enableDbgTools,
             .mp_classReg      = NULL

@@ -19,6 +19,12 @@
     <Filter Include="Source Files\dstruct">
       <UniqueIdentifier>{beaad60e-1130-47ee-a372-5aa3c795a4bd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\platform">
+      <UniqueIdentifier>{40c91401-f568-4123-9b21-da3e05573e57}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\platform\windows">
+      <UniqueIdentifier>{0c5525fc-3d3f-43eb-bc11-980338318644}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\noriko.h">
@@ -112,6 +118,12 @@
     </ClCompile>
     <ClCompile Include="..\src\Noriko\application.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\window.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\winwindow.c">
+      <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

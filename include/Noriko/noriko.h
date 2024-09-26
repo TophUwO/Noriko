@@ -74,6 +74,9 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid);
 /**
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid);
+/**
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkApplicationExit(_Ecode_range_ NkErrorCode errCode);
 
 /**
  */

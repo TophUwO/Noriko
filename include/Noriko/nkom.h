@@ -129,7 +129,7 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  *        of which the name is provided
  * \param ifaceName name of the interface
  */
-#define NKOM_DEFINE_VTABLE(ifaceName) static struct __##ifaceName##_VTable__ const NK_VTABLEOF(ifaceName) =
+#define NKOM_DEFINE_VTABLE(ifaceName) static struct __##ifaceName##_VTable__ const NKOM_VTABLEOF(ifaceName) =
 /**
  * \def   NKOM_IMPLEMENTS(ifaceName)
  * \brief auxiliary macro which inserts a pointer to the VTable of the given interface

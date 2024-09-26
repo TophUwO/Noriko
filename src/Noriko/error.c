@@ -79,7 +79,9 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InterfaceNotImpl)),    
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnknownClass)),        
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassAlreadyReg)),     
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassNotReg))       
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassNotReg)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_RegWindowClass)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateNativeWindow))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -122,7 +124,8 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("class is unknown to the current class factory instance"),
     NK_MAKE_STRING_VIEW("class is already registered in the global NkOM runtime"),
     NK_MAKE_STRING_VIEW("class is not registered in the global NkOM runtime"),
-
+    NK_MAKE_STRING_VIEW("could not register window class"),
+    NK_MAKE_STRING_VIEW("could not create native window")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 
