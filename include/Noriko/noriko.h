@@ -38,6 +38,7 @@
 #include <include/Noriko/layer.h>
 #include <include/Noriko/window.h>
 #include <include/Noriko/helpers.h>
+#include <include/Noriko/renderer.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -50,6 +51,8 @@
 NK_NATIVE typedef struct NkApplicationSpecification {
     NkSize                 m_structSize;      /**< size of this structure, in bytes */
     NkBoolean              m_enableDbgTools;  /**< whether or not to enable debugging tools */
+    NkRendererApi          m_rendererApi;     /**< API to use for rendering */
+    NkBoolean              m_isVSync;         /**< whether or not VSync is used */
     NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
     NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
     NkSize2D               m_dispTileSize;    /**< tile size used in the main window viewport */

@@ -119,7 +119,7 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
 
 /**
  */
-NK_INTERNAL NK_INLINE DWORD NK_CALL __NkInt_WindowsWindow_TranslateWindowModes(
+NK_INTERNAL NK_INLINE DWORD NK_CALL __NkInt_WindowsWindow_MapFromWindowModes(
     _In_ NkWindowMode allowedWndModes,
     _In_ NkWindowFlags wndFlags
 ) {
@@ -290,8 +290,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
         }
 
         /* Calculate window metrics, that is, initial size (to fit the viewport). */
-        DWORD wndStyle = __NkInt_WindowsWindow_TranslateWindowModes(wndSpecs->m_allowedWndModes, wndSpecs->m_wndFlags);
-        DWORD extWndStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
+        DWORD wndStyle    = __NkInt_WindowsWindow_MapFromWindowModes(wndSpecs->m_allowedWndModes, wndSpecs->m_wndFlags);
+        DWORD extWndStyle = WS_EX_WINDOWEDGE | WS_EX_APPWINDOW;
         NkSize2D actVpExtents = __NkInt_WindowsWindow_AdjustViewportExtents(
             &wndSpecs->m_vpExtents,
             &wndSpecs->m_dispTileSize,

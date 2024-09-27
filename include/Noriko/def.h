@@ -41,6 +41,18 @@
 #define NK_INTERNAL                 static
 #define NK_NORETURN                 __declspec(noreturn)
 #define NK_INLINE                   inline
+/**
+ * \def   NK_VIRTUAL
+ * \brief marks a function as 'virtual', that is, must be implemented per-platform and
+ *        has no default implementation
+ * 
+ * \par Remarks
+ *   While this symbol has no significance to the compiler, it is there for annotation
+ *   purposes. It makes it obvious what functions a developer porting Noriko to a new
+ *   platform must implement in order for it to work. Each virtual functions has detailed
+ *   behavioral documentation attached to it.
+ */
+#define NK_VIRTUAL
 
 /* Use SALv2 on MSVC platform. */
 /** \cond */

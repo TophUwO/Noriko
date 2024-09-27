@@ -39,6 +39,8 @@ NK_INTERNAL __NkInt_Application gl_Application;
 
 
 /**
+ * \struct __NkInt_ComponentInitInfo
+ * \brief  represents a component init entry
  */
 NK_NATIVE typedef struct __NkInt_ComponentInitInfo {
     NkStringView m_compIdent;                   /**< component identifier (for logging) */
@@ -48,6 +50,12 @@ NK_NATIVE typedef struct __NkInt_ComponentInitInfo {
 } __NkInt_ComponentInitInfo;
 
 /**
+ * \brief lists all components that Noriko must initialize before the main-loop can be
+ *        entered
+ * 
+ * \par Remarks
+ *   The listed components are initialized in the order they appear in the array, and are
+ *   uninitialized in the reverse order they are specified.
  */
 NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("allocators"),                 &NkAllocInitialize,   &NkAllocUninitialize  },
@@ -153,7 +161,8 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 #if (defined NK_TARGET_WINDOWS)
     NkErrorCode errCode = NkErr_Ok;
     MSG currMsg;
-
+    
+    HBRUSH br = CreateSolidBrush(RGB(33, 33, 33));
     for (;;) {
         /* First, dispatch windows messages. */
         while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {

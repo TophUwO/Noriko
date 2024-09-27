@@ -314,6 +314,7 @@
     <ClInclude Include="..\include\Noriko\nkom.h" />
     <ClInclude Include="..\include\Noriko\noriko.h" />
     <ClInclude Include="..\include\Noriko\platform.h" />
+    <ClInclude Include="..\include\Noriko\renderer.h" />
     <ClInclude Include="..\include\Noriko\sort.h" />
     <ClInclude Include="..\include\Noriko\timer.h">
       <FileType>CppHeader</FileType>

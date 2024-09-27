@@ -92,16 +92,18 @@ NK_NATIVE typedef enum NkViewportAlignment {
 /**
  */
 NK_NATIVE typedef struct NkWindowSpecification {
-    NkSize                 m_structSize;      /**< size of this structure, in bytes */
-    NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
-    NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
-    NkSize2D               m_dispTileSize;    /**< tile size of the viewport */
-    NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
-    NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
-    NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
-    NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
-    NkStringView           m_wndIdent;        /**< window identifier (for querying windows) */
-    NkStringView           m_wndTitle;        /**< main window title */
+         NkSize                 m_structSize;      /**< size of this structure, in bytes */
+    enum NkRendererApi          m_rendererApi;     /**< API to use for rendering the window */
+         NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
+         NkBoolean              m_isVSync;         /**< whether or not VSync is used */
+         NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
+         NkSize2D               m_dispTileSize;    /**< tile size of the viewport */
+         NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
+         NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
+         NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
+         NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
+         NkStringView           m_wndIdent;        /**< window identifier (for querying windows) */
+         NkStringView           m_wndTitle;        /**< main window title */
 } NkWindowSpecification;
 
 
@@ -149,6 +151,10 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      */
     NkErrorCode (NK_CALL *SetWindowFlag)(_Inout_ NkIWindow *self, _In_ NkWindowFlags wndFlag, _In_ NkBoolean newVal);
+
+    /**
+     */
+    struct NkIRenderer *(NK_CALL *GetRenderer)(_Inout_ NkIWindow *self);
 };
 
 
