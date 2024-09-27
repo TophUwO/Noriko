@@ -136,10 +136,11 @@ NK_INTERNAL NK_INLINE DWORD NK_CALL __NkInt_WindowsWindow_TranslateWindowModes(
  */
 NK_INTERNAL NK_INLINE int NK_CALL __NkInt_WindowsWindow_TranslateWindowModeToShowCommand(_In_ NkWindowMode wndMode) {
     switch (wndMode) {
-        case NkWndMode_Hidden:    return SW_HIDE;
-        case NkWndMode_Maximized: return SW_SHOWMAXIMIZED;
-        case NkWndMode_Minimized: return SW_SHOWMINIMIZED;
-        case NkWndMode_Normal:    return SW_SHOWNORMAL;
+        case NkWndMode_Hidden:     return SW_HIDE;
+        case NkWndMode_Fullscreen: 
+        case NkWndMode_Maximized:  return SW_SHOWMAXIMIZED;
+        case NkWndMode_Minimized:  return SW_SHOWMINIMIZED;
+        case NkWndMode_Normal:     return SW_SHOWNORMAL;
     }
 
     return INT_MAX;
@@ -352,7 +353,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
 
         /* Set properties. */
         NkStringViewCopy(&wndSpecs->m_wndIdent, &wndPtr->m_wndIdent);
-        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & NkWndMode_All;
+        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
         self->VT->SetWindowMode(self, wndSpecs->m_initialWndMode);
 

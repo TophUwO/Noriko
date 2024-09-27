@@ -23,7 +23,7 @@
 
 
 #if (defined NK_TARGET_WINDOWS)
-_Return_ok_ NkErrorCode NK_CALL NkGetMaximizedWindowExtents(_Out_ NkSize2D *resPtr) {
+_Return_ok_ NkErrorCode NK_CALL NkQueryMaximizedWindowExtents(_Out_ NkSize2D *resPtr) {
     NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
 
     /* Get size of maximized window instead. */
@@ -57,7 +57,7 @@ NkSize2D NK_CALL NkCalculateMaximumViewportExtents(
 
     /* Get size of a maximized window on the main monitor. */
     NkSize2D maxWndSize;
-    NK_IGNORE_RETURN_VALUE(NkGetMaximizedWindowExtents(&maxWndSize));
+    NK_IGNORE_RETURN_VALUE(NkQueryMaximizedWindowExtents(&maxWndSize));
 
     /* Get the size of the non-client area. */
     RECT nclRect = (RECT){ 0, 0, 0, 0 };
