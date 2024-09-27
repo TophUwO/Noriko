@@ -75,6 +75,7 @@
 
     /* Include windows headers. */
     #include <windows.h>
+    #include <dwmapi.h>
 #else
     #error Noriko's engine component currently only supports Microsoft Windows.
 #endif

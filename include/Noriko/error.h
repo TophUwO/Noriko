@@ -151,6 +151,8 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_ClassNotReg,          /**< class is not registered in the global NkOM runtime */
     NkErr_RegWindowClass,       /**< could not register window class */
     NkErr_CreateNativeWindow,   /**< could not create native window */
+    NkErr_WndModeNotSupported,  /**< window mode not supported on the current platform */
+    NkErr_AdjustClientArea,     /**< failed to adjust client area size */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;

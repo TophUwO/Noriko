@@ -37,6 +37,7 @@
 #include <include/Noriko/event.h>
 #include <include/Noriko/layer.h>
 #include <include/Noriko/window.h>
+#include <include/Noriko/helpers.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -51,7 +52,7 @@ NK_NATIVE typedef struct NkApplicationSpecification {
     NkBoolean              m_enableDbgTools;  /**< whether or not to enable debugging tools */
     NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
     NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
-    NkSize2D               m_glTileSize;      /**< global tile size of the main window viewport */
+    NkSize2D               m_dispTileSize;    /**< tile size used in the main window viewport */
     NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
     NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
     NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */

@@ -317,7 +317,6 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_PoolAllocRequestNewPool(
 
     NkVoid *blockPtr = NULL;
     NkUint32 defPoolSize = __NkInt_PoolAllocCalcPoolSize(blockCount, blockSize, gl_BlockAlign);
-    __NkInt_PoolAllocAdjustPoolMetrics(blockSize, &blockCount, &defPoolSize);
     /* Allocate the new pool by using the general-purpose allocator. */
     NkErrorCode errorCode = NkGPAlloc(
         NK_MAKE_ALLOCATION_CONTEXT(),

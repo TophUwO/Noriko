@@ -159,7 +159,8 @@ NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd) {
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackProcessEvent(_In_ NkEvent const *evPtr) {
     NK_ASSERT(evPtr != NULL, NkErr_InParameter);
-    NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
+    if (gl_LayerStack.mp_layerStack == NULL)
+        return NkErr_Ok;
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     NkBoolean eventWasHandled = NK_FALSE;

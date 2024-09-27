@@ -16,6 +16,7 @@
  * \file  window.c
  * \brief implements the platform-independent window system functions
  */
+#define NK_NAMESPACE "nk::window"
 
 
 /* Noriko includes */
@@ -54,18 +55,17 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid) {
     
     /* Initialize the window. */
     NkIWindow *wndRef = NkWindowQueryInstance();
-    return wndRef->VT->Initialize(wndRef, &(NkWindowSpecification const){
+    return wndRef->VT->Initialize(wndRef, &(NkWindowSpecification){
         .m_structSize      = sizeof(NkWindowSpecification),
         .m_vpAlignment     = appSpecs->m_vpAlignment,
         .m_vpExtents       = appSpecs->m_vpExtents,
-        .m_glTileSize      = appSpecs->m_glTileSize,
+        .m_dispTileSize    = appSpecs->m_dispTileSize,
         .m_allowedWndModes = appSpecs->m_allowedWndModes,
         .m_initialWndMode  = appSpecs->m_initialWndMode,
         .m_wndFlags        = appSpecs->m_wndFlags | NkWndFlag_MainWindow,
         .mp_nativeHandle   = appSpecs->mp_nativeHandle,
         .m_wndIdent        = NK_MAKE_STRING_VIEW("NkWnd_MainWindow"),
-        .m_wndTitle        = appSpecs->m_wndTitle,
-        .m_wndPos          = appSpecs->m_wndPos
+        .m_wndTitle        = appSpecs->m_wndTitle
     });
 }
 
@@ -85,5 +85,50 @@ NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid) {
     /* The return value can never be NULL. */
     return __NkInt_WindowQueryPlatformInstance();
 }
+
+
+NkStringView const *NK_CALL NkWindowGetModeStr(_In_ NkWindowMode wndMode) {
+    NK_ASSERT(wndMode >= 0 && (wndMode & (wndMode - 1)) == 0 && wndMode < __NkWndMode_Count__, NkErr_InParameter);
+
+    /** \cond INTERNAL */
+    /**
+     */
+    NK_INTERNAL NkStringView const gl_WindowModeStrs[] = {
+        [NkWndMode_Unknown]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Unknown)),
+        [NkWndMode_Minimized]  = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Minimized)),
+        [NkWndMode_Maximized]  = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Maximized)),
+        [NkWndMode_Fullscreen] = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Fullscreen)),
+        [NkWndMode_Normal]     = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Normal)),
+        [NkWndMode_Visible]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Visible)),
+        [NkWndMode_Hidden]     = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Hidden)),
+        [NkWndMode_Default]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Default)),
+        [NkWndMode_All]        = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_All))
+    };
+    /** \endcond */
+
+    return &gl_WindowModeStrs[wndMode];
+}
+
+NkStringView const *NK_CALL NkWindowGetFlagStr(_In_ NkWindowFlags wndFlag) {
+    return NULL;
+}
+
+NkStringView const *NK_CALL NkWindowGetViewportAlignmentStr(_In_ NkViewportAlignment vpAlignment) {
+    return NULL;
+}
+
+NkEventType NK_CALL NkWindowMapEventTypeFromWindowMode(_In_ NkWindowMode wndMode) {
+    NK_ASSERT(wndMode >= 0 && (wndMode & (wndMode - 1)) == 0 && wndMode < __NkWndMode_Count__, NkErr_InParameter);
+
+    return ((NkEventType const [__NkWndMode_Count__]){
+        [NkWndMode_Normal]     = NkEv_WindowRestored,
+        [NkWndMode_Maximized]  = NkEv_WindowMaximized,
+        [NkWndMode_Minimized]  = NkEv_WindowMinimized,
+        [NkWndMode_Fullscreen] = NkEv_WindowFullscreen
+    })[wndMode];
+}
+
+
+#undef NK_NAMESPACE
 
 

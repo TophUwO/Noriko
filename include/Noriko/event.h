@@ -52,8 +52,7 @@ NK_NATIVE typedef enum NkEventType {
     NkEv_WindowMaximized,     /**< when the window was maximized */
     NkEv_WindowRestored,      /**< when the window was restored */
     NkEv_WindowMoved,         /**< when the window position changed */
-    NkEv_WindowEnterFs,       /**< when the window entered full-screen mode */
-    NkEv_WindowLeaveFs,       /**< when the window left full-screen mode */
+    NkEv_WindowFullscreen,    /**< when the window entered full-screen mode */
     NkEv_WindowShown,         /**< when the window was shown */
     NkEv_WindowHidden,        /**< when the window was hidden */
 
@@ -100,11 +99,11 @@ NK_NATIVE typedef enum NkEventCategory {
  * \brief  represents the additional data used by some window events
  */
 NK_NATIVE typedef struct NkWindowEvent {
-    NkIWindow *mp_wndRef;      /**< reference to the Noriko window handle */
-    NkPoint2D  m_wndPos;       /**< global window position (screen coordinates) */
-    NkSize2D   m_wndSize;      /**< window size (in pixels, client area only) */
-    NkSize2D   m_totalWndSize; /**< total window size (in pixels, incl. non-client area, etc.) */
-    NkUint32   m_wndState;     /**< \todo current window state */
+    NkIWindow    *mp_wndRef;      /**< reference to the Noriko window handle */
+    NkPoint2D     m_wndPos;       /**< global window position (screen coordinates) */
+    NkSize2D      m_wndSize;      /**< window size (in pixels, client area only) */
+    NkSize2D      m_totalWndSize; /**< total window size (in pixels, incl. non-client area, etc.) */
+    NkWindowMode  m_wndMode;      /**< \todo current window mode */
 } NkWindowEvent;
 
 /**

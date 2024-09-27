@@ -81,7 +81,9 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassAlreadyReg)),     
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassNotReg)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_RegWindowClass)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateNativeWindow))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateNativeWindow)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_WndModeNotSupported)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AdjustClientArea))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -125,7 +127,9 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("class is already registered in the global NkOM runtime"),
     NK_MAKE_STRING_VIEW("class is not registered in the global NkOM runtime"),
     NK_MAKE_STRING_VIEW("could not register window class"),
-    NK_MAKE_STRING_VIEW("could not create native window")
+    NK_MAKE_STRING_VIEW("could not create native window"),
+    NK_MAKE_STRING_VIEW("window mode not supported on the current platform"),
+    NK_MAKE_STRING_VIEW("could not adjust client area size to fit requested viewport")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

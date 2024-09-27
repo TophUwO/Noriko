@@ -38,11 +38,13 @@ NK_NATIVE typedef NkVoid *NkNativeWindowHandle;
  * \brief represents the window modes a platform window can support
  */
 NK_NATIVE typedef enum NkWindowMode {
+    NkWndMode_Unknown    = 0,      /**< unknown/invalid window mode */
+
     NkWndMode_Minimized  = 1 << 0, /**< minimized window mode (taskbar icon still visible) */
     NkWndMode_Maximized  = 1 << 1, /**< maximized window mode (title bar still visible) */
     NkWndMode_Fullscreen = 1 << 2, /**< full-screen window mode (desktop invisible) */
-    NkWndMode_Normal     = 1 << 3, /**< normal (= 'windowed') window mode */
-    NkWndMode_Visible    = 1 << 4, /**< window is visible */
+    NkWndMode_Normal     = 1 << 3, /**< normal (= 'windowed' = non-'full-screen') window mode */
+    NkWndMode_Visible    = 1 << 4, /**< window is visible; currently unused */
     NkWndMode_Hidden     = 1 << 5, /**< window is hidden (taskbar icon not visible) */
 
     /**
@@ -67,6 +69,8 @@ NK_NATIVE typedef enum NkWindowFlags {
     NkWndFlag_MessageOnlyWnd = 1 << 0,
     NkWndFlag_AlwaysOnTop    = 1 << 1,
     NkWndFlag_MainWindow     = 1 << 2,
+    NkWndFlag_DragResizable  = 1 << 3,
+    NkWndFlag_DragMovable    = 1 << 4,
 
     __NkWndFlag_Count__
 } NkWindowFlags;
@@ -91,14 +95,13 @@ NK_NATIVE typedef struct NkWindowSpecification {
     NkSize                 m_structSize;      /**< size of this structure, in bytes */
     NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
     NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
-    NkSize2D               m_glTileSize;      /**< global tile size of the main window viewport */
+    NkSize2D               m_dispTileSize;    /**< tile size of the viewport */
     NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
     NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
     NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
     NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
     NkStringView           m_wndIdent;        /**< window identifier (for querying windows) */
     NkStringView           m_wndTitle;        /**< main window title */
-    NkPoint2D              m_wndPos;          /**< main window position (relative to virtual desktop) */
 } NkWindowSpecification;
 
 
@@ -146,12 +149,6 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      */
     NkErrorCode (NK_CALL *SetWindowFlag)(_Inout_ NkIWindow *self, _In_ NkWindowFlags wndFlag, _In_ NkBoolean newVal);
-    /**
-     */
-    NkErrorCode (NK_CALL *GetWindowPosition)(_Inout_ NkIWindow *self, _Out_ NkPoint2D *resPtr);
-    /**
-     */
-    NkErrorCode (NK_CALL *SetWindowPosition)(_Inout_ NkIWindow *self, _In_ NkPoint2D const newWndPos);
 };
 
 
@@ -169,5 +166,18 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid);
  *         call \c NkWindowStartup() once to actually create the platform window.
  */
 NK_NATIVE NK_API NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
+
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkWindowGetModeStr(_In_ NkWindowMode wndMode);
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkWindowGetFlagStr(_In_ NkWindowFlags wndFlag);
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkWindowGetViewportAlignmentStr(_In_ NkViewportAlignment vpAlignment);
+/**
+ */
+NK_NATIVE NK_API enum NkEventType NK_CALL NkWindowMapEventTypeFromWindowMode(_In_ NkWindowMode wndMode);
 
 

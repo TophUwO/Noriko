@@ -18,6 +18,7 @@
  */
 #define NK_NAMESPACE "nk::winwindow"
 
+
 /* Noriko includes */
 #include <include/Noriko/window.h>
 #include <include/Noriko/platform.h>
@@ -44,12 +45,60 @@ NK_NATIVE typedef struct __NkInt_WindowsWindow {
 
 /**
  */
+NK_INTERNAL NkWindowMode NK_CALL __NkInt_WindowsWindow_GetNewWindowMode(_In_ HWND wndHandle) {
+    if (IsZoomed(wndHandle)) return NkWndMode_Maximized;
+    if (IsIconic(wndHandle)) return NkWndMode_Minimized;
+
+    return NkWndMode_Normal;
+}
+
+/**
+ */
 NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT msgId, WPARAM wParam, LPARAM lParam) {
     /* Get the pointer to the underlying window structure. */
     __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)GetWindowLongPtr(wndHandle, GWLP_USERDATA);
 
     switch (msgId) {
+        case WM_INITMENU:
+        case WM_INITMENUPOPUP: {
+            /*
+             * If we disabled moving by dragging, we also want to disable the
+             * corresponding menu item in the system menu.
+             */
+            HMENU sysMenu = GetSystemMenu(wndHandle, FALSE);
+            if ((HMENU)wParam == sysMenu && (wndRef->m_wndFlags & NkWndFlag_DragMovable) == NK_FALSE) {
+                EnableMenuItem(sysMenu, SC_MOVE, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+
+                return 0;
+            }
+
+            break;
+        }
+        case WM_SYSCOMMAND:
+            /* Disable moving by dragging the title bar if the specific flag is cleared. */
+            if ((wParam & 0xFFF0) == SC_MOVE && (wndRef->m_wndFlags & NkWndFlag_DragMovable) == NK_FALSE)
+                return 0;
+
+            break;
+        case WM_WINDOWPOSCHANGED: {
+            NkWindowMode const newWndMode = __NkInt_WindowsWindow_GetNewWindowMode(wndHandle);
+
+            /* If the window mode has changed, update it. */
+            if (wndRef->m_currWndMode ^ newWndMode)
+                wndRef->NkIWindow_Iface.VT->SetWindowMode((NkIWindow *)wndRef, newWndMode);
+
+            break;
+        }
         case WM_CLOSE:
+            /*
+             * First, dispatch 'window-closed' event. This lets layers do what they need
+             * to do right before the window is closed.
+             */
+            NK_IGNORE_RETURN_VALUE(
+                NkEventDispatch(NkEv_WindowClosed, (NkWindowEvent){ .mp_wndRef = (NkIWindow *)wndRef })
+            );
+
+            /* Destroy the platform window. */
             DestroyWindow(wndHandle);
 
             /*
@@ -58,16 +107,93 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
              */
             if (wndRef->m_wndFlags & NkWndFlag_MainWindow)
                 NkApplicationExit(NkErr_Ok);
-            break;
+            return FALSE;
     }
 
-    return DefWindowProcA(wndHandle, msgId, wParam, lParam);
+    /*
+     * Let the default window procedure handle the rest. This ensures that basic window
+     * functions are always there.
+     */
+    return DefWindowProc(wndHandle, msgId, wParam, lParam);
 }
 
 /**
  */
-NK_INTERNAL NK_INLINE NkWindowMode NK_CALL __NkInt_WindowsWindow_QueryAllowedPlatformWindowModes(NkVoid) {
-    return NkWndMode_All;
+NK_INTERNAL NK_INLINE DWORD NK_CALL __NkInt_WindowsWindow_TranslateWindowModes(
+    _In_ NkWindowMode allowedWndModes,
+    _In_ NkWindowFlags wndFlags
+) {
+    DWORD initialValue = WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_CLIPSIBLINGS;
+
+    if (allowedWndModes & NkWndMode_Maximized) initialValue |= WS_MAXIMIZEBOX;
+    if (allowedWndModes & NkWndMode_Minimized) initialValue |= WS_MINIMIZEBOX;
+    if (wndFlags & NkWndFlag_DragResizable)    initialValue |= WS_SIZEBOX;
+
+    return initialValue;
+}
+
+/**
+ */
+NK_INTERNAL NK_INLINE int NK_CALL __NkInt_WindowsWindow_TranslateWindowModeToShowCommand(_In_ NkWindowMode wndMode) {
+    switch (wndMode) {
+        case NkWndMode_Hidden:    return SW_HIDE;
+        case NkWndMode_Maximized: return SW_SHOWMAXIMIZED;
+        case NkWndMode_Minimized: return SW_SHOWMINIMIZED;
+        case NkWndMode_Normal:    return SW_SHOWNORMAL;
+    }
+
+    return INT_MAX;
+}
+
+/**
+ */
+NK_INTERNAL NK_INLINE NkSize2D NK_CALL __NkInt_WindowsWindow_AdjustViewportExtents(
+    _In_ NkSize2D const *vpExtents,
+    _In_ NkSize2D const *dspTsize,
+    _In_ NkInt32 wndStyle,
+    _In_ NkInt32 extWndStyle
+) {
+    NK_ASSERT(vpExtents != NULL, NkErr_InParameter);
+    NK_ASSERT(dspTsize != NULL, NkErr_InParameter);
+
+    /* Get the maximum viewport extents. */
+    NkSize2D maxVpExtents = NkCalculateMaximumViewportExtents(wndStyle, extWndStyle, dspTsize);
+
+    /*
+     * Compare the calculated maximum viewport extents to the ones we got, and adjust if
+     * necessary.
+     */
+    return (NkSize2D){
+        NK_MIN(vpExtents->m_width,  maxVpExtents.m_width),
+        NK_MIN(vpExtents->m_height, maxVpExtents.m_height)
+    };
+}
+
+/**
+ */
+NK_INTERNAL NK_INLINE NkSize2D NK_CALL __NkInt_WindowsWindow_GetWindowSize(
+    _In_ HWND wndHandle,
+    _In_ NkBoolean isClientArea
+) {
+    RECT res;
+    if (isClientArea ? !GetClientRect(wndHandle, &res) : !GetWindowRect(wndHandle, &res))
+        return (NkSize2D){ 0, 0 };
+
+    return (NkSize2D) { res.right - res.left, res.bottom - res.top };
+}
+
+/**
+ */
+NK_INTERNAL NK_INLINE NkBoolean NK_CALL __NkInt_WindowsWindow_IsWindowFlagMutable(_In_ NkWindowFlags const wndFlag) {
+    switch (wndFlag) {
+        case NkWndFlag_MessageOnlyWnd:
+        case NkWndFlag_MainWindow:     return NK_FALSE;
+        case NkWndFlag_AlwaysOnTop:
+        case NkWndFlag_DragMovable:
+        case NkWndFlag_DragResizable:  return NK_TRUE;
+    }
+
+    return NK_FALSE;
 }
 
 
@@ -135,9 +261,16 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
      * and then create the platform window.
      */
     if (wndSpecs->mp_nativeHandle == NULL) {
+        /** \cond INTERNAL */
+        /**
+         * \brief name of the windows window class used for creating native windows 
+         */
+        NK_INTERNAL NkStringView const gl_WndClassName = NK_MAKE_STRING_VIEW("NkInt_WindowsWindow");
+        /** \endcond */
+
         /* Register the window class. */
-        if (RegisterClassExA(&(WNDCLASSEXA const){
-            .cbSize        = sizeof(WNDCLASSEXA),
+        if (RegisterClassEx(&(WNDCLASSEX const){
+            .cbSize        = sizeof(WNDCLASSEX),
             .style         = 0,
             .lpfnWndProc   = (WNDPROC)&__NkInt_WindowsWindow_WndProc,
             .cbClsExtra    = 0,
@@ -145,9 +278,9 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             .hInstance     = GetModuleHandle(NULL),
             .hIcon         = LoadIcon(NULL, IDI_APPLICATION),
             .hCursor       = LoadCursor(NULL, IDI_APPLICATION),
-            .hbrBackground = (HBRUSH)NULL,
+            .hbrBackground = NULL,
             .lpszMenuName  = NULL,
-            .lpszClassName = "NkInt_WindowsWindow",
+            .lpszClassName = gl_WndClassName.mp_dataPtr,
             .hIconSm       = LoadIcon(NULL, IDI_APPLICATION)
         }) == FALSE) {
             NK_LOG_ERROR("Could not register window class.");
@@ -155,16 +288,51 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             return NkErr_RegWindowClass;
         }
 
+        /* Calculate window metrics, that is, initial size (to fit the viewport). */
+        DWORD wndStyle = __NkInt_WindowsWindow_TranslateWindowModes(wndSpecs->m_allowedWndModes, wndSpecs->m_wndFlags);
+        DWORD extWndStyle = WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW;
+        NkSize2D actVpExtents = __NkInt_WindowsWindow_AdjustViewportExtents(
+            &wndSpecs->m_vpExtents,
+            &wndSpecs->m_dispTileSize,
+            (NkInt32)wndStyle,
+            (NkInt32)extWndStyle
+        );
+        /*
+         * Calculate window size from the client area size we got through calculating the 
+         * actual viewport extents. This will then be fed into 'CreateWindowEx()' to
+         * create a window that has exactly our requested client size.
+         */
+        RECT wndSize = (RECT){
+            0,
+            0,
+            (LONG)(actVpExtents.m_width  * wndSpecs->m_dispTileSize.m_width),
+            (LONG)(actVpExtents.m_height * wndSpecs->m_dispTileSize.m_height)
+        };
+        if (!AdjustWindowRectEx(&wndSize, wndStyle, FALSE, extWndStyle)) {
+            NK_LOG_ERROR("Could not adjust client area size to fit viewport.");
+
+            /* Cleanup properly by unregistering the class. */
+            UnregisterClass("NkInt_WindowsWindow", GetModuleHandle(NULL));
+            return NkErr_AdjustClientArea;
+        }
+        /* Calculate initial window position (centered on primary display). */
+        NkPoint2D const initialPos = NkCalculateInitialWindowPos(
+            &(NkSize2D const){
+                wndSize.right - wndSize.left,
+                wndSize.bottom - wndSize.top
+            }
+        );
+
         /* Actually create the window. */
-        wndPtr->mp_nativeHandle = CreateWindowExA(
-            WS_EX_APPWINDOW | WS_EX_OVERLAPPEDWINDOW | WS_EX_COMPOSITED,
-            "NkInt_WindowsWindow",
+        wndPtr->mp_nativeHandle = CreateWindowEx(
+            extWndStyle,
+            gl_WndClassName.mp_dataPtr,
             wndSpecs->m_wndTitle.mp_dataPtr,
-            WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
-            wndSpecs->m_wndPos.m_xCoord == INT64_MAX ? CW_USEDEFAULT : (int)wndSpecs->m_wndPos.m_xCoord,
-            wndSpecs->m_wndPos.m_yCoord == INT64_MAX ? CW_USEDEFAULT : (int)wndSpecs->m_wndPos.m_yCoord,
-            (int)(wndSpecs->m_vpExtents.m_width * wndSpecs->m_glTileSize.m_width),
-            (int)(wndSpecs->m_vpExtents.m_height * wndSpecs->m_glTileSize.m_height),
+            wndStyle,
+            (int)initialPos.m_xCoord,
+            (int)initialPos.m_yCoord,
+            wndSize.right - wndSize.left,
+            wndSize.bottom - wndSize.top,
             wndSpecs->m_wndFlags & NkWndFlag_MessageOnlyWnd ? HWND_MESSAGE : NULL,
             (HMENU)NULL,
             (HINSTANCE)GetModuleHandle(NULL),
@@ -174,20 +342,19 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             NK_LOG_ERROR("Failed to create native platform window.");
 
             /* Cleanup properly by unregistering the class. */
-            UnregisterClassA("NkInt_WindowsWindow", GetModuleHandle(NULL));
+            UnregisterClass("NkInt_WindowsWindow", GetModuleHandle(NULL));
             return NkErr_CreateNativeWindow;
         }
         /* Set the window userdata pointer to the current NkIWindow instance. */
         SetWindowLongPtr(wndPtr->mp_nativeHandle, GWLP_USERDATA, (LONG_PTR)self);
+        /* Set title bar to dark mode if possible. */
+        DwmSetWindowAttribute(wndPtr->mp_nativeHandle, DWMWA_USE_IMMERSIVE_DARK_MODE, &(BOOL){ TRUE }, sizeof(BOOL));
 
         /* Set properties. */
-        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & __NkInt_WindowsWindow_QueryAllowedPlatformWindowModes();
-        wndPtr->m_currWndMode     = wndSpecs->m_initialWndMode;
+        NkStringViewCopy(&wndSpecs->m_wndIdent, &wndPtr->m_wndIdent);
+        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & NkWndMode_All;
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
-
-        /* Set window show state. */
-        UpdateWindow(wndPtr->mp_nativeHandle);
-        ShowWindow(wndPtr->mp_nativeHandle, SW_SHOWNORMAL);
+        self->VT->SetWindowMode(self, wndSpecs->m_initialWndMode);
 
         /* All good. */
         return NkErr_Ok;
@@ -230,6 +397,98 @@ NK_INTERNAL NkWindowMode NK_CALL __NkInt_WindowsWindow_GetWindowMode(_Inout_ NkI
     return ((__NkInt_WindowsWindow *)self)->m_currWndMode;
 }
 
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowMode(
+    _Inout_ NkIWindow *self,
+    _In_    NkWindowMode newMode
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT((newMode & (newMode - 1)) == 0, NkErr_InParameter);
+    
+    /* Check if the current window mode is even supported. */
+    if ((newMode & self->VT->QueryAllowedWindowModes(self)) == NK_FALSE) {
+        NK_LOG_ERROR("Window mode '%s' not supported for this window.", NkWindowGetModeStr(newMode)->mp_dataPtr);
+
+        return NkErr_WndModeNotSupported;
+    }
+
+    /* Apply the new window mode. */
+    int const newShowCmd = __NkInt_WindowsWindow_TranslateWindowModeToShowCommand(newMode);
+    if (newShowCmd != INT_MAX) {
+        /* Get pointer to the internal window data. */
+        __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)self;
+        /* Update the internal flag. */
+        wndRef->m_currWndMode = newMode;
+
+        /* Do the native window mode changing. */
+        ShowWindow(wndRef->mp_nativeHandle, newShowCmd);
+
+        /* Lastly, dispatch an event to let the layers know. */
+        return NkEventDispatch(NkWindowMapEventTypeFromWindowMode(newMode), &(NkWindowEvent){
+            .mp_wndRef      = self,
+            .m_wndSize      = __NkInt_WindowsWindow_GetWindowSize(wndRef->mp_nativeHandle, NK_FALSE),
+            .m_totalWndSize = __NkInt_WindowsWindow_GetWindowSize(wndRef->mp_nativeHandle, NK_TRUE),
+            .m_wndPos       = (NkPoint2D){ 0, 0 },
+            .m_wndMode      = newMode
+        });
+    }
+    
+    /* Setting the window mode is currently not implemented. */
+    return NkErr_NotImplemented;
+}
+
+/**
+ */
+NK_INTERNAL NkBoolean NK_CALL __NkInt_WindowsWindow_GetWindowFlag(_Inout_ NkIWindow *self, _In_ NkWindowFlags wndFlag) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
+    return (NkBoolean)(((__NkInt_WindowsWindow *)self)->m_wndFlags & wndFlag);
+}
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowFlag(
+    _Inout_ NkIWindow *self,
+    _In_    NkWindowFlags wndFlag,
+    _In_    NkBoolean newVal
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)self;
+
+    /* Set or unset the flag. */
+    NkBoolean const oldVal = __NkInt_WindowsWindow_GetWindowFlag(self, wndFlag);
+    if (oldVal == newVal || !__NkInt_WindowsWindow_IsWindowFlagMutable(wndFlag))
+        return NkErr_NoOperation;
+    wndRef->m_wndFlags = wndRef->m_wndFlags & ~wndFlag | (newVal ? wndFlag : 0);
+
+    /* If the flag was changed, do what has to be done to apply the changes. */
+    switch (wndFlag) {
+        case NkWndFlag_DragResizable: {
+            /* Change the window style to reflect the new setting. */
+            LONG_PTR currWndStyle = GetWindowLongPtr(wndRef->mp_nativeHandle, GWL_STYLE);
+
+            SetWindowLongPtr(
+                wndRef->mp_nativeHandle,
+                GWL_STYLE,
+                currWndStyle & ~WS_SIZEBOX | (newVal ? WS_SIZEBOX : 0)
+            );
+            SetWindowPos(wndRef->mp_nativeHandle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+            return NkErr_Ok;
+        }
+        case NkWndFlag_DragMovable:
+            /*
+             * This flag does not require anything else to be done. Thus, we return
+             * *NkErr_Ok* so that the caller does not think it has no effect.
+             */
+            return NkErr_Ok;
+    }
+
+    /* Changing the given flag is not implemented or has no effect. */
+    return NkErr_NotImplemented;
+}
+
 
 /**
  */
@@ -242,11 +501,9 @@ NKOM_DEFINE_VTABLE(NkIWindow) {
     .QueryAllowedWindowModes = &__NkInt_WindowsWindow_QueryAllowedWindowModes,
     .QueryNativeWindowHandle = &__NkInt_WindowsWindow_QueryNativeWindowHandle,
     .GetWindowMode           = &__NkInt_WindowsWindow_GetWindowMode,
-    .SetWindowMode           = NULL,
-    .GetWindowFlag           = NULL,
-    .SetWindowFlag           = NULL,
-    .GetWindowPosition       = NULL,
-    .SetWindowPosition       = NULL
+    .SetWindowMode           = &__NkInt_WindowsWindow_SetWindowMode,
+    .GetWindowFlag           = &__NkInt_WindowsWindow_GetWindowFlag,
+    .SetWindowFlag           = &__NkInt_WindowsWindow_SetWindowFlag,
 };
 
 /**

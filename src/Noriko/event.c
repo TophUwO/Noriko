@@ -61,18 +61,17 @@ NK_INTERNAL __NkInt_EventTypeInfo const gl_c_EvTypeTbl[] = {
     { NkEv_None,                NkEvCat_None,                     0,                       NK_FALSE },
 
     /* window events */                                           
-    { NkEv_WindowClosed,        NkEvCat_Window,                   0,                       NK_FALSE },
-    { NkEv_WindowGotFocus,      NkEvCat_Window,                   0,                       NK_FALSE },
-    { NkEv_WindowLostFocus,     NkEvCat_Window,                   0,                       NK_FALSE },
+    { NkEv_WindowClosed,        NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
+    { NkEv_WindowGotFocus,      NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
+    { NkEv_WindowLostFocus,     NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowResized,       NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
-    { NkEv_WindowMinimized,     NkEvCat_Window,                   0,                       NK_FALSE },
+    { NkEv_WindowMinimized,     NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowMaximized,     NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowRestored,      NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowMoved,         NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
-    { NkEv_WindowEnterFs,       NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
-    { NkEv_WindowLeaveFs,       NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
-    { NkEv_WindowShown,         NkEvCat_Window,                   0,                       NK_FALSE },
-    { NkEv_WindowHidden,        NkEvCat_Window,                   0,                       NK_FALSE },
+    { NkEv_WindowFullscreen,    NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
+    { NkEv_WindowShown,         NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
+    { NkEv_WindowHidden,        NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
 
     /* keyboard events */
     { NkEv_KeyboardKeyDown,     NkEvCat_Input | NkEvCat_Keyboard, sizeof(NkKeyboardEvent), NK_TRUE  },
@@ -150,8 +149,7 @@ NkStringView const *NK_CALL NkEventQueryTypeString(_In_ NkEventType evType) {
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowMaximized)),    
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowRestored)),     
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowMoved)),        
-        NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowEnterFs)),      
-        NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowLeaveFs)),      
+        NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowFullscreen)),          
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowShown)),        
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowHidden)),       
 

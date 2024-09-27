@@ -70,9 +70,18 @@ NK_INTERNAL NkSize const gl_c_CompInitTblSize = NK_ARRAYSIZE(gl_c_CompInitTable)
 _Return_ok_ NK_INTERNAL NkErrorCode __NkInt_ValidateAppSpecification(_In_ NkApplicationSpecification const *specsPtr) {
     NkErrorCode errCode = NkErr_Ok;
 
-    /* Validate command-line parameters. */
+    /* Validate command-line specification. */
     NK_WEAK_ASSERT(errCode, NkErr_InParameter, specsPtr->m_argc > 0, ERROR, "argc must be greater than or equal to 1!");
     NK_WEAK_ASSERT(errCode, NkErr_InptrParameter, specsPtr->mp_argv != NULL, ERROR, "argv must be non-zero!");
+
+    /* Validate window specification. */
+    NK_WEAK_ASSERT(
+        errCode,
+        NkErr_InParameter,
+        specsPtr->m_allowedWndModes & NkWndMode_Normal,
+        ERROR,
+        "The window must support the 'NkWndMode_Normal' window mode!"
+    );
 
     return errCode;
 }
@@ -147,17 +156,19 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 
     for (;;) {
         /* First, dispatch windows messages. */
-        while (PeekMessageA(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
-            TranslateMessage(&currMsg);
-            DispatchMessageA(&currMsg);
-
+        while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
             /*
-             * Check if the message was actually the Windows 'WM_QUIT' message. This is
-             * done after we dispatched the message to allow the application window(s) to
-             * handle the message as well.
+             * Check if the message was actually the Windows 'WM_QUIT' message. The
+             * 'WM_QUIT' message is not sent to any window procedures.
              */
-            if (currMsg.message == WM_QUIT)
+            if (currMsg.message == WM_QUIT) {
+                errCode = (NkErrorCode)currMsg.wParam;
+
                 goto lbl_CLEANUP;
+            }
+
+            TranslateMessage(&currMsg);
+            DispatchMessage(&currMsg);
         }
 
         /* Update everything and render. */
