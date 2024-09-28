@@ -106,6 +106,13 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      * \return pointer to the original renderer specification
      */
     NkRendererSpecification const *(NK_CALL *QuerySpecification)(_Inout_ NkIRenderer *self);
+    /**
+     * \brief  retrieves the handle to the Noriko window the current renderer belongs to
+     * \param  [in,out] self pointer to the current \c NkIRenderer instance
+     * \return pointer to the Noriko window handle
+     * \note   The return value of this function can never be <tt>NULL</tt>.
+     */
+    NkIWindow *(NK_CALL *QueryWindow)(_Inout_ NkIRenderer *self);
 
     /**
      * \brief  resizes the client area of the renderer which is usually congruent with the
@@ -139,14 +146,14 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
  *         application to instantiate the renderer it so desires. Call this function once
  *         per process before instantiating the first renderer.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid);
+NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid);
 /**
  * \brief  uninitializes global renderer state
  * \return \c NkErr_Ok on success, non-zero on failure
  * \note   If this function is called without a corresponding call to
  *         <tt>NkRendererStartup()</tt>, this function does nothing.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid);
+NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid);
 
 /**
  * \brief   retrieves a list of renderer APIs of which an implementation, that is, a

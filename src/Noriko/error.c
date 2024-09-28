@@ -213,23 +213,24 @@ _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ Nk
 
 
 NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext const *errCxtPtr) {
-    NK_ASSERT(errCxtPtr != NULL, NkErr_InParameter);
-
-    char gl_int_FormatBuffer[NK_ERROR_MSGBUF];
-    char const *msgPtr = __NkInt_FormatFatalErrorMessage(errCxtPtr, gl_int_FormatBuffer);
-    NK_LOG_CRITICAL(msgPtr);
+    /* Only print error details if there was a context passed to this function. */
+    if (errCxtPtr != NULL) {
+        char gl_int_FormatBuffer[NK_ERROR_MSGBUF];
+        char const *msgPtr = __NkInt_FormatFatalErrorMessage(errCxtPtr, gl_int_FormatBuffer);
+        NK_LOG_CRITICAL(msgPtr);
 
 #if (defined NK_TARGET_WINDOWS)
-    MessageBoxA(
-        NULL, 
-        msgPtr,
-        "Fatal Error", 
-        MB_OK | MB_ICONERROR
-    );
+        MessageBoxA(
+            NULL, 
+            msgPtr,
+            "Fatal Error", 
+            MB_OK | MB_ICONERROR
+        );
 #endif
+    }
 
     /* Quit, passing the specified error code to the host platform. */
-    exit(errCxtPtr->m_errorCode);
+    exit(errCxtPtr == NULL ? NkErr_Unknown : errCxtPtr->m_errorCode);
 }
 
 

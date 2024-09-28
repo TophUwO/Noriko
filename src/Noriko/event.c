@@ -116,7 +116,7 @@ _Return_ok_ NkErrorCode NK_CALL NkEventDispatch(_In_ NkEventType evType, ...) {
     }
 
     /* Finally, dispatch the event. */
-    return NkLayerstackProcessEvent(&specEvent);
+    return NkLayerstackOnEvent(&specEvent);
 }
 
 NkVoid NK_CALL NkEventCopy(_In_ NkEvent const *srcPtr, _Out_ NkEvent *dstPtr) {

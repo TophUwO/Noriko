@@ -202,6 +202,11 @@ NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_
  * \see   NkFatalErrorContext, NkErrorCode
  * \note  \li This function does not return.
  * \note  \li Any *atexit()*-handlers will be executed before quitting.
+ * 
+ * \par Remarks
+ *   If \c errCxtPtr is <tt>NULL</tt>, no error information will be shown to the user.
+ *   The application, however, will still be exited immediately, returning
+ *   \c NkErr_Unknown to the host platform.
  */
 NK_NATIVE NK_API NK_NORETURN NkVoid NK_CALL NkFatalTerminate(_In_ NkFatalErrorContext const *errCxtPtr);
 

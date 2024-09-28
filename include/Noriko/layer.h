@@ -123,6 +123,9 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILay
 NK_NATIVE NK_API NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd);
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackProcessEvent(_In_ NkEvent const *evPtr);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnEvent(_In_ NkEvent const *evPtr);
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat deltaTime);
 
 

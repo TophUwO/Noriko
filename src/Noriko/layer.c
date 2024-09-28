@@ -65,7 +65,8 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_OnLayerStackDestroy(_Inout_ NkILayer *layerRe
 
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
-    NK_ASSERT(gl_LayerStack.mp_layerStack == NULL, NkErr_ComponentState);
+    if (gl_LayerStack.mp_layerStack != NULL)
+        return NkErr_NoOperation;
 
     /* Initialize the layer vector. */
     NkErrorCode errCode = NkVectorCreate(&(NkVectorProperties) {
@@ -90,6 +91,8 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid) {
+    if (gl_LayerStack.mp_layerStack == NULL)
+        return NkErr_NoOperation;
     NK_LOG_INFO("shutdown: layer stack");
 
     /* Destroy the synchronization primitive. */
@@ -102,7 +105,8 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid) {
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In_ NkSize whereInd) {
     NK_ASSERT(layerRef != NULL, NkErr_InOutParameter);
-    NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
+    if (gl_LayerStack.mp_layerStack == NULL)
+        return NkErr_NoOperation;
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     /*
@@ -136,7 +140,8 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In
 }
 
 NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd) {
-    NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
+    if (gl_LayerStack.mp_layerStack == NULL)
+        return NkErr_NoOperation;
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     NkILayer *layerRef = NkVectorAt(gl_LayerStack.mp_layerStack, whereInd);
@@ -157,18 +162,17 @@ NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd) {
     return layerRef;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLayerstackProcessEvent(_In_ NkEvent const *evPtr) {
+_Return_ok_ NkErrorCode NK_CALL NkLayerstackOnEvent(_In_ NkEvent const *evPtr) {
     NK_ASSERT(evPtr != NULL, NkErr_InParameter);
     if (gl_LayerStack.mp_layerStack == NULL)
-        return NkErr_Ok;
+        return NkErr_NoOperation;
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     NkBoolean eventWasHandled = NK_FALSE;
-    NkSize layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);
+    NkSize const layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);
     for (NkSize i = 0; i < layerCount && !eventWasHandled; i++) {
         NkILayer *currLayer = NkVectorAt(gl_LayerStack.mp_layerStack, i);
-        if (currLayer == NULL)
-            continue;
+        NK_ASSERT(currLayer != NULL, NkErr_ObjectState);
 
         NK_UNLOCK(gl_LayerStack.m_mtxLock);
         /*
@@ -182,6 +186,36 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackProcessEvent(_In_ NkEvent const *evP
 
     NK_UNLOCK(gl_LayerStack.m_mtxLock);
     return eventWasHandled ? NkErr_Ok : NkErr_NoOperation;
+}
+
+_Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat deltaTime) {
+    if (gl_LayerStack.mp_layerStack == NULL)
+        return NkErr_NoOperation;
+
+    NK_LOCK(gl_LayerStack.m_mtxLock);
+    /*
+     * Iterate over the layerstack backwards, that is, from the lowest layer to the
+     * top-most layer.
+     */
+    NkSize const layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);
+    if (layerCount == 0)
+        goto lbl_END;
+    for (NkInt64 i = (NkInt64)layerCount - 1; i >= 0; i--) {
+        NkILayer *currLayer = NkVectorAt(gl_LayerStack.mp_layerStack, i);
+        NK_ASSERT(currLayer != NULL, NkErr_ObjectState);
+
+        NK_UNLOCK(gl_LayerStack.m_mtxLock);
+        /*
+         * Call the render method of the current layer. The return value is ignored.
+         * Layers must be able to be drawn independently from each other.
+         */
+        NK_IGNORE_RETURN_VALUE(currLayer->VT->OnRender(currLayer, deltaTime));
+        NK_LOCK(gl_LayerStack.m_mtxLock);
+    }
+
+lbl_END:
+    NK_UNLOCK(gl_LayerStack.m_mtxLock);
+    return layerCount == 0 ? NkErr_NoOperation : NkErr_Ok;
 }
 
 

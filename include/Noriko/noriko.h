@@ -61,7 +61,6 @@ NK_NATIVE typedef struct NkApplicationSpecification {
     NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
     NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
     NkStringView           m_wndTitle;        /**< main window title */
-    NkPoint2D              m_wndPos;          /**< main window position (relative to virtual desktop) */
     int                    m_argc;            /**< number of command-line parameters */
     char                 **mp_argv;           /**< command-line parameters */
     char                 **mp_envp;           /**< (optional) environment variables */
@@ -79,10 +78,24 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid);
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid);
 /**
+ * \brief quits the application at the next possible time
+ * \param [in] errCode return code to propagate to the host platform
+ * \note  To exit the application immediately without cleaning up, use the
+ *        <tt>NkFatalTerminate(NULL)</tt> function.
+ * 
+ * \par Remarks
+ *   This function does not immediately exit the application, but rather posts a quit
+ *   request to the main loop which will be processed at one point. Once this request
+ *   is received, all engine components will be shutdown in an orderly manner and control
+ *   is returned to the host platform.
  */
 NK_NATIVE NK_API NkVoid NK_CALL NkApplicationExit(_Ecode_range_ NkErrorCode errCode);
 
 /**
+ * \brief  retrieves the application specification, that is, the application settings
+ *         used to initialize the Noriko engine component
+ * \return pointer to the application specification
+ * \note   The return value of this function can never be <tt>NULL</tt>.
  */
 NK_NATIVE NK_API NkApplicationSpecification const *NK_CALL NkApplicationQuerySpecification(NkVoid);
 
