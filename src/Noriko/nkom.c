@@ -198,7 +198,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
      * run its initialize method. If this fails, it is not an error.
      */
     NkIInitializable *initRef;
-    if (tmpResPtr->VT->QueryInterface(tmpResPtr, NKOM_IIDOF(NkIInitializable), (NkVoid **)&initRef) != NkErr_Ok) {
+    if (tmpResPtr->VT->QueryInterface(tmpResPtr, NKOM_IIDOF(NkIInitializable), (NkVoid **)&initRef) == NkErr_Ok) {
         /*
          * If initialization fails, decrement the object's ref-count. It must now be one.
          * In the next step, it will be decremented again, causing it to hit zero,
@@ -209,6 +209,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
             initRef->VT->Release(initRef);
 
             *resPtr = NULL;
+            return errCode;
         }
 
         /* QueryInterface() did increment ref-count. */
@@ -224,8 +225,15 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
         tmpResPtr->VT->Release(tmpResPtr);
     
         *resPtr = NULL;
+        return errCode;
     }
 
+    /*
+     * Reference count should now be 2 after having queried the desired interface.
+     * Decrement by one to return an object that has a reference count of 1 and as such
+     * can be destroyed by a single call to 'Release()'.
+     */
+    (*resPtr)->VT->Release(*resPtr);
     return errCode;
 }
 
@@ -241,7 +249,12 @@ _Return_ok_ NkErrorCode NK_CALL NkOMQueryFactoryForClass(
     NK_ASSERT(clsFacPtr != NULL, NkErr_OutptrParameter);
 
     NK_LOCK(gl_NkOMContext.m_clsRegLock);
-    if (NkHashtableAt(gl_NkOMContext.mp_classReg, &(NkHashtableKey){ .mp_ptrKey = clsidPtr }, clsFacPtr) == NkErr_Ok) {
+    NkErrorCode const errCode = NkHashtableAt(
+        gl_NkOMContext.mp_classReg,
+        &(NkHashtableKey){ .mp_ptrKey = (NkVoid *)clsidPtr },
+        clsFacPtr
+    );
+    if (errCode == NkErr_Ok) {
         NK_UNLOCK(gl_NkOMContext.m_clsRegLock);
 
         /* Add a reference to the class factory. */
@@ -272,7 +285,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInstallClassFactory(_Inout_ NkIClassFactory 
             errCode = NkHashtableInsert(
                 gl_NkOMContext.mp_classReg,
                 &(NkHashtablePair){
-                    .m_keyVal    = { .mp_ptrKey = clsidArr[i] },
+                    .m_keyVal    = { .mp_ptrKey = (NkVoid *)clsidArr[i] },
                     .mp_valuePtr = clsFac
                 }
             );
@@ -308,7 +321,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMUninstallClassFactory(_Inout_ NkIClassFactor
     for (NkSize i = 0; clsidArr[i] != NULL; i++) {
         NK_SYNCHRONIZED(gl_NkOMContext.m_clsRegLock,
             NK_IGNORE_RETURN_VALUE(NkHashtableErase(gl_NkOMContext.mp_classReg, &(NkHashtableKey){
-                .mp_uuidKey = clsidArr[i]
+                .mp_uuidKey = (NkVoid *)clsidArr[i]
             }));
         );
 
@@ -335,9 +348,12 @@ NkSize NK_CALL NkOMQueryImplementationIndex(
     NK_ASSERT(uuidRef != NULL, NkErr_InParameter);
 
     NkSize currInd = 0;
-    while (infos[currInd].mp_uuidRef != NULL)
+    while (infos[currInd].mp_uuidRef != NULL) {
         if (NkUuidIsEqual(uuidRef, infos[currInd].mp_uuidRef) == TRUE)
             return currInd;
+
+        ++currInd;
+    }
 
     return SIZE_MAX;
 }

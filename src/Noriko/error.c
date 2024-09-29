@@ -77,13 +77,17 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClosingTokenNotFound)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InterfacePureVirtual)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InterfaceNotImpl)),    
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnknownClass)),        
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnknownClass)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AggregationNotSupp)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassAlreadyReg)),     
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ClassNotReg)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_RegWindowClass)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateNativeWindow)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_WndModeNotSupported)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AdjustClientArea))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AdjustClientArea)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateMemDC)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateCompBitmap)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateBrush))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -124,12 +128,16 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("interface is marked as 'pure-virtual' and cannot be instantiated"),
     NK_MAKE_STRING_VIEW("current class does not implement the specified interface"),
     NK_MAKE_STRING_VIEW("class is unknown to the current class factory instance"),
+    NK_MAKE_STRING_VIEW("class does not support NkOM aggregation"),
     NK_MAKE_STRING_VIEW("class is already registered in the global NkOM runtime"),
     NK_MAKE_STRING_VIEW("class is not registered in the global NkOM runtime"),
     NK_MAKE_STRING_VIEW("could not register window class"),
     NK_MAKE_STRING_VIEW("could not create native window"),
     NK_MAKE_STRING_VIEW("window mode not supported on the current platform"),
-    NK_MAKE_STRING_VIEW("could not adjust client area size to fit requested viewport")
+    NK_MAKE_STRING_VIEW("could not adjust client area size to fit requested viewport"),
+    NK_MAKE_STRING_VIEW("could not create memory device context"),
+    NK_MAKE_STRING_VIEW("failed to create memory bitmap compatible with given device context"),
+    NK_MAKE_STRING_VIEW("failed to create paint brush")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

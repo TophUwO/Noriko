@@ -40,6 +40,7 @@ NK_NATIVE typedef struct __NkInt_WindowsWindow {
     NkWindowFlags m_wndFlags;        /**< window flags */
     NkStringView  m_wndTitle;        /**< default window title */
     NkStringView  m_wndIdent;        /**< textual window identifier */
+    NkIRenderer  *mp_rendererRef;    /**< reference to the renderer for this window */
 } __NkInt_WindowsWindow;
 
 
@@ -80,6 +81,15 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
                 return 0;
 
             break;
+        case WM_SIZE:
+            /* Window size has changed; do nothing but resize the renderer. */
+            if (wndRef != NULL && wndRef->mp_rendererRef != NULL)
+                wndRef->mp_rendererRef->VT->Resize(
+                    wndRef->mp_rendererRef,
+                    wndRef->NkIWindow_Iface.VT->GetClientDimensions((NkIWindow *)wndRef)
+                );
+
+            break;
         case WM_WINDOWPOSCHANGED: {
             NkWindowMode const newWndMode = __NkInt_WindowsWindow_GetNewWindowMode(wndHandle);
 
@@ -108,6 +118,11 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
             if (wndRef->m_wndFlags & NkWndFlag_MainWindow)
                 NkApplicationExit(NkErr_Ok);
             return FALSE;
+        case WM_DESTROY:
+            /* Destroy the renderer. */
+            wndRef->mp_rendererRef->VT->Release(wndRef->mp_rendererRef);
+
+            return 0;
     }
 
     /*
@@ -357,8 +372,18 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
         self->VT->SetWindowMode(self, wndSpecs->m_initialWndMode);
 
-        /* All good. */
-        return NkErr_Ok;
+        /* Create a renderer for the window. */
+        NkUuid const *implCLSID = NkRendererQueryCLSIDFromApi(wndSpecs->m_rendererApi);
+        return NkOMCreateInstance(implCLSID, NULL, NKOM_IIDOF(NkIRenderer), &(NkRendererSpecification){
+            .m_structSize   = sizeof(NkRendererSpecification),
+            .mp_wndRef      = self,
+            .m_isVSync      = wndSpecs->m_isVSync,
+            .m_rendererApi  = wndSpecs->m_rendererApi,
+            .m_vpExtents    = wndSpecs->m_vpExtents,
+            .m_dispTileSize = wndSpecs->m_dispTileSize,
+            .m_vpAlignment  = wndSpecs->m_vpAlignment,
+            .m_clearCol     = NK_MAKE_RGB(255, 0, 0)
+        }, (NkIBase **)&wndPtr->mp_rendererRef);
     }
 
     /* Attaching to existing windows is currently not implemented. */
@@ -458,7 +483,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowFlag(
     __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)self;
 
     /* Set or unset the flag. */
-    NkBoolean const oldVal = __NkInt_WindowsWindow_GetWindowFlag(self, wndFlag);
+    NkBoolean oldVal = __NkInt_WindowsWindow_GetWindowFlag(self, wndFlag);
     if (oldVal == newVal || !__NkInt_WindowsWindow_IsWindowFlagMutable(wndFlag))
         return NkErr_NoOperation;
     wndRef->m_wndFlags = wndRef->m_wndFlags & ~wndFlag | (newVal ? wndFlag : 0);
@@ -466,6 +491,12 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowFlag(
     /* If the flag was changed, do what has to be done to apply the changes. */
     switch (wndFlag) {
         case NkWndFlag_DragResizable: {
+            /**
+             * \brief show flags for the 'ShowWindow()' function after manually updating
+             *        the window style
+             */
+            NK_INTERNAL UINT const gl_ShowFlags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+
             /* Change the window style to reflect the new setting. */
             LONG_PTR currWndStyle = GetWindowLongPtr(wndRef->mp_nativeHandle, GWL_STYLE);
 
@@ -474,7 +505,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowFlag(
                 GWL_STYLE,
                 currWndStyle & ~WS_SIZEBOX | (newVal ? WS_SIZEBOX : 0)
             );
-            SetWindowPos(wndRef->mp_nativeHandle, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+            SetWindowPos(wndRef->mp_nativeHandle, NULL, 0, 0, 0, 0, gl_ShowFlags);
 
             return NkErr_Ok;
         }
@@ -488,6 +519,27 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_SetWindowFlag(
 
     /* Changing the given flag is not implemented or has no effect. */
     return NkErr_NotImplemented;
+}
+
+NK_INTERNAL NkSize2D NK_CALL __NkInt_WindowsWindow_GetClientDimensions(_Inout_ NkIWindow *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
+    /* The 'client dimensions' are the dimensions of the native window viewport. */
+    RECT clRect;
+    GetClientRect((HWND)self->VT->QueryNativeWindowHandle(self), &clRect);
+
+    return (NkSize2D) {
+        (NkUint64)(clRect.right  - clRect.left),
+        (NkUint64)(clRect.bottom - clRect.top)
+    };
+}
+
+NK_INTERNAL NkIRenderer *NK_CALL __NkInt_WindowsWindow_GetRenderer(_Inout_ NkIWindow *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)self;
+
+    wndRef->mp_rendererRef->VT->AddRef(wndRef->mp_rendererRef);
+    return wndRef->mp_rendererRef;
 }
 
 
@@ -505,15 +557,19 @@ NKOM_DEFINE_VTABLE(NkIWindow) {
     .SetWindowMode           = &__NkInt_WindowsWindow_SetWindowMode,
     .GetWindowFlag           = &__NkInt_WindowsWindow_GetWindowFlag,
     .SetWindowFlag           = &__NkInt_WindowsWindow_SetWindowFlag,
+    .GetClientDimensions     = &__NkInt_WindowsWindow_GetClientDimensions,
+    .GetRenderer             = &__NkInt_WindowsWindow_GetRenderer
 };
 
-/**
- * \brief actual instance of the windows window 
- */
-NK_INTERNAL __NkInt_WindowsWindow gl_Window = { .NkIWindow_Iface = &NKOM_VTABLEOF(NkIWindow) };
 
+NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid) {
+    /**
+     * \brief actual instance of the windows window 
+     */
+    NK_INTERNAL __NkInt_WindowsWindow gl_Window = { .NkIWindow_Iface = &NKOM_VTABLEOF(NkIWindow) };
 
-NkIWindow *NK_CALL __NkInt_WindowQueryPlatformInstance(NkVoid) {
+    /* Only for formality's sake. */
+    gl_Window.NkIWindow_Iface.VT->AddRef((NkIWindow *)&gl_Window);
     return (NkIWindow *)&gl_Window;
 }
 #endif /* NK_TARGET_WINDOWS */

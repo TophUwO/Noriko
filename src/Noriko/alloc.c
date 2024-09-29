@@ -198,7 +198,7 @@ NK_INTERNAL NkVoid *__NkInt_ReallocateMemoryUnaligned(
  * \see   __NkInt_AllocateMemoryUnaligned
  * \see   __NkInt_ReallocateMemoryUnaligned
  */
-NK_INTERNAL NkVoid __NkInt_FreeMemoryUnaligned(_In_ NkVoid const *ptr) {
+NK_INTERNAL NkVoid __NkInt_FreeMemoryUnaligned(_In_ NkVoid *ptr) {
 #if (defined NK_USE_MSVC_MEMORY_LEAK_DETECTOR)
     _free_dbg((NkVoid *)ptr, _NORMAL_BLOCK);
 #else
@@ -582,7 +582,7 @@ _Return_ok_ NkErrorCode NK_CALL NkGPRealloc(
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkGPFree(_In_ NkVoid const *memPtr) {
+NkVoid NK_CALL NkGPFree(_In_ NkVoid *memPtr) {
     if (memPtr == NULL)
         return;
 

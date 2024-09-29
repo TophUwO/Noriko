@@ -74,6 +74,13 @@
  * \note  This macro only works with numeric values.
  */
 #define NK_CLAMP(elem, lo, hi)       (NK_MAX(NK_MIN(elem, hi), lo))
+/**
+ * \def   NK_ISBITFLAG(n)
+ * \brief tests if \c n is a <tt>bitflag</tt>, that is, a <em>power of two</em> or
+ *        <em>zero</em>
+ * \param n value to test (numeric)
+ */
+#define NK_ISBITFLAG(n)              ((NkBoolean)((n & (n - 1)) == 0))
 
 /**
  * \def   NK_ARRAYSIZE(arr)

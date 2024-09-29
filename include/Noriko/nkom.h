@@ -39,7 +39,7 @@
  * \brief   represents the type that is used for holding the reference count of any NkOM
  *          class instance
  */
-NK_NATIVE typedef int NkOMRefCount;
+NK_NATIVE typedef NkInt32 NkOMRefCount;
 
 
 /**
@@ -52,11 +52,12 @@ NK_NATIVE typedef int NkOMRefCount;
  *         info associated with the given IID/CLSID.
  */
 NK_NATIVE typedef struct NkOMImplementationInfo {
-    NkUuid    *mp_uuidRef;       /**< IID/CLSID */
+    NkUuid    const *mp_uuidRef; /**< IID/CLSID */
 
     /* The following are for use as class infos only. */
     NkSize     m_structSize;     /**< size of the internal structure */
     NkBoolean  m_isAggSupported; /**< whether or not aggregation is supported */
+    NkVoid    *mp_vtabPtr;       /**< pointer to the VTable for the class */
 } NkOMImplementationInfo;
 
 
@@ -123,6 +124,18 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
     NK_NATIVE NK_API NkUuid const __##ifaceName##_CLSID__;                     \
     NK_NATIVE struct ifaceName { struct __##ifaceName##_VTable__ const *VT; }; \
     NK_NATIVE struct __##ifaceName##_VTable__
+/**
+ * \def   NKOM_DECLARE_INTERFACE_ALIAS(ifaceBase, ifaceName)
+ * \brief declares an interface with its own IID and CLSID that is equivalent in ABI
+ *        to the given 'base' interface
+ * \param ifaceBase name of the interface to create the alias from
+ * \param ifaceName name of the alias interface
+ */
+#define NKOM_DECLARE_INTERFACE_ALIAS(ifaceBase, ifaceName)                     \
+    NK_NATIVE typedef struct ifaceName ifaceName;                              \
+    NK_NATIVE NK_API NkUuid const __##ifaceName##_IID__;                       \
+    NK_NATIVE NK_API NkUuid const __##ifaceName##_CLSID__;                     \
+    NK_NATIVE struct ifaceName { struct __##ifaceBase##_VTable__ const *VT; };
 /**
  * \def   NKOM_DEFINE_VTABLE(ifaceName)
  * \brief convenience macro for defining the static internal VTable for an interface

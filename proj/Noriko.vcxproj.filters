@@ -134,5 +134,11 @@
     <ClCompile Include="..\src\Noriko\platform\windows\winhelpers.c">
       <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\wingdi.c">
+      <Filter>Source Files\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\renderer.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

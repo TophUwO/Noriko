@@ -64,6 +64,7 @@ NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,    &NkPRNGUninitialize   },
     { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,        &NkEnvShutdown        },
     { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,      &NkOMUninitialize     },
+    { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,   &NkRendererShutdown   },
     { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
     { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown }
 };
@@ -162,7 +163,6 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
     NkErrorCode errCode = NkErr_Ok;
     MSG currMsg;
     
-    HBRUSH br = CreateSolidBrush(RGB(33, 33, 33));
     for (;;) {
         /* First, dispatch windows messages. */
         while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
@@ -181,7 +181,15 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
         }
 
         /* Update everything and render. */
-        // ...
+        NkIWindow   *mainWnd   = NkWindowQueryInstance();
+        NkIRenderer *mainWndRd = mainWnd->VT->GetRenderer(mainWnd);
+
+        mainWndRd->VT->BeginDraw(mainWndRd);
+        NK_IGNORE_RETURN_VALUE(NkLayerstackOnRender(0.f));
+        mainWndRd->VT->EndDraw(mainWndRd);
+
+        /* Release the renderer since 'GetRenderer()' acquired it. */
+        mainWndRd->VT->Release(mainWndRd);
     }
 
 lbl_CLEANUP:

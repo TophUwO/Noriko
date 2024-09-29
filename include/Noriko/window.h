@@ -85,7 +85,6 @@ NK_NATIVE typedef enum NkViewportAlignment {
     NkVpAlign_HCenter = 1 << 4,
     NkVpAlign_Right   = 1 << 5,
 
-    NkVpAlign_Default = NkVpAlign_HCenter | NkVpAlign_VCenter,
     __NkVpAlign_Count__
 } NkViewportAlignment;
 
@@ -154,6 +153,12 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
 
     /**
      */
+    NkSize2D (NK_CALL *GetClientDimensions)(_Inout_ NkIWindow *self);
+    /**
+     * \par Remarks
+     *   Like with all functions that return an NkOM object, they increment the reference
+     *   count of the returned object.
+     */
     struct NkIRenderer *(NK_CALL *GetRenderer)(_Inout_ NkIWindow *self);
 };
 
@@ -170,8 +175,12 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid);
  * \return pointer to the static window instance
  * \note   Before using the window instance obtained by this function for the first time,
  *         call \c NkWindowStartup() once to actually create the platform window.
+ * 
+ * \par Remarks
+ *   Like with all functions that return an NkOM object, they increment the reference
+ *   count of the returned object.
  */
-NK_NATIVE NK_API NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
+NK_NATIVE NK_VIRTUAL NK_INLINE NK_API NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
 
 /**
  */

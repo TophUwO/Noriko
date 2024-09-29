@@ -147,12 +147,16 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InterfacePureVirtual, /**< interface is marked as 'pure-virtual'; cannot be instantiated */
     NkErr_InterfaceNotImpl,     /**< class does not implement the specified interface */
     NkErr_UnknownClass,         /**< class is unknown to the current class factory instance */
+    NkErr_AggregationNotSupp,   /**< class does not support NkOM aggregation */
     NkErr_ClassAlreadyReg,      /**< class is already registered in the global NkOM runtime */
     NkErr_ClassNotReg,          /**< class is not registered in the global NkOM runtime */
     NkErr_RegWindowClass,       /**< could not register window class */
     NkErr_CreateNativeWindow,   /**< could not create native window */
     NkErr_WndModeNotSupported,  /**< window mode not supported on the current platform */
     NkErr_AdjustClientArea,     /**< failed to adjust client area size */
+    NkErr_CreateMemDC,          /**< failed to create memory DC */
+    NkErr_CreateCompBitmap,     /**< failed to create compatible bitmap */
+    NkErr_CreateBrush,          /**< failed to create brush */
 
     __NkErr_Count__             /**< used internally */
 } NkErrorCode;

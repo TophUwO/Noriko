@@ -334,8 +334,10 @@
     <ClCompile Include="..\src\Noriko\log.c" />
     <ClCompile Include="..\src\Noriko\nkom.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
+    <ClCompile Include="..\src\Noriko\platform\windows\wingdi.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winhelpers.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winwindow.c" />
+    <ClCompile Include="..\src\Noriko\renderer.c" />
     <ClCompile Include="..\src\Noriko\sort.c" />
     <ClCompile Include="..\src\Noriko\timer.c" />
     <ClCompile Include="..\src\Noriko\util.c" />

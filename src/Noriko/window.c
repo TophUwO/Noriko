@@ -24,22 +24,6 @@
 #include <include/Noriko/noriko.h>
 
 
-/** \cond INTERNAL */
-/**
- * \brief  retrieves the instance of the internal platform window instance
- * 
- * Platform-dependent implementations of the \c NkIWindow interface are found in
- * different locations throughout Noriko's source code. Every file implementing a
- * platform window must export a function with the below signature. Of course, as per the
- * rules for external linkage, only one of these exported functions can be present at a
- * time. Implementations of windows which are not for the current platform, therefore,
- * should be completely stripped from the build.
- * 
- * \return pointer to the static window instance (never <tt>NULL</tt>)
- */
-NK_NATIVE NK_EXTERN NkIWindow *NK_CALL __NkInt_WindowQueryPlatformInstance(NkVoid);
-/** \endcond */
-
 /* Define IID and CLSID. */
 // { D9DD03B3-536E-410E-8BA5-DABF915A6AB5 }
 NKOM_DEFINE_IID(NkIWindow, { 0xd9dd03b3, 0x536e, 0x410e, 0x8ba5dabf915a6ab5 });
@@ -57,7 +41,9 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid) {
     NkIWindow *wndRef = NkWindowQueryInstance();
     return wndRef->VT->Initialize(wndRef, &(NkWindowSpecification){
         .m_structSize      = sizeof(NkWindowSpecification),
+        .m_rendererApi     = appSpecs->m_rendererApi,
         .m_vpAlignment     = appSpecs->m_vpAlignment,
+        .m_isVSync         = appSpecs->m_isVSync,
         .m_vpExtents       = appSpecs->m_vpExtents,
         .m_dispTileSize    = appSpecs->m_dispTileSize,
         .m_allowedWndModes = appSpecs->m_allowedWndModes,
@@ -81,17 +67,13 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid) {
 }
 
 
-NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid) {
-    /* The return value can never be NULL. */
-    return __NkInt_WindowQueryPlatformInstance();
-}
-
-
 NkStringView const *NK_CALL NkWindowGetModeStr(_In_ NkWindowMode wndMode) {
-    NK_ASSERT(wndMode >= 0 && (wndMode & (wndMode - 1)) == 0 && wndMode < __NkWndMode_Count__, NkErr_InParameter);
+    NK_ASSERT(wndMode >= 0 && NK_ISBITFLAG(wndMode) && wndMode < __NkWndMode_Count__, NkErr_InParameter);
 
     /** \cond INTERNAL */
     /**
+     * \brief maps numeric window mode IDs to their string representation (used for
+     *        logging, etc.) 
      */
     NK_INTERNAL NkStringView const gl_WindowModeStrs[] = {
         [NkWndMode_Unknown]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndMode_Unknown)),
@@ -110,15 +92,41 @@ NkStringView const *NK_CALL NkWindowGetModeStr(_In_ NkWindowMode wndMode) {
 }
 
 NkStringView const *NK_CALL NkWindowGetFlagStr(_In_ NkWindowFlags wndFlag) {
-    return NULL;
+    NK_ASSERT(wndFlag >= 0 && NK_ISBITFLAG(wndFlag) && wndFlag < __NkWndFlag_Count__, NkErr_InParameter);
+
+    /** \cond INTERNAL */
+    NK_INTERNAL NkStringView const gl_WindowFlagStrs[] = {
+        [NkWndFlag_Default]        = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_Default)),
+        [NkWndFlag_MessageOnlyWnd] = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_MessageOnlyWnd)),
+        [NkWndFlag_AlwaysOnTop]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_AlwaysOnTop)),
+        [NkWndFlag_MainWindow]     = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_MainWindow)),
+        [NkWndFlag_DragResizable]  = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_DragResizable)),
+        [NkWndFlag_DragMovable]    = NK_MAKE_STRING_VIEW(NK_ESC(NkWndFlag_DragMovable))
+    };
+    /** \endcond */
+
+    return &gl_WindowFlagStrs[wndFlag];
 }
 
 NkStringView const *NK_CALL NkWindowGetViewportAlignmentStr(_In_ NkViewportAlignment vpAlignment) {
-    return NULL;
+    NK_ASSERT(vpAlignment > 0 && NK_ISBITFLAG(vpAlignment) && vpAlignment < __NkVpAlign_Count__, NkErr_InParameter);
+
+    /** \cond INTERNAL */
+    NK_INTERNAL NkStringView const gl_ViewportAlignmentStrs[] = {
+        [NkVpAlign_Top]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_Top)),
+        [NkVpAlign_VCenter] = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_VCenter)),
+        [NkVpAlign_Bottom]  = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_Bottom)),
+        [NkVpAlign_Left]    = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_Left)),
+        [NkVpAlign_HCenter] = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_HCenter)),
+        [NkVpAlign_Right]   = NK_MAKE_STRING_VIEW(NK_ESC(NkVpAlign_Right))
+    };
+    /** \endcond */
+
+    return &gl_ViewportAlignmentStrs[vpAlignment];
 }
 
 NkEventType NK_CALL NkWindowMapEventTypeFromWindowMode(_In_ NkWindowMode wndMode) {
-    NK_ASSERT(wndMode >= 0 && (wndMode & (wndMode - 1)) == 0 && wndMode < __NkWndMode_Count__, NkErr_InParameter);
+    NK_ASSERT(wndMode >= 0 && NK_ISBITFLAG(wndMode) && wndMode < __NkWndMode_Count__, NkErr_InParameter);
 
     return ((NkEventType const [__NkWndMode_Count__]){
         [NkWndMode_Normal]     = NkEv_WindowRestored,

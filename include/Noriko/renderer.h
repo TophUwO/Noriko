@@ -27,6 +27,7 @@
 #include <include/Noriko/def.h>
 #include <include/Noriko/nkom.h>
 #include <include/Noriko/window.h>
+#include <include/Noriko/platform.h>
 
 
 /**
@@ -54,10 +55,11 @@ NK_NATIVE typedef struct NkRendererSpecification {
     NkSize               m_structSize;   /**< size of this structure, in bytes */
     NkIWindow           *mp_wndRef;      /**< reference to the parent window */
     NkBoolean            m_isVSync;      /**< whether VSync is enabled */
-    NkRendererApi        m_renderApi;    /**< API to initialize renderer for */
+    NkRendererApi        m_rendererApi;  /**< API to initialize renderer for */
     NkSize2D             m_vpExtents;    /**< viewport extents (in tiles) */
     NkSize2D             m_dispTileSize; /**< tile size (in pixels) */
     NkViewportAlignment  m_vpAlignment;  /**< viewport alignment in client area of window */
+    NkRgbaColor          m_clearCol;     /**< clear color to use for background */
 } NkRendererSpecification;
 
 
@@ -98,10 +100,10 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      *   the <tt>NkRdApi_Default</tt> API identifier, the returned value is the actual
      *   API chosen.
      */
-    NkRendererApi (NK_CALL *QueryRendererAPI)(_Inout_ NkIRenderer *self);
+    NkRendererApi (NK_CALL *QueryRendererApi)(_Inout_ NkIRenderer *self);
     /**
-     * \brief  retrieves a pointer to the original renderer specification passed when the
-     *         renderer was created
+     * \brief  retrieves a pointer to the *original* renderer specification passed when
+     *         the renderer was created
      * \param  [in,out] self pointer to the current \c NkIRenderer instance
      * \return pointer to the original renderer specification
      */
@@ -111,6 +113,10 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      * \param  [in,out] self pointer to the current \c NkIRenderer instance
      * \return pointer to the Noriko window handle
      * \note   The return value of this function can never be <tt>NULL</tt>.
+     *
+     * \par Remarks
+     *   Like with all functions that return an NkOM object, they increment the reference
+     *   count of the returned object.
      */
     NkIWindow *(NK_CALL *QueryWindow)(_Inout_ NkIRenderer *self);
 
@@ -121,20 +127,20 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      * \param  [in] clAreaSize dimensions of the client area, in pixels
      * \return \c NkErr_Ok on success, non-zero on failure
      */
-    NkErrorCode (NK_CALL *Resize)(_Inout_ NkIRenderer *self, _In_ NkSize2D const *clAreaSize);
+    NkErrorCode (NK_CALL *Resize)(_Inout_ NkIRenderer *self, _In_ NkSize2D clAreaSize);
     /**
      * \brief  starts a new batch of rendering commands
      * \param  [in,out] self current \c NkIRenderer instance
      * \return \c NkErr_Ok on success, non-zero on failure
      */
-    NkErrorCode (NK_CALL *BeginRender)(_Inout_ NkIRenderer *self);
+    NkErrorCode (NK_CALL *BeginDraw)(_Inout_ NkIRenderer *self);
     /**
      * \brief  finishes a batch of rendering commands, flushes the output device and, if
      *         VSync is enabled, waits (i.e., blocks) for a V-Blank signal
      * \param  [in,out] self current \c NkIRenderer instance
      * \return \c NkErr_Ok on success, non-zero on failure
      */
-    NkErrorCode (NK_CALL *EndRender)(_Inout_ NkIRenderer *self);
+    NkErrorCode (NK_CALL *EndDraw)(_Inout_ NkIRenderer *self);
 };
 
 
@@ -146,14 +152,14 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
  *         application to instantiate the renderer it so desires. Call this function once
  *         per process before instantiating the first renderer.
  */
-NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid);
 /**
  * \brief  uninitializes global renderer state
  * \return \c NkErr_Ok on success, non-zero on failure
  * \note   If this function is called without a corresponding call to
  *         <tt>NkRendererStartup()</tt>, this function does nothing.
  */
-NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid);
 
 /**
  * \brief   retrieves a list of renderer APIs of which an implementation, that is, a
@@ -180,7 +186,7 @@ NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(N
  *    </li>
  *   </ul>
  */
-NK_NATIVE NK_VIRTUAL NK_API NkSize NK_CALL NkRendererQueryAvailablePlatformApis(_Out_ NkRendererApi *resPtr);
+NK_NATIVE NK_API NkSize NK_CALL NkRendererQueryAvailablePlatformApis(_Outptr_ NkRendererApi const **resPtr);
 /**
  * \brief  retrieves the API identifier for the renderer API that will be chosen when
  *         specifying the \c NkRdApi_Default flag when instantiating the renderer
@@ -194,6 +200,24 @@ NK_NATIVE NK_VIRTUAL NK_API NkSize NK_CALL NkRendererQueryAvailablePlatformApis(
  *   renderer API implemented. This should not be a thing in a release version of the
  *   Noriko engine component.
  */
-NK_NATIVE NK_VIRTUAL NK_API NkRendererApi NK_CALL NkRendererQueryDefaultPlatformApi(NkVoid);
+NK_NATIVE NK_API NkRendererApi NK_CALL NkRendererQueryDefaultPlatformApi(NkVoid);
+/**
+ * \brief  retrieves the ID (CLSID) of the class that implements the renderer based on
+ *         the API identified by \c apiIdent
+ * \param  [in] apiIdent identifier of the rendering API
+ * \return class ID of the renderer, or \c NULL if the API is unknown or the current
+ *         platform does not implement a renderer based on the given API
+ */
+NK_NATIVE NK_API NkUuid const *NK_CALL NkRendererQueryCLSIDFromApi(_In_ NkRendererApi apiIdent);
+
+
+/* Define renderers for the Windows platform. */
+#if (defined NK_TARGET_WINDOWS)
+/**
+ * \interface NkIGdiRenderer
+ * \brief     represents a renderer based on Windows' GDI
+ */
+NKOM_DECLARE_INTERFACE_ALIAS(NkIRenderer, NkIGdiRenderer);
+#endif
 
 
