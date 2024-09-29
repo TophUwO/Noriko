@@ -118,7 +118,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
     };
 
 lbl_END:
-    //ReleaseDC(wndHandle, wndDC);
+    ReleaseDC(wndHandle, wndDC);
     return errCode;
 }
 
