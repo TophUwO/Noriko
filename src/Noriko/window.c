@@ -59,10 +59,14 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid) {
     NK_LOG_INFO("shutdown: window");
 
     /*
-     * Windows are uninitialized by themselves. Therefore, there is no need for an
-     * external uninit function. This function, thus, exists merely for formality reasons
-     * and is not expected to ever do anything.
+     * The default destroy handler of the window simply hides it so that we can wait for
+     * the WM_QUIT message to destroy everything. Once that message is received, we leave
+     * the main loop and destroy every component in the reverse order they were
+     * initialized. So we need to destroy the window here.
      */
+    NkIWindow *wndRef = NkWindowQueryInstance();
+
+    DestroyWindow(wndRef->VT->QueryNativeWindowHandle(wndRef));
     return NkErr_Ok;
 }
 

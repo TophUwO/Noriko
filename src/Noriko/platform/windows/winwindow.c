@@ -99,6 +99,18 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
 
             break;
         }
+        case WM_ERASEBKGND:
+            /* See comment in the 'WM_PAINT' section. */
+            return 1;
+        case WM_PAINT:
+            /*
+             * We paint manually in the main loop, so we ignore all WM_PAINT messages. We
+             * need to validate the update region or else the system keeps sending
+             * WM_PAINT messages until it's painted.
+             */
+            ValidateRect(wndHandle, NULL);
+
+            return 0;
         case WM_CLOSE:
             /*
              * First, dispatch 'window-closed' event. This lets layers do what they need
@@ -108,12 +120,14 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
                 NkEventDispatch(NkEv_WindowClosed, (NkWindowEvent){ .mp_wndRef = (NkIWindow *)wndRef })
             );
 
-            /* Destroy the platform window. */
-            DestroyWindow(wndHandle);
+            /* Don't destroy the window yet, just hide it. */
+            ShowWindow(wndHandle, SW_HIDE);
 
             /*
              * If the current window is the main window, we exit the application
-             * normally.
+             * normally. This posts a WM_QUIT message to the thread's message queue which
+             * will then initiate destroying of all components, including the window
+             * itself.
              */
             if (wndRef->m_wndFlags & NkWndFlag_MainWindow)
                 NkApplicationExit(NkErr_Ok);

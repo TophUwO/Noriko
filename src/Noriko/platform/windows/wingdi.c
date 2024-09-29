@@ -125,6 +125,8 @@ lbl_END:
 /**
  */
 NK_INTERNAL NkVoid NK_CALL __NkInt_GdiRenderer_Destroy(_Inout_ __NkInt_GdiRenderer *self) {
+    NK_LOG_INFO("shutdown: GDI renderer");
+    
     /*
      * Select the old bitmap into the DC to free it when the DC is destroyed. Our actual
      * bitmap must be freed by us since it was not indirectly created by the memory DC
@@ -204,6 +206,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_Initialize(
 ) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
     NK_ASSERT(initParam != NULL, NkErr_InParameter);
+
+    NK_LOG_INFO("startup: GDI renderer");
 
     /* Get the pointer to the renderer specification. */
     NkRendererSpecification const *rdSpecs = (NkRendererSpecification const *)initParam;
