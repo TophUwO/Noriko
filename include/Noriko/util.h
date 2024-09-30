@@ -625,3 +625,27 @@ NK_NATIVE NK_API NkVoid NK_CALL NkRawStringSplit(
 NK_NATIVE NK_API NkSize NK_CALL NkArrayGetDynCount(_In_to_null_ NkVoid const **ptrArray);
 
 
+/**
+ * \brief  calculates the origin of the renderer viewport based on window dimensions and
+ *         viewport alignment
+ * \param  [in] vpAlignment alignment of the viewport; a combination of fields of the
+ *              \c NkViewportAlignment enumeration
+ * \param  [in] vpExtents extents of the viewport, in tile space
+ * \param  [in] tileSize size of one tile, in pixels
+ * \param  [in] clExtents size of the client area, in pixels
+ * \return coordinates of the upper-left corner of the viewport, in client space (i.e.,
+ *         relative to the upper-left corner of the client area)
+ * 
+ * \par Remarks
+ *   This function calculates the point of origin (that is, the top-left corner) of the
+ *   viewport that a renderer will render to. The viewport is positioned inside the
+ *   client area of the target device according to the specified <em>viewport alignment</em>.
+ */
+NK_NATIVE NK_API NkPoint2D NK_CALL NkCalculateViewportOrigin(
+    _In_ enum NkViewportAlignment vpAlignment,
+    _In_ NkSize2D vpExtents,
+    _In_ NkSize2D tileSize,
+    _In_ NkSize2D clExtents
+);
+
+

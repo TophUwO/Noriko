@@ -40,13 +40,13 @@
  *   area of the primary desktop is not available, the function should return
  *   \c NkErr_NotImplemented and leave \c resPtr untouched.
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkQueryMaximizedWindowExtents(_Out_ NkSize2D *resPtr);
+NK_NATIVE NK_VIRTUAL NK_API _Return_ok_ NkErrorCode NK_CALL NkQueryMaximizedWindowExtents(_Out_ NkSize2D *resPtr);
 /**
  */
-NK_NATIVE NK_API NkPoint2D NK_CALL NkCalculateInitialWindowPos(_In_ NkSize2D const *wndSize);
+NK_NATIVE NK_VIRTUAL NK_API NkPoint2D NK_CALL NkCalculateInitialWindowPos(_In_ NkSize2D const *wndSize);
 /**
  */
-NK_NATIVE NK_API NkSize2D NK_CALL NkCalculateMaximumViewportExtents(
+NK_NATIVE NK_VIRTUAL NK_API NkSize2D NK_CALL NkCalculateMaximumViewportExtents(
     _In_  NkInt32 wndStyle,
     _In_  NkInt32 extWndStyle,
     _In_  NkSize2D const *dispTileSize

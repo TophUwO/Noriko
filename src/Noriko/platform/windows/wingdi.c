@@ -51,11 +51,15 @@ NK_NATIVE typedef struct __NkInt_GdiRenderer {
      * \brief  represents the collection of basic resources used by the GDI renderer
      */
     struct __NkInt_GdiResources {
-        HDC      mp_memDC;   /**< memory DC to render contents to */
-        HBITMAP  mp_memBmp;  /**< bitmap to render to */
-        HBITMAP  mp_oldBmp;  /**< initial bitmap of the memory DC */
-        HBRUSH   mp_clearBr; /**< brush used for clearing the screen */
-        NkSize2D m_bbDim;    /**< dimensions of the internal back buffer */
+        HDC       mp_memDC;    /**< memory DC to render contents to */
+        HBITMAP   mp_memBmp;   /**< bitmap to render to */
+        HBITMAP   mp_oldBmp;   /**< initial bitmap of the memory DC */
+        HBRUSH    mp_clearBr;  /**< brush used for clearing the screen */
+#if (!defined NK_CONFIG_DEPLOY)
+        HBRUSH    m_vpBkgndBr; /**< brush used for the viewport background */
+#endif /* NK_CONFIG_DEPLOY */
+        NkSize2D  m_bbDim;     /**< dimensions of the internal back buffer */
+        NkPoint2D m_vpOri;     /**< viewport origin, in client space */
     } m_gdiRes;
 } __NkInt_GdiRenderer;
 /* Define IID and CLSID. */
@@ -66,6 +70,7 @@ NKOM_DEFINE_CLSID(NkIGdiRenderer, { 0x819653f5, 0x28c1, 0x4edf, 0xa49f09613c47a5
 
 
 /**
+ * \todo free resources properly in case of an error 
  */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResources(
     _In_  NkRendererSpecification const *rdSpecs,
@@ -107,14 +112,33 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
         errCode = NkErr_CreateBrush;
         goto lbl_END;
     }
+#if (!defined NK_CONFIG_DEPLOY)
+    HBRUSH vpBrush = CreateSolidBrush(RGB(255, 255, 255));
+    if (vpBrush == NULL) {
+        NK_LOG_ERROR("Could not create viewport background brush.");
+
+        errCode = NkErr_CreateBrush;
+        DeleteObject(clBrush);
+        goto lbl_END;
+    }
+#endif /* NK_CONFIG_DEPLOY */
 
     /* Initialize the fields. */
     *resPtr = (struct __NkInt_GdiResources){
-        .mp_memDC   = memDC,
-        .mp_memBmp  = memBmp,
-        .mp_oldBmp  = oldBmp,
-        .mp_clearBr = clBrush,
-        .m_bbDim    = clDim
+        .mp_memDC    = memDC,
+        .mp_memBmp   = memBmp,
+        .mp_oldBmp   = oldBmp,
+        .mp_clearBr  = clBrush,
+#if (!defined NK_CONFIG_DEPLOY)
+        .m_vpBkgndBr = vpBrush,
+#endif /* NK_CONFIG_DEPLOY */
+        .m_bbDim     = clDim,
+        .m_vpOri     = NkCalculateViewportOrigin(
+            rdSpecs->m_vpAlignment,
+            rdSpecs->m_vpExtents,
+            rdSpecs->m_dispTileSize,
+            clDim
+        )
     };
 
 lbl_END:
@@ -136,8 +160,12 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_GdiRenderer_Destroy(_Inout_ __NkInt_GdiRender
     /* Make sure we still have the correct bitmap. This should never fail. */
     NK_ASSERT(currBmp == self->m_gdiRes.mp_memBmp, NkErr_ObjectState);
 
-    /* Destroy our memory bitmap and memory DC. */
+    /* Destroy our memory bitmap, memory DC, and the other resources. */
     DeleteObject(self->m_gdiRes.mp_memBmp);
+    DeleteObject(self->m_gdiRes.mp_clearBr);
+#if (!defined NK_CONFIG_DEPLOY)
+    DeleteObject(self->m_gdiRes.m_vpBkgndBr);
+#endif /* NK_CONFIG_DEPLOY */
     DeleteDC(self->m_gdiRes.mp_memDC);
 
     /* Release the parent window. */
@@ -292,8 +320,14 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_Resize(
     SelectObject(rdRef->m_gdiRes.mp_memDC, rdRef->m_gdiRes.mp_memBmp);
     ReleaseDC((HWND)rdRef->mp_wndRef->VT->QueryNativeWindowHandle(rdRef->mp_wndRef), wndDC);
 
-    /* All went well. */
+    /* All went well. Update client size and recalculate viewport origin. */
     rdRef->m_gdiRes.m_bbDim = clAreaSize;
+    rdRef->m_gdiRes.m_vpOri = NkCalculateViewportOrigin(
+        rdRef->m_currSpec.m_vpAlignment,
+        rdRef->m_currSpec.m_vpExtents,
+        rdRef->m_currSpec.m_dispTileSize,
+        rdRef->m_gdiRes.m_bbDim
+    );
     return NkErr_Ok;
 }
 
@@ -302,9 +336,10 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_Resize(
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_BeginDraw(_Inout_ NkIRenderer *self) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
 
-    /* Clear the back buffer. */
+    /* Get pointer to renderer state. */
     __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
 
+    /* Clear the back buffer. */
     FillRect(
         rdRef->m_gdiRes.mp_memDC,
         &(RECT const){
@@ -315,6 +350,26 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_BeginDraw(_Inout
         },
         rdRef->m_gdiRes.mp_clearBr
     );
+    
+#if (!defined NK_CONFIG_DEPLOY)
+    /* Draw background of viewport. */
+    NkSize2D const vpDim = {
+        rdRef->m_currSpec.m_vpExtents.m_width  * rdRef->m_currSpec.m_dispTileSize.m_width,
+        rdRef->m_currSpec.m_vpExtents.m_height * rdRef->m_currSpec.m_dispTileSize.m_height
+    };
+
+    FillRect(
+        rdRef->m_gdiRes.mp_memDC,
+        &(RECT const){
+            (LONG)rdRef->m_gdiRes.m_vpOri.m_xCoord,
+            (LONG)rdRef->m_gdiRes.m_vpOri.m_yCoord,
+            (LONG)rdRef->m_gdiRes.m_vpOri.m_xCoord + vpDim.m_width,
+            (LONG)rdRef->m_gdiRes.m_vpOri.m_yCoord + vpDim.m_height,
+        },
+        rdRef->m_gdiRes.m_vpBkgndBr
+    );
+#endif /* NK_CONFIG_DEPLOY */
+
     return NkErr_Ok;
 }
 

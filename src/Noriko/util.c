@@ -26,6 +26,7 @@
 #include <include/Noriko/util.h>
 #include <include/Noriko/log.h>
 #include <include/Noriko/timer.h>
+#include <include/Noriko/window.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -481,6 +482,23 @@ NkSize NK_CALL NkArrayGetDynCount(_In_to_null_ NkVoid const **ptrArray) {
 
     return elemCount;
 }
+
+
+NkPoint2D NK_CALL NkCalculateViewportOrigin(
+    _In_ NkViewportAlignment vpAlign,
+    _In_ NkSize2D vpExtents,
+    _In_ NkSize2D tileSize,
+    _In_ NkSize2D clExtents
+) {
+    /* Calculate size of viewport in pixel space. */
+    NkSize2D const vpExtPx = { vpExtents.m_width * tileSize.m_width, vpExtents.m_height * tileSize.m_height };
+
+    /* Calculate coordinates of upper-left corner of viewport, in client space. */
+    return (NkPoint2D){
+        vpAlign & NkVpAlign_Left ? 0 : (clExtents.m_width  - vpExtPx.m_width)  / (vpAlign & NkVpAlign_Right  ? 1 : 2),
+        vpAlign & NkVpAlign_Top  ? 0 : (clExtents.m_height - vpExtPx.m_height) / (vpAlign & NkVpAlign_Bottom ? 1 : 2)
+    };
+};
 
 
 #undef NK_NAMESPACE
