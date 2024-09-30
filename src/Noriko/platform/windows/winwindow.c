@@ -396,7 +396,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             .m_vpExtents    = wndSpecs->m_vpExtents,
             .m_dispTileSize = wndSpecs->m_dispTileSize,
             .m_vpAlignment  = wndSpecs->m_vpAlignment,
-            .m_clearCol     = NK_MAKE_RGB(255, 0, 0)
+            .m_clearCol     = NK_MAKE_RGB(0, 0, 0)
         }, (NkIBase **)&wndPtr->mp_rendererRef);
     }
 
