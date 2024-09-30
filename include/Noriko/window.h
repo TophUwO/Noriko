@@ -90,7 +90,7 @@ NK_NATIVE typedef enum NkViewportAlignment {
 
 /**
  */
-NK_NATIVE typedef struct NkWindowSpecification {
+NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkWindowSpecification {
          NkSize                 m_structSize;      /**< size of this structure, in bytes */
     enum NkRendererApi          m_rendererApi;     /**< API to use for rendering the window */
          NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */

@@ -141,7 +141,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In
 
 NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd) {
     if (gl_LayerStack.mp_layerStack == NULL)
-        return NkErr_NoOperation;
+        return NULL;
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     NkILayer *layerRef = NkVectorAt(gl_LayerStack.mp_layerStack, whereInd);

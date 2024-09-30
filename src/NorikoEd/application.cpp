@@ -25,7 +25,7 @@ namespace NkE {
         : QApplication(argc, argv), m_platInfo{ sizeof m_platInfo }
     {
         /* Initialize Noriko's integrated logging facility. */
-        NK_IGNORE_RETURN_VALUE(NkLogInitialize());
+        NK_IGNORE_RETURN_VALUE(NkLogStartup());
 
         /* Create main components. */
         m_mainWnd = std::make_unique<MainWindow>("NorikoEd indev");
@@ -37,7 +37,7 @@ namespace NkE {
 
     Application::~Application() {
         NkPRNGUninitialize();
-        NkLogUninitialize();
+        NkLogShutdown();
     }
 
 

@@ -23,6 +23,7 @@
 
 /* stdlib includes */
 #include <stdint.h>
+#include <time.h>
 
 
 /* Annotations for exporting symbols. */

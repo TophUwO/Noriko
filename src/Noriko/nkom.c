@@ -29,6 +29,8 @@
 
 /* Windows includes */
 #if (defined _WIN32)
+    #pragma warning (disable: 4668) /* macro not defined; replacing with '0' */
+
     #include <windows.h>
 #endif
 
@@ -209,11 +211,12 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
             initRef->VT->Release(initRef);
 
             *resPtr = NULL;
-            return errCode;
         }
 
         /* QueryInterface() did increment ref-count. */
         tmpResPtr->VT->Release(tmpResPtr);
+        if (errCode != NkErr_Ok)
+            return errCode;
     }
 
     /* Finally, query the interface that we will use to communicate with the object. */
@@ -233,6 +236,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
      * Decrement by one to return an object that has a reference count of 1 and as such
      * can be destroyed by a single call to 'Release()'.
      */
+#pragma warning (suppress: 6001) /* False alarm due to SAL not working properly with function pointers. */
     (*resPtr)->VT->Release(*resPtr);
     return errCode;
 }

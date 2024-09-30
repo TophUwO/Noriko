@@ -65,6 +65,7 @@
     #pragma warning (disable: 4710) /* function not inlined */
     #pragma warning (disable: 4711) /* function selected for inline expansion */
     #pragma warning (disable: 4115) /* named type definition in parentheses */
+    #pragma warning (disable: 4255) /* no function prototype; convert () to (void) */
     /*
      * Disable some warnings in deploy builds that are not substantial but may be
      * important when debugging.

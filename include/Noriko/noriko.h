@@ -48,7 +48,7 @@
  * \struct NkApplicationSpecification
  * \brief  represents global configuration options passed to the Noriko startup routine
  */
-NK_NATIVE typedef struct NkApplicationSpecification {
+NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkApplicationSpecification {
     NkSize                 m_structSize;      /**< size of this structure, in bytes */
     NkBoolean              m_enableDbgTools;  /**< whether or not to enable debugging tools */
     NkRendererApi          m_rendererApi;     /**< API to use for rendering */

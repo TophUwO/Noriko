@@ -24,24 +24,13 @@
 /* stdlib includes */
 #include <stdarg.h>
 #include <stdio.h>
-#include <time.h>
 
 /* Noriko includes */
 #include <include/Noriko/platform.h>
-#include <include/Noriko/alloc.h>
 #include <include/Noriko/log.h>
-#include <include/Noriko/timer.h>
 
 
 /** \cond INTERNAL */
-/**
- * \def   NK_LOG_PADDING(x)
- * \brief calculates the padding required for aligning log message severities based on a
- *        given log level
- * \param x string representation of log level
- */
-#define NK_LOG_PADDING(x) ((NkSize)(sizeof "FATAL" - sizeof x))
-
 /**
  * \brief NK_LOG_TSSIZE
  * \brief size of the message timestamp buffer, in bytes (incl. <tt>NUL</tt>-terminator)
@@ -53,71 +42,42 @@
  */
 #define NK_LOG_MSGSIZE    ((NkSize)(1 << 12))
 /**
- * \def   NK_LOG_NSINKS
- * \brief maximum number of sinks that can be registered at a time
+ * \def   NK_LOG_NDEV
+ * \brief maximum number of devices that can be registered at a time
  */
-#define NK_LOG_NSINKS     ((NkSize)(1 << 6))
+#define NK_LOG_NDEV       ((NkSize)(1 << 6))
 
 
 /**
- * \brief forward-declaration of the log level properties type for internal use 
- */
-NK_NATIVE typedef struct NkLogLevelProperties NkLogLevelProperties;
-
-/**
- * \struct __NkInt_LogSinkExtProps
- * \brief  represents the log sink properties enhanced with synchronization facilities
- */
-NK_NATIVE typedef struct __NkInt_LogSinkExtProps {
-    NkLogSinkProperties m_regProps; /**< public properties */
-
-    NK_DECL_LOCK(m_mtxLock);        /**< synchronization object for sink */
-} __NkInt_LogSinkExtProps;
-
-/**
- * \struct __NkInt_LogExtContext
+ * \struct __NkInt_LogContext
  * \brief  represents the internal log context
  */
-NK_NATIVE typedef struct __NkInt_LogExtContext {
-    NK_DECL_LOCK(m_mtxLock);
+NK_NATIVE typedef struct __NkInt_LogContext {
+    NK_DECL_LOCK(m_mtxLock);               /**< synchronization primitive */
 
-    NkSize                   m_nOfSinks;                 /**< current number of registered sinks */
-    __NkInt_LogSinkExtProps  m_sinkArray[NK_LOG_NSINKS]; /**< sink array */
-    NkLogContext             m_logCxt;                   /**< global logger settings */
-} __NkInt_LogExtContext;
-
+    NkSize        m_nOfDev;                /**< current number of registered devices */
+    NkLogLevel    m_glMinLevel;            /**< global minimum log level */
+    NkLogLevel    m_glMaxLevel;            /**< global maximum log level */
+    NkStringView  m_defTsFmt;              /**< default ts format string */
+    NkILogDevice *m_devArray[NK_LOG_NDEV]; /**< device array */
+} __NkInt_LogContext;
 
 /**
  * \brief represents the global log context instance
- * 
- * This instance is not constant since it may be altered at startup by command-line args
- * and such. However, after initialization, the data in \c m_logCxt is not touched, so it
- * may be accessed by multiple threads simultaneously without problems.
  */
-NK_INTERNAL __NkInt_LogExtContext gl_LogContext = {
-    .m_nOfSinks = 0,
-    .m_logCxt = {
-        .m_structSize = sizeof gl_LogContext.m_logCxt,
-        .m_maxMsgSize = NK_LOG_MSGSIZE,
-        .m_glMinLevel = NkLogLvl_None,
-        .m_glMaxLevel = NkLogLvl_Critical,
-        .mp_defFmtStr = NK_MAKE_STRING_VIEW_PTR("\033[97m"),
-        .mp_rstFmtStr = NK_MAKE_STRING_VIEW_PTR("\033[0m"),
-        .mp_tsFmtStr  = NK_MAKE_STRING_VIEW_PTR("%m-%d-%y %H:%M:%S"),
-        .m_maxSinkCnt = NK_LOG_NSINKS,
-
-        .m_lvlProps = { { 0, NK_MAKE_RGBA(0, 0, 0, 0), NULL, NULL },
-            { NK_LOG_PADDING("TRACE"), NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("TRACE"), NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
-            { NK_LOG_PADDING("DEBUG"), NK_MAKE_RGB(120, 120, 120), NK_MAKE_STRING_VIEW_PTR("DEBUG"), NK_MAKE_STRING_VIEW_PTR("\033[90;40m") },
-            { NK_LOG_PADDING("INFO"),  NK_MAKE_RGB(0, 255, 0),     NK_MAKE_STRING_VIEW_PTR("INFO"),  NK_MAKE_STRING_VIEW_PTR("\033[92;40m") },
-            { NK_LOG_PADDING("WARN"),  NK_MAKE_RGB(255, 255, 0),   NK_MAKE_STRING_VIEW_PTR("WARN"),  NK_MAKE_STRING_VIEW_PTR("\033[33;40m") },
-            { NK_LOG_PADDING("ERROR"), NK_MAKE_RGB(255, 0, 0),     NK_MAKE_STRING_VIEW_PTR("ERROR"), NK_MAKE_STRING_VIEW_PTR("\033[91;40m") },
-            { NK_LOG_PADDING("FATAL"), NK_MAKE_RGB(150, 0, 0),     NK_MAKE_STRING_VIEW_PTR("FATAL"), NK_MAKE_STRING_VIEW_PTR("\033[97;41m") }
-        }
-    }
+NK_INTERNAL __NkInt_LogContext gl_LogContext = {
+    .m_nOfDev     = 0,
+    .m_glMinLevel = NkLogLvl_None,
+    .m_glMaxLevel = NkLogLvl_Critical,
+    .m_defTsFmt   = NK_MAKE_STRING_VIEW("%m-%d-%y %H:%M:%S"),
+    .m_devArray   = { NULL }
 };
-/* Make sure that the level table aligns with the numeric log level IDs. */
-static_assert(NK_ARRAYSIZE(gl_LogContext.m_logCxt.m_lvlProps) == __NkLogLvl_Count__, "Log level table size mismatch!");
+
+/* Define IID and CLSID of the default NkILogDevice interface. */
+// { 3B93159F-704B-4B51-A19C-31D505D2729A }
+NKOM_DEFINE_IID(NkILogDevice, { 0x3b93159f, 0x704b, 0x4b51, 0xa19c31d505d2729a });
+// { 00000000-0000-0000-0000-000000000000 }
+NKOM_DEFINE_CLSID(NkILogDevice, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
 
 
 /*
@@ -127,13 +87,100 @@ static_assert(NK_ARRAYSIZE(gl_LogContext.m_logCxt.m_lvlProps) == __NkLogLvl_Coun
  * This logger is not used in deploy builds.
  */
 #pragma region Debug Console Logger
-/** \cond */
-NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConLogOnInit(
-    _In_    NkLogSinkHandle sinkHandle,
-    _Inout_ NkLogSinkProperties *sinkPropsPtr
+/**
+ * \def   NK_LOG_PADDING(x)
+ * \brief calculates the padding required for aligning log message severities based on a
+ *        given log level
+ * \param x string representation of log level
+ */
+ #define NK_LOG_PADDING(x) ((NkSize)(sizeof "FATAL" - sizeof x))
+
+
+/**
+ * \struct __NkInt_LogLevelStatic
+ * \brief  contains static per-level information
+ */
+NK_NATIVE typedef struct __NkInt_LogLevelStatic {
+    NkStringView m_lvlRep;   /**< textual representation of the level */
+    NkStringView m_vt100Seq; /**< VT-100 formatting sequence */
+    NkSize       m_padding;  /**< padding for alignment of log level string reps */
+} __NkInt_LogLevelStatic;
+
+/**
+ * \brief actual instance of the static level infos 
+ */
+NK_INTERNAL __NkInt_LogLevelStatic const gl_LogLevelStaticInfo[] = {
+    { NK_MAKE_STRING_VIEW(""),      NK_MAKE_STRING_VIEW("\033[97m"),    0                       },
+
+    { NK_MAKE_STRING_VIEW("TRACE"), NK_MAKE_STRING_VIEW("\033[90;40m"), NK_LOG_PADDING("TRACE") },
+    { NK_MAKE_STRING_VIEW("DEBUG"), NK_MAKE_STRING_VIEW("\033[90;40m"), NK_LOG_PADDING("DEBUG") },
+    { NK_MAKE_STRING_VIEW("INFO"),  NK_MAKE_STRING_VIEW("\033[92;40m"), NK_LOG_PADDING("INFO")  },
+    { NK_MAKE_STRING_VIEW("WARN"),  NK_MAKE_STRING_VIEW("\033[33;40m"), NK_LOG_PADDING("WARN")  },
+    { NK_MAKE_STRING_VIEW("ERROR"), NK_MAKE_STRING_VIEW("\033[91;40m"), NK_LOG_PADDING("ERROR") },
+    { NK_MAKE_STRING_VIEW("FATAL"), NK_MAKE_STRING_VIEW("\033[97;41m"), NK_LOG_PADDING("FATAL") }
+};
+/* Validate integrity. */
+static_assert(NK_ARRAYSIZE(gl_LogLevelStaticInfo) == __NkLogLvl_Count__, "");
+
+/**
+ * \brief VT-100 reset format directive
+ */
+NK_INTERNAL NkStringView const gl_ResetFmtCmd = NK_MAKE_STRING_VIEW("\033[0m");
+/**
+ * \brief string containing only spaces to use for padding
+ */
+NK_INTERNAL NkStringView const gl_PaddingTempl = NK_MAKE_STRING_VIEW("                ");
+
+
+/**
+ */
+NK_INTERNAL NkOMRefCount NK_CALL __NkInt_ConoutDev_AddRef(_Inout_ NkILogDevice *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+
+    /* Stub because static object. */
+    return 1;
+}
+
+/**
+ */
+NK_INTERNAL NkOMRefCount NK_CALL __NkInt_ConoutDev_Release(_Inout_ NkILogDevice *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+
+    /* Same thing as in 'AddRef()'. */
+    return 1;
+}
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_ConoutDev_QueryInterface(
+    _Inout_  NkILogDevice *self,
+    _In_     NkUuid const *iId,
+    _Outptr_ NkVoid **resPtr
 ) {
-    NK_UNREFERENCED_PARAMETER(sinkHandle);
-    NK_UNREFERENCED_PARAMETER(sinkPropsPtr);
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(iId != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutptrParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+
+    if (NkUuidIsEqual(iId, NKOM_IIDOF(NkIBase)) || NkUuidIsEqual(iId, NKOM_IIDOF(NkILogDevice))) {
+        /* Interface is implemented. */
+        *resPtr = (NkVoid *)self;
+
+        return NkErr_Ok;
+    }
+
+    /* Interface is not implemented. */
+    *resPtr = NULL;
+    return NkErr_InterfaceNotImpl;
+}
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_ConoutDev_OnInstall(_Inout_ NkILogDevice *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
 
     /* Initialize console window. */
 #if (defined NK_TARGET_WINDOWS)
@@ -158,20 +205,17 @@ NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConLogOnInit(
     return NkErr_Ok;
 }
 
-NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConOnUninit(
-    _In_    NkLogSinkHandle sinkHandle,
-    _Inout_ NkLogSinkProperties *sinkPropsPtr
-) {
-    NK_UNREFERENCED_PARAMETER(sinkHandle);
-    NK_UNREFERENCED_PARAMETER(sinkPropsPtr);
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_ConoutDev_OnUninstall(_Inout_ NkILogDevice *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
 
     /* Destroy console window. */
 #if (defined NK_TARGET_WINDOWS)
     /*
-     * Reset format right before exiting so that subsequent debug messages, etc.
-     * generated by the debugger are not looking funny.
-     */
-    fputs(gl_LogContext.m_logCxt.mp_rstFmtStr->mp_dataPtr, stdout);
+    * Reset format right before exiting so that subsequent debug messages, etc.
+    * generated by the debugger are not looking funny.
+    */
+    fputs(gl_ResetFmtCmd.mp_dataPtr, stdout);
 
     FreeConsole();
 #endif
@@ -179,38 +223,58 @@ NK_INTERNAL NkErrorCode NK_CALL __NkInt_ConOnUninit(
     return NkErr_Ok;
 }
 
-NK_INTERNAL NkVoid NK_CALL __NkInt_ConOnLog(
-    _In_     NkLogSinkHandle sinkHandle,
-    _In_     NkLogLevel lvlId,
-    _In_z_   char const *tsPtr,
-    _In_z_   char const *fmtMsgPtr,
-    _In_opt_ NkLogFrame const *framePtr,
-    _Inout_  NkLogSinkProperties *sinkPropsPtr
+NK_INTERNAL NkVoid NK_CALL __NkInt_ConoutDev_OnMessage(
+    _Inout_      NkILogDevice *self,
+    _In_         NkLogLevel lvlId,
+    _In_         NkLogMessageContext const *msgCxtPtr,
+    _In_         NkStringView tsStr,
+    _Format_str_ NkStringView fmtMsgStr
 ) {
-    NK_UNREFERENCED_PARAMETER(sinkHandle);
-    NK_UNREFERENCED_PARAMETER(framePtr);
-    NK_UNREFERENCED_PARAMETER(sinkPropsPtr);
-    
-    /* Retrieve log level output properties. */
-    NkLogLevelProperties *logLvlPropsPtr = (NkLogLevelProperties *)&gl_LogContext.m_logCxt.m_lvlProps[lvlId];
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(0 <= lvlId && lvlId < __NkLogLvl_Count__, NkErr_InParameter);
+    NK_ASSERT(msgCxtPtr != NULL, NkErr_InParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+    NK_UNREFERENCED_PARAMETER(msgCxtPtr);
+
+    /* Retrieve pointer to the static info for the current log level. */
+    __NkInt_LogLevelStatic const *lvlInfo = &gl_LogLevelStaticInfo[lvlId];
 
     /* Compose log message from the "compiled" components. */
     if (lvlId ^ NkLogLvl_None) {
         /* If the logging level is "none", do not print the level or timestamp information. */
         fputs("[", stdout);
-        fputs(tsPtr, stdout);
+        fputs(tsStr.mp_dataPtr, stdout);
         fputs("] <", stdout);
-        fputs(logLvlPropsPtr->mp_lvlFmtStr->mp_dataPtr, stdout);
-        fputs(logLvlPropsPtr->mp_lvlStrRep->mp_dataPtr, stdout);
-        fputs(gl_LogContext.m_logCxt.mp_rstFmtStr->mp_dataPtr, stdout);
+        fputs(lvlInfo->m_vt100Seq.mp_dataPtr, stdout);
+        fputs(lvlInfo->m_lvlRep.mp_dataPtr, stdout);
+        fputs(gl_ResetFmtCmd.mp_dataPtr, stdout);
         fputs(">", stdout);
-        for (NkInt32 i = 0; i <= logLvlPropsPtr->m_nSpace; i++)
-            fputc(' ', stdout);
+        fprintf(stdout, "%.*s", (int)lvlInfo->m_padding + 1, gl_PaddingTempl.mp_dataPtr);
     }
-    fputs(fmtMsgPtr, stdout);
+    fputs(fmtMsgStr.mp_dataPtr, stdout);
     fputc('\n', stdout);
 }
-/** \endcond */
+
+
+/**
+ * \brief define the internal debug device
+ * 
+ * \par Remarks
+ *   Just like with the internal definition of the \c gl_RendererFactory object in file
+ *   <tt>renderer.c</tt>, internal state of the object is not needed, so we can define
+ *   our object to just be the VTable which by itself can be static. This is not going to
+ *   cause us any issues.
+ */
+NK_INTERNAL NkILogDevice const gl_ConoutDevice = {
+    .VT = &(struct __NkILogDevice_VTable__){
+        .QueryInterface = &__NkInt_ConoutDev_QueryInterface,
+        .AddRef         = &__NkInt_ConoutDev_AddRef,
+        .Release        = &__NkInt_ConoutDev_Release,
+        .OnInstall      = &__NkInt_ConoutDev_OnInstall,
+        .OnUninstall    = &__NkInt_ConoutDev_OnUninstall,
+        .OnMessage      = &__NkInt_ConoutDev_OnMessage
+    }
+};
 #pragma endregion
 
 
@@ -232,139 +296,113 @@ NK_INTERNAL NkVoid __NkInt_LogFormatMessageAndTimestamp(
     _Out_writes_(NK_LOG_MSGSIZE) char *msgPtr,
     _Out_writes_(NK_LOG_TSSIZE)  char *tsPtr,
     _Out_                        NkSize *msgSzPtr,
-    _Out_                        NkSize *tsSzPtr
+    _Out_                        NkSize *tsSzPtr,
+    _Out_                        NkNativeTime *currTimePtr
 ) {
     /* Format string. */
     *msgSzPtr = (NkSize)vsnprintf(msgPtr, NK_LOG_MSGSIZE, fmtStr, vlArgs);
 
     /* Format timestamp. */
     NkInt64 currLTime;
-    struct tm currTime;
-    /* Get current time. */
     _time64(&currLTime);
-    localtime_s(&currTime, &currLTime);
+    localtime_s(currTimePtr, &currLTime);
     *tsSzPtr = strftime(
         tsPtr,
         NK_LOG_TSSIZE,
-        gl_LogContext.m_logCxt.mp_tsFmtStr->mp_dataPtr,
-        &currTime
+        gl_LogContext.m_defTsFmt.mp_dataPtr,
+        currTimePtr
     );
 }
 
 /**
- * \brief  checks whether the given log level is enabled for a sink
- * \param  [in] sProps pointer to the properties for the sink
- * \param  [in] lvlId numeric level ID
- * \return non-zero if the log level is enabled for the sink, zero if it is not
  */
-NK_INTERNAL NkBoolean __NkInt_LogIsLevelEnabledForSink(
-    _In_ __NkInt_LogSinkExtProps const *sProps,
-    _In_ NkLogLevel lvlId
-) {
-    return NK_INRANGE_INCL(lvlId, sProps->m_regProps.m_minLevel, sProps->m_regProps.m_maxLevel);
+NK_INTERNAL NkSize NK_CALL __NkInt_LogFindDevice(_In_ NkILogDevice *devRef) {
+    NK_ASSERT(devRef != NULL, NkErr_InParameter);
+
+    for (NkSize i = 0; i < NK_ARRAYSIZE(gl_LogContext.m_devArray); i++)
+        if (gl_LogContext.m_devArray[i] == devRef)
+            return i;
+
+    return SIZE_MAX;
 }
 /** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkLogInitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkLogStartup(NkVoid) {
     NK_INITLOCK(gl_LogContext.m_mtxLock);
 
+    NkErrorCode errCode = NkErr_Ok;
+
 #if (!defined NK_CONFIG_DEPLOY)
-    /* Register built-in log sinks. */
-    NkLogSinkProperties dbgconLogProps = {
-        .m_structSize      = sizeof dbgconLogProps,
-        .m_sinkIdent       = NK_MAKE_STRING_VIEW("nk_dbgcon"),
-        .m_minLevel        = NkLogLvl_Trace,
-        .m_maxLevel        = NkLogLvl_Critical,
-        .mp_extraCxt       = NULL,
-        .mp_fnOnSinkInit   = (NkLogSinkInitFn)&__NkInt_ConLogOnInit,
-        .mp_fnOnSinkUninit = (NkLogSinkUninitFn)&__NkInt_ConOnUninit,
-        .mp_fnOnSinkWrite  = (NkLogSinkWriteFn)&__NkInt_ConOnLog
-    };
-    NkLogSinkHandle dummyHandle;
-    NkErrorCode errorCode = NkLogRegisterSink(&dbgconLogProps, &dummyHandle);
-    if (errorCode != NkErr_Ok)
-        return errorCode;
+    /* Register built-in debug logger. */
+    errCode = NkLogInstallDevice((NkILogDevice *)&gl_ConoutDevice);
 #endif
 
     NK_LOG_INFO("startup: logging");
-    return NkErr_Ok;
+    return errCode;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLogUninitialize(NkVoid) {
+_Return_ok_ NkErrorCode NK_CALL NkLogShutdown(NkVoid) {
     NK_LOG_INFO("shutdown: logging");
 
     /*
-     * Traverse the entire sink array and run sink-specific uninitialization on all of
-     * them.
+     * Traverse the device array, run their 'NkILogDevice::OnUninstall()' method and
+     * release them. 
      */
-    for (NkSize i = 0, j = 0; i < gl_LogContext.m_logCxt.m_maxSinkCnt && j < gl_LogContext.m_nOfSinks; i++) {
-        __NkInt_LogSinkExtProps *sinkProps = (__NkInt_LogSinkExtProps *)&gl_LogContext.m_sinkArray[i];
-        if (sinkProps->m_regProps.m_structSize == 0 || sinkProps->m_regProps.mp_fnOnSinkUninit == NULL)
+    for (NkSize i = 0, j = 0; i < NK_ARRAYSIZE(gl_LogContext.m_devArray) && j < gl_LogContext.m_nOfDev; i++) {
+        NkILogDevice *currDev = gl_LogContext.m_devArray[i];
+        if (currDev == NULL)
             continue;
 
-        /* Call 'onUninit' handler. */
-        (*sinkProps->m_regProps.mp_fnOnSinkUninit)((NkLogSinkHandle)i, sinkProps->m_regProps.mp_extraCxt);
+        /* Call 'NkILogDevice::OnUninstall()' method. */
+        NK_IGNORE_RETURN_VALUE(currDev->VT->OnUninstall(currDev));
+        /*
+         * Release device. This balances the 'NkILogDevice::AddRef()'-call we made in
+         * 'NkLogInstallDevice()'.
+         */
+        currDev->VT->Release(currDev);
+        ++j;
     }
 
     NK_DESTROYLOCK(gl_LogContext.m_mtxLock);
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkLogQueryContext(_Out_ NkLogContext *cxtStructPtr) {
-    /* Copy current state into result pointer. */
-    memcpy(
-        (NkVoid *)cxtStructPtr,
-        (NkVoid const *)&gl_LogContext.m_logCxt,
-        NK_MIN(cxtStructPtr->m_structSize, gl_LogContext.m_logCxt.m_structSize)
-    );
-}
+_Return_ok_ NkErrorCode NK_CALL NkLogInstallDevice(_Inout_ NkILogDevice *devRef) {
+    NK_ASSERT(devRef != NULL, NkErr_InOutParameter);
 
-_Return_ok_ NkErrorCode NK_CALL NkLogRegisterSink(
-    _Inout_ NkLogSinkProperties *sinkPropsPtr,
-    _Out_   NkLogSinkHandle *sinkHandlePtr
-) {
     NkErrorCode errorCode = NkErr_Ok;
 
     /* Check if we can even add a sink. If we cannot, return invalid sink ID. */
     NK_LOCK(gl_LogContext.m_mtxLock);
-    if (gl_LogContext.m_nOfSinks >= gl_LogContext.m_logCxt.m_maxSinkCnt) {
-        *sinkHandlePtr = -1;
-
+    if (gl_LogContext.m_nOfDev >= NK_ARRAYSIZE(gl_LogContext.m_devArray)) {
         errorCode = NkErr_CapLimitExceeded;
+
         goto lbl_CLEANUP;
     }
 
-    /*
-     * Insert the sink into the first free slot. Free slots are marked with their
-     * m_structSize member being set to 0.
-     */
-    for (NkSize i = 0; i < gl_LogContext.m_logCxt.m_maxSinkCnt; i++) {
-        /* As soon as we reach an empty slot, attempt to insert sink in there. */
-        if (gl_LogContext.m_sinkArray[i].m_regProps.m_structSize == 0) {
-            /* Call sink-specific 'onInit()' slot if possible. */
-            if (sinkPropsPtr->mp_fnOnSinkInit != NULL) {
-                NK_UNLOCK(gl_LogContext.m_mtxLock);
-                errorCode = (*sinkPropsPtr->mp_fnOnSinkInit)((NkLogSinkHandle)i, sinkPropsPtr);
-                NK_LOCK(gl_LogContext.m_mtxLock);
+    /* Get pointer to device array. */
+    NkILogDevice **devArr = gl_LogContext.m_devArray;
+    /* Insert the sink into the first free slot. */
+    for (NkSize i = 0; i < NK_ARRAYSIZE(gl_LogContext.m_devArray); i++) {
+        /*
+         * As soon as we reach an empty slot, we run the 'NkILogDevice::OnInstall' method
+         * which also lets us ask if we can actually install the device.
+         */
+        if (devArr[i] == NULL) {
+            NK_UNLOCK(gl_LogContext.m_mtxLock);
+            errorCode = devRef->VT->OnInstall(devRef);
+            NK_LOCK(gl_LogContext.m_mtxLock);
+            if (errorCode != NkErr_Ok)
+                goto lbl_CLEANUP;
 
-                if (errorCode != NkErr_Ok)
-                    goto lbl_CLEANUP;
-            }
-
-            /* Copy sink properties. */
-            memcpy(&gl_LogContext.m_sinkArray[i], sinkPropsPtr, sizeof *sinkPropsPtr);
-            /* Make sure the size field is set correctly. */
-            gl_LogContext.m_sinkArray[i].m_regProps.m_structSize = sizeof *sinkPropsPtr;
-            /* Update registered sink count. */
-            ++gl_LogContext.m_nOfSinks;
-
-            /* Return slot ID for use as sink handle. */
-            *sinkHandlePtr = (NkLogSinkHandle)i;
+            /* Install the new device. */
+            devArr[i] = devRef;
+            devRef->VT->AddRef(devRef);
+            ++gl_LogContext.m_nOfDev;
             goto lbl_CLEANUP;
         }
     }
-    *sinkHandlePtr = -1;
 
 lbl_CLEANUP:
     NK_UNLOCK(gl_LogContext.m_mtxLock);
@@ -372,53 +410,51 @@ lbl_CLEANUP:
     return errorCode;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLogUnregisterSink(_Inout_ NkLogSinkHandle *sinkHandlePtr) {
-    NkErrorCode errorCode = NkErr_Ok;
-
-    /* If the sink ID is invalid, do nothing. */
+_Return_ok_ NkErrorCode NK_CALL NkLogUninstallDevice(_Inout_ NkILogDevice *devRef) {
+    NK_ASSERT(devRef != NULL, NkErr_InOutParameter);
     NK_LOCK(gl_LogContext.m_mtxLock);
-    if (NK_INRANGE_INCL(*sinkHandlePtr, 0, (NkInt32)gl_LogContext.m_logCxt.m_maxSinkCnt - 1) == NK_FALSE) {
-        errorCode = NkErr_InOutParameter;
 
-        goto lbl_CLEANUP;
-    }
+    /* Check if the device is installed. */
+    NkSize devIndex;
+    if ((devIndex = __NkInt_LogFindDevice(devRef)) == SIZE_MAX)
+        return NkErr_ItemNotFound;
 
-    /* Get pointer to sink slot in question. */
-    __NkInt_LogSinkExtProps *sProps = &gl_LogContext.m_sinkArray[*sinkHandlePtr];
+    /* Call 'NkILogDevice::OnUninstall()' method. */
+    NK_UNLOCK(gl_LogContext.m_mtxLock);
+    NK_IGNORE_RETURN_VALUE(devRef->VT->OnUninstall(devRef));
+    NK_IGNORE_RETURN_VALUE(devRef->VT->Release(devRef));
+    NK_LOCK(gl_LogContext.m_mtxLock);
 
-    /* Call sink-specific 'onUninit()' handler is possible. */
-    if (sProps->m_regProps.mp_fnOnSinkUninit != NULL) {
-        NK_UNLOCK(gl_LogContext.m_mtxLock);
-        errorCode = (*sProps->m_regProps.mp_fnOnSinkUninit)(*sinkHandlePtr, &sProps->m_regProps);
-        NK_LOCK(gl_LogContext.m_mtxLock);
+    /* Erase device from array. */
+    gl_LogContext.m_devArray[devIndex] = NULL;
+    --gl_LogContext.m_nOfDev;
 
-        if (errorCode != NkErr_Ok)
-            goto lbl_CLEANUP;
-    }
-    /* Remove the sink from the table. */
-    sProps->m_regProps.m_structSize = 0;
-    /*
-     * Extra service: Set handle to -1 so that nobody will use the sink handle again for
-     * shenanigans if they fail to set it to something invalid on their own.
-     */
-    *sinkHandlePtr = -1;
-
-lbl_CLEANUP:
-    return errorCode;
+    NK_UNLOCK(gl_LogContext.m_mtxLock);
+    return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkLogWrite(
-    _In_opt_     NkLogFrame const *framePtr,
+NkVoid NK_CALL NkLogMessage(
+    _Inout_opt_  NkLogMessageContext *msgCxtPtr,
     _In_         NkLogLevel lvlId,
     _Format_str_ char const *fmtStr,
     ...
 ) {
+    NK_ASSERT(0 <= lvlId && lvlId < __NkLogLvl_Count__, NkErr_InParameter);
+    NK_ASSERT(fmtStr != NULL, NkErr_InParameter);
+
+    /*
+     * If we got no message context provided, redirect our context modification efforts
+     * to our statically-allocated context.
+     */
+    NkLogMessageContext msgContext = { .m_structSize = sizeof msgContext };
+    msgCxtPtr = msgCxtPtr != NULL ? msgCxtPtr : &msgContext;
+
     /* Format message and timestamp (timestamp only if needed). */
     char msgBuf[NK_LOG_MSGSIZE], tsBuf[NK_LOG_TSSIZE];
     NkSize tsSize, msgSize;
     va_list vlArgs;
     va_start(vlArgs, fmtStr);
-    __NkInt_LogFormatMessageAndTimestamp(fmtStr, vlArgs, msgBuf, tsBuf, &msgSize, &tsSize);
+    __NkInt_LogFormatMessageAndTimestamp(fmtStr, vlArgs, msgBuf, tsBuf, &msgSize, &tsSize, &msgCxtPtr->m_timestamp);
     va_end(vlArgs);
 
     NK_LOCK(gl_LogContext.m_mtxLock);
@@ -426,12 +462,8 @@ NkVoid NK_CALL NkLogWrite(
      * If the log level is globally disabled or there are currently no sinks registered,
      * do nothing.
      */
-    NkBoolean const isEnabled = NK_INRANGE_INCL(
-        lvlId,
-        gl_LogContext.m_logCxt.m_glMinLevel,
-        gl_LogContext.m_logCxt.m_glMaxLevel
-    );
-    if (!isEnabled || gl_LogContext.m_nOfSinks == 0)
+    NkBoolean const isEnabled = NK_INRANGE_INCL(lvlId, gl_LogContext.m_glMinLevel, gl_LogContext.m_glMaxLevel);
+    if (!isEnabled || gl_LogContext.m_nOfDev == 0)
         goto lbl_CLEANUP;
 
     /*
@@ -439,28 +471,22 @@ NkVoid NK_CALL NkLogWrite(
      * reach the end of the sink array or we have processed all registered sinks,
      * whatever comes first.
      */
-    for (NkSize i = 0, j = 0; i < NK_ARRAYSIZE(gl_LogContext.m_sinkArray) && j < gl_LogContext.m_nOfSinks; i++) {
-        /*
-         * Get pointer to sink slot and check if the slot is used. If not, ignore. Also
-         * ignore if the current sink is set to ignore the log level of the current
-         * message.
-         */
-        __NkInt_LogSinkExtProps *sinkProps = (__NkInt_LogSinkExtProps *)&gl_LogContext.m_sinkArray[i];
-        if (sinkProps->m_regProps.m_structSize == 0 || __NkInt_LogIsLevelEnabledForSink(sinkProps, lvlId) == NK_FALSE)
+    for (NkSize i = 0, j = 0; i < NK_ARRAYSIZE(gl_LogContext.m_devArray) && j < gl_LogContext.m_nOfDev; i++) {
+        /* Get pointer to device. If the slot is empty, ignore. */
+        NkILogDevice *currDev = gl_LogContext.m_devArray[i];
+        if (currDev == NULL)
             continue;
 
-        /* Call the sink's 'onLog' handler. */
+        /* Call the device's 'NkILogDevice::OnMessage()' method. */
         NK_UNLOCK(gl_LogContext.m_mtxLock);
-        (*sinkProps->m_regProps.mp_fnOnSinkWrite)(
-            (NkLogSinkHandle)i,
+        currDev->VT->OnMessage(
+            currDev,
             lvlId,
-            tsBuf,
-            msgBuf,
-            framePtr,
-            &sinkProps->m_regProps
+            msgCxtPtr,
+            (NkStringView){ tsBuf, msgSize  },
+            (NkStringView){ msgBuf, msgSize }
         );
         NK_LOCK(gl_LogContext.m_mtxLock);
-
         ++j;
     }
 

@@ -59,7 +59,7 @@ NK_NATIVE typedef struct __NkInt_ComponentInitInfo {
  */
 NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("allocators"),                 &NkAllocInitialize,   &NkAllocUninitialize  },
-    { NK_MAKE_STRING_VIEW("logging"),                    &NkLogInitialize,     &NkLogUninitialize    },
+    { NK_MAKE_STRING_VIEW("logging"),                    &NkLogStartup,        &NkLogShutdown        },
     { NK_MAKE_STRING_VIEW("timing devices"),             &NkTimerInitialize,   &NkTimerUninitialize  },
     { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,    &NkPRNGUninitialize   },
     { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,        &NkEnvShutdown        },

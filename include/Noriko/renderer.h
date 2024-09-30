@@ -51,7 +51,7 @@ NK_NATIVE typedef enum NkRendererApi {
  * \struct NkRendererSpecification
  * \brief  represents the configuration data used when configuring
  */
-NK_NATIVE typedef struct NkRendererSpecification {
+NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkRendererSpecification {
     NkSize               m_structSize;   /**< size of this structure, in bytes */
     NkIWindow           *mp_wndRef;      /**< reference to the parent window */
     NkBoolean            m_isVSync;      /**< whether VSync is enabled */
