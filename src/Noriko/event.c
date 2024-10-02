@@ -60,7 +60,8 @@ NK_INTERNAL __NkInt_EventTypeInfo const gl_c_EvTypeTbl[] = {
     /* technical events */
     { NkEv_None,                NkEvCat_None,                     0,                       NK_FALSE },
 
-    /* window events */                                           
+    /* window events */
+    { NkEv_WindowOpened,        NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowClosed,        NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowGotFocus,      NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
     { NkEv_WindowLostFocus,     NkEvCat_Window,                   sizeof(NkWindowEvent),   NK_TRUE  },
@@ -141,6 +142,8 @@ NkStringView const *NK_CALL NkEventQueryTypeString(_In_ NkEventType evType) {
         /* technical events */
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_None)),            
 
+        /* window events */
+        NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowOpened)),
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowClosed)),    
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowGotFocus)),  
         NK_MAKE_STRING_VIEW(NK_ESC(NkEv_WindowLostFocus)),

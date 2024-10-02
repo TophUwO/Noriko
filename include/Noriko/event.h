@@ -44,7 +44,8 @@ NK_NATIVE typedef enum NkEventType {
     NkEv_None = 0,            /**< unknown/default/invalid event type */
 
     /* window events */
-    NkEv_WindowClosed,        /**< when the window is closed */
+    NkEv_WindowOpened,        /**< when a window is opened (= created) */
+    NkEv_WindowClosed,        /**< when the window is closed (= destroyed) */
     NkEv_WindowGotFocus,      /**< when the window got focus */
     NkEv_WindowLostFocus,     /**< when the window lost focus */
     NkEv_WindowResized,       /**< when the window size got changed */

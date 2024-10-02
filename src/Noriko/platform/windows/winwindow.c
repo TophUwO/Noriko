@@ -380,15 +380,9 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
         /* Set title bar to dark mode if possible. */
         DwmSetWindowAttribute(wndPtr->mp_nativeHandle, DWMWA_USE_IMMERSIVE_DARK_MODE, &(BOOL){ TRUE }, sizeof(BOOL));
 
-        /* Set properties. */
-        NkStringViewCopy(&wndSpecs->m_wndIdent, &wndPtr->m_wndIdent);
-        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
-        wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
-        self->VT->SetWindowMode(self, wndSpecs->m_initialWndMode);
-
         /* Create a renderer for the window. */
         NkUuid const *implCLSID = NkRendererQueryCLSIDFromApi(wndSpecs->m_rendererApi);
-        return NkOMCreateInstance(implCLSID, NULL, NKOM_IIDOF(NkIRenderer), &(NkRendererSpecification){
+        NkErrorCode errCode = NkOMCreateInstance(implCLSID, NULL, NKOM_IIDOF(NkIRenderer), &(NkRendererSpecification){
             .m_structSize   = sizeof(NkRendererSpecification),
             .mp_wndRef      = self,
             .m_isVSync      = wndSpecs->m_isVSync,
@@ -398,6 +392,22 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             .m_vpAlignment  = wndSpecs->m_vpAlignment,
             .m_clearCol     = NK_MAKE_RGB(0, 0, 0)
         }, (NkIBase **)&wndPtr->mp_rendererRef);
+        if (errCode != NkErr_Ok) {
+            /** \todo change to release() */
+            DestroyWindow(wndPtr->mp_nativeHandle);
+
+            return errCode;
+        }
+
+        /* Set properties. */
+        NkStringViewCopy(&wndSpecs->m_wndIdent, &wndPtr->m_wndIdent);
+        wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
+        wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
+
+        /* Send initial events. */
+        NK_IGNORE_RETURN_VALUE(NkEventDispatch(NkEv_WindowOpened, &(NkWindowEvent){ .mp_wndRef = self }));
+        self->VT->SetWindowMode(self, wndSpecs->m_initialWndMode);
+        return NkErr_Ok;
     }
 
     /* Attaching to existing windows is currently not implemented. */
@@ -408,6 +418,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
 /**
  */
 NK_INTERNAL NkVoid NK_CALL __NkInt_WindowsWindow_OnUpdate(_Inout_ NkIWindow *self, _In_ NkFloat deltaTime) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
     /* Stub. */
     NK_UNREFERENCED_PARAMETER(self);
     NK_UNREFERENCED_PARAMETER(deltaTime);
