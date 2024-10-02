@@ -154,5 +154,11 @@ NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr,
  *         available on the current platform
  */
 NK_NATIVE NK_API NkUint64 NK_CALL NkGetCurrentTime(NkVoid);
+/**
+ * \brief  returns the timing device's frequency, that is, the number of ticks per second
+ *         elapsed
+ * \return timer frequency, in ticks per second, or \c 0 of this value is unavailable
+ */
+NK_NATIVE NK_API NkUint64 NK_CALL NkGetTimerFrequency(NkVoid);
 
 

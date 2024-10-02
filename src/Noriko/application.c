@@ -159,12 +159,28 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid) {
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
+    /** \cond INTERNAL */
+    /**
+     * \brief fixed update rate of the game's physics, animation, etc.; currently 100 Hz
+     * \note  This is subject to change in the future.
+     */
+    NkFloat ticksPerUpdate = 0.01f * NkGetTimerFrequency();
+    /** \endcond */
+
 #if (defined NK_TARGET_WINDOWS)
-    NkErrorCode errCode = NkErr_Ok;
-    MSG currMsg;
-    
+    NkErrorCode errCode  = NkErr_Ok;
+    MSG         currMsg  = { 0 };
+    NkUint64    prevTime = NkGetCurrentTime();
+    NkUint64    currLag  = 0;
+
     for (;;) {
-        /* First, dispatch windows messages. */
+        /* First, calculate timestep. */
+        NkUint64 currTime    = NkGetCurrentTime();
+        NkUint64 elapsedTime = currTime - prevTime;
+        prevTime = currTime;
+        currLag += elapsedTime;
+
+        /* Then, dispatch windows messages. */
         while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
             /*
              * Check if the message was actually the Windows 'WM_QUIT' message. The
@@ -180,15 +196,28 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
             DispatchMessage(&currMsg);
         }
 
-        /* Update everything and render. */
+        /*
+         * Update the game's layers. If the game cannot keep up with the framerate,
+         * simulate multiple frames before rendering to ensure the physics stay
+         * consistent.
+         */
+        while (currLag > ticksPerUpdate) {
+            /* \todo Update game objects and everything. */
+
+            /* Frame was processed; go ahead and catch up more possibly. */
+            currLag -= (NkUint64)ticksPerUpdate;
+        }
+
+        /* Run the renderer at the variable timestep. */
         NkIWindow   *mainWnd   = NkWindowQueryInstance();
         NkIRenderer *mainWndRd = mainWnd->VT->GetRenderer(mainWnd);
 
         mainWndRd->VT->BeginDraw(mainWndRd);
-        NK_IGNORE_RETURN_VALUE(NkLayerstackOnRender(0.f));
+        NK_IGNORE_RETURN_VALUE(NkLayerstackOnRender(currLag / ticksPerUpdate));
         mainWndRd->VT->EndDraw(mainWndRd);
 
         /* Release the renderer since 'GetRenderer()' acquired it. */
+        mainWnd->VT->Release(mainWnd);
         mainWndRd->VT->Release(mainWndRd);
     }
 

@@ -312,6 +312,10 @@ NkUint64 NK_CALL NkGetCurrentTime(NkVoid) {
     return res;
 }
 
+NkUint64 NK_CALL NkGetTimerFrequency(NkVoid) {
+    return gl_tdContext.m_timerFrequency;
+}
+
 
 #undef NK_NAMESPACE
 

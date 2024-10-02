@@ -184,7 +184,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnEvent(_In_ NkEvent const *evPtr) {
     return eventWasHandled ? NkErr_Ok : NkErr_NoOperation;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat deltaTime) {
+_Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat aheadBy) {
     NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
@@ -204,7 +204,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat deltaTime) {
          * Call the render method of the current layer. The return value is ignored.
          * Layers must be able to be drawn independently from each other.
          */
-        NK_IGNORE_RETURN_VALUE(currLayer->VT->OnRender(currLayer, deltaTime));
+        NK_IGNORE_RETURN_VALUE(currLayer->VT->OnRender(currLayer, aheadBy));
         NK_LOCK(gl_LayerStack.m_mtxLock);
     }
 
