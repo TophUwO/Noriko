@@ -50,7 +50,7 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid) {
         .m_initialWndMode  = appSpecs->m_initialWndMode,
         .m_wndFlags        = appSpecs->m_wndFlags | NkWndFlag_MainWindow,
         .mp_nativeHandle   = appSpecs->mp_nativeHandle,
-        .m_wndIdent        = NK_MAKE_STRING_VIEW("NkWnd_MainWindow"),
+        .m_wndUuid         = { 0xf5ef2c4c, 0x6a5e, 0x4719, 0x9f3f0412dbbaf611 },
         .m_wndTitle        = appSpecs->m_wndTitle
     });
 }

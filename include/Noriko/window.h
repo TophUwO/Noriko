@@ -61,48 +61,67 @@ NK_NATIVE typedef enum NkWindowMode {
 } NkWindowMode;
 
 /**
- * \brief  
+ * \enum  NkWindowFlags
+ * \brief window flags for Noriko windows
+ * 
+ * \par Remarks
+ *   Despite the flag IDs being platform-independent, some flags may not be implemented
+ *   on some platforms. If this is the case, this is documented as such explicitly.
  */
 NK_NATIVE typedef enum NkWindowFlags {
-    NkWndFlag_Default = 0,
+    NkWndFlag_Default = 0,             /**< default flags */
 
-    NkWndFlag_MessageOnlyWnd = 1 << 0,
-    NkWndFlag_AlwaysOnTop    = 1 << 1,
-    NkWndFlag_MainWindow     = 1 << 2,
-    NkWndFlag_DragResizable  = 1 << 3,
-    NkWndFlag_DragMovable    = 1 << 4,
+    NkWndFlag_MessageOnlyWnd = 1 << 0, /**< for Windows: window is message-only */
+    NkWndFlag_AlwaysOnTop    = 1 << 1, /**< whether or not the window is always on top */
+    NkWndFlag_MainWindow     = 1 << 2, /**< whether or not the window is the main window */
+    NkWndFlag_DragResizable  = 1 << 3, /**< if the window can be resized via border dragging */
+    NkWndFlag_DragMovable    = 1 << 4, /**< if the window can be moved by dragging the title bar, etc. */
 
-    __NkWndFlag_Count__
+    __NkWndFlag_Count__                /**< *only used internally* */
 } NkWindowFlags;
 
 /**
+ * \enum  NkViewportAlignment
+ * \brief represents the alignment of the internal viewport of the client area of the
+ *        window is larger than the designated viewport
+ * 
+ * \par Remarks
+ *   A valid viewport alignment is a combination of exactly one value of the first (i.e.,
+ *   vertical) group and the second (i.e., horizontal) group each. If the given alignment
+ *   is none (i.e., <tt>0</tt>), the behavior is undefined. All other permutations are
+ *   reported as <em>invalid viewport alignment</tt>.
  */
 NK_NATIVE typedef enum NkViewportAlignment {
+    /* first group - vertical */
     NkVpAlign_Top     = 1 << 0,
     NkVpAlign_VCenter = 1 << 1,
     NkVpAlign_Bottom  = 1 << 2,
+
+    /* second group - horizontal */
     NkVpAlign_Left    = 1 << 3,
     NkVpAlign_HCenter = 1 << 4,
     NkVpAlign_Right   = 1 << 5,
 
-    __NkVpAlign_Count__
+    __NkVpAlign_Count__         /**< *only used internally* */
 } NkViewportAlignment;
 
 /**
+ * \struct NkWindowSpecification
+ * \brief  represents the configuration options for a Noriko platform-independent window
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkWindowSpecification {
-         NkSize                 m_structSize;      /**< size of this structure, in bytes */
-    enum NkRendererApi          m_rendererApi;     /**< API to use for rendering the window */
-         NkViewportAlignment    m_vpAlignment;     /**< viewport alignment inside the main window */
-         NkBoolean              m_isVSync;         /**< whether or not VSync is used */
-         NkSize2D               m_vpExtents;       /**< size in tiles of the main window viewport */
-         NkSize2D               m_dispTileSize;    /**< tile size of the viewport */
-         NkWindowMode           m_allowedWndModes; /**< allowed window modes for the main window */
-         NkWindowMode           m_initialWndMode;  /**< initial window mode for the main window */
-         NkWindowFlags          m_wndFlags;        /**< additional (platform-dependent) window flags */
-         NkNativeWindowHandle   mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
-         NkStringView           m_wndIdent;        /**< window identifier (for querying windows) */
-         NkStringView           m_wndTitle;        /**< main window title */
+         NkSize               m_structSize;      /**< size of this structure, in bytes */
+    enum NkRendererApi        m_rendererApi;     /**< API to use for rendering the window */
+         NkViewportAlignment  m_vpAlignment;     /**< viewport alignment inside the main window */
+         NkBoolean            m_isVSync;         /**< whether or not VSync is used */
+         NkSize2D             m_vpExtents;       /**< size in tiles of the main window viewport */
+         NkSize2D             m_dispTileSize;    /**< tile size of the viewport */
+         NkWindowMode         m_allowedWndModes; /**< allowed window modes for the main window */
+         NkWindowMode         m_initialWndMode;  /**< initial window mode for the main window */
+         NkWindowFlags        m_wndFlags;        /**< additional (platform-dependent) window flags */
+         NkNativeWindowHandle mp_nativeHandle;   /**< optional existing window handle to create Noriko window for */
+         NkUuid               m_wndUuid;         /**< window identifier (for querying windows) */
+         NkStringView         m_wndTitle;        /**< main window title */
 } NkWindowSpecification;
 
 
@@ -132,12 +151,26 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     /**
      */
     NkVoid (NK_CALL *OnUpdate)(_Inout_ NkIWindow *self, _In_ NkFloat deltaTime);
+
     /**
      */
     NkWindowMode (NK_CALL *QueryAllowedWindowModes)(_Inout_ NkIWindow *self);
     /**
      */
     NkNativeWindowHandle (NK_CALL *QueryNativeWindowHandle)(_Inout_ NkIWindow *self);
+    /**
+     * \brief  retrieves a pointer to the current window's unique identifier
+     * \param  [in,out] self pointer to the current \c NkIWindow instance
+     * \return pointer to the window's identifier
+     * 
+     * \par Remarks
+     *   While the return value of this function itself (i.e., the pointer) cannot be
+     *   cached due to the memory being owned by the window instance, the memory pointed
+     *   to can be since the window identifier is immutable. Use <tt>NkUuidCopy()</tt> in
+     *   order to store the UUID if you need it throughout the duration of the
+     *   application's runtime.
+     */
+    NkUuid const *(NK_CALL *QueryWindowIdentifier)(_Inout_ NkIWindow *self);
     /**
      */
     NkWindowMode (NK_CALL *GetWindowMode)(_Inout_ NkIWindow *self);
@@ -152,9 +185,19 @@ NKOM_DECLARE_INTERFACE(NkIWindow) {
     NkErrorCode (NK_CALL *SetWindowFlag)(_Inout_ NkIWindow *self, _In_ NkWindowFlags wndFlag, _In_ NkBoolean newVal);
 
     /**
+     * \brief  retrieves the current dimensions of the window's client area, that is, the
+     *         area that is free for the client to use and not occupied by system-managed
+     *         components such as title bar and frame
+     * \param  [in,out] self pointer to the current Noriko window
+     * \return pair of non-zero extents corresponding to the size of the current window's
+     *         viewport, in pixels
      */
     NkSize2D (NK_CALL *GetClientDimensions)(_Inout_ NkIWindow *self);
     /**
+     * \brief  retrieves the internal renderer instance specific to this window
+     * \param  [in,out] self pointer to the current Noriko window
+     * \return pointer to the underlying renderer
+     *
      * \par Remarks
      *   Like with all functions that return an NkOM object, they increment the reference
      *   count of the returned object.

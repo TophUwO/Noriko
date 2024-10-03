@@ -487,6 +487,15 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkUuidToString(
     _In_          NkUuid const *uuidPtr,
     _O_bytes_(37) char *strBuf
 );
+/**
+ * \brief   copies a source UUID into the destination buffer
+ * \param   [in] srcPtr pointer to the source \c NkUuid instance
+ * \param   [out] resPtr pointer to the destination buffer; must be at least <tt>16</tt>
+ *                bytes in size
+ * \warning If either \c srcPtr or \c resPtr are \c NULL or point to invalid locations,
+ *          the behavior is undefined. 
+ */
+NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkUuidCopy(_In_ NkUuid const *srcPtr, _Out_ NkUuid *resPtr);
 
 
 /**

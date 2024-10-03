@@ -91,6 +91,7 @@ _Return_ok_ NK_INTERNAL NkErrorCode __NkInt_ValidateAppSpecification(_In_ NkAppl
         ERROR,
         "The window must support the 'NkWndMode_Normal' window mode!"
     );
+    /** \todo validate app spec more */
 
     return errCode;
 }
@@ -122,6 +123,7 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationStartup(_In_ NkApplicationSpecifica
     /* Initialize the internal components in order. */
     for (NkSize i = 0; i < gl_c_CompInitTblSize; i++) {
         errCode = (*gl_c_CompInitTable[i].mp_initFn)();
+
         if (errCode != NkErr_Ok) {
             NK_LOG_CRITICAL(
                 "Failed to initialize component '%s'. Failed with error code '%s' (%i). Check logs for more details.",
@@ -142,6 +144,7 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid) {
     /* Shutdown all components in the reverse order they were started up. */
     for (NkInt64 i = (NkInt64)gl_c_CompInitTblSize - 1; i >= 0; i--) {
         NkErrorCode const errCode = (*gl_c_CompInitTable[i].mp_uninitFn)();
+
         if (errCode != NkErr_Ok) {
             NK_LOG_CRITICAL(
                 "Failed to shutdown component '%s'. Failed with error code '%s' (%i). Checks logs for more details.",
@@ -161,25 +164,29 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid) {
 _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
     /** \cond INTERNAL */
     /**
-     * \brief fixed update rate of the game's physics, animation, etc.; currently 100 Hz
+     * \brief fixed update rate of the game's physics, animation, etc.; currently 120 Hz
      * \note  This is subject to change in the future.
      */
-    NkFloat ticksPerUpdate = 0.01f * NkGetTimerFrequency();
+    NkFloat ticksPerUpdate = (8.333f / 1000.f) * NkGetTimerFrequency();
     /** \endcond */
 
+    NkErrorCode    errCode    = NkErr_Ok;
+    NkUint64       prevTime   = NkGetCurrentTime();
+    NkUint64       currLag    = 0;
+    NkUint64 const maxElapsed = 0.016f * NkGetTimerFrequency();
+
 #if (defined NK_TARGET_WINDOWS)
-    NkErrorCode errCode  = NkErr_Ok;
-    MSG         currMsg  = { 0 };
-    NkUint64    prevTime = NkGetCurrentTime();
-    NkUint64    currLag  = 0;
+    MSG currMsg;
+#endif
 
     for (;;) {
         /* First, calculate timestep. */
         NkUint64 currTime    = NkGetCurrentTime();
-        NkUint64 elapsedTime = currTime - prevTime;
+        NkUint64 elapsedTime = NK_MIN(currTime - prevTime, maxElapsed);
         prevTime = currTime;
         currLag += elapsedTime;
 
+#if (defined NK_TARGET_WINDOWS)
         /* Then, dispatch windows messages. */
         while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
             /*
@@ -195,6 +202,9 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
             TranslateMessage(&currMsg);
             DispatchMessage(&currMsg);
         }
+#else
+    #error Need to implement main loop message handling on this platform.
+#endif
 
         /*
          * Update the game's layers. If the game cannot keep up with the framerate,
@@ -223,9 +233,6 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 
 lbl_CLEANUP:
     return errCode;
-#else
-    #error Implementation for 'NkApplicationRun()' missing on this platform.
-#endif
 }
 
 NkVoid NK_CALL NkApplicationExit(_Ecode_range_ NkErrorCode errCode) {

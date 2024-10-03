@@ -333,6 +333,13 @@ NkVoid NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *st
     *strBuf = 0x00;
 }
 
+NkVoid NK_CALL NkUuidCopy(_In_ NkUuid const *srcPtr, _Out_ NkUuid *resPtr) {
+    NK_ASSERT(srcPtr != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
+
+    memcpy((void *)(__NkInt_Uuid *)resPtr, (void const *)(__NkInt_Uuid *)srcPtr, sizeof(__NkInt_Uuid));
+}
+
 
 NkVoid NK_CALL NkVariantGet(_In_ NkVariant const *varPtr, _Out_opt_ NkVariantType *tyPtr, _Out_opt_ NkVoid *valPtr) {
     NK_ASSERT(varPtr != NULL, NkErr_InParameter);

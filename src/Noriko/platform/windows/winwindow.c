@@ -39,7 +39,7 @@ NK_NATIVE typedef struct __NkInt_WindowsWindow {
     NkWindowMode  m_currWndMode;     /**< current window mode */
     NkWindowFlags m_wndFlags;        /**< window flags */
     NkStringView  m_wndTitle;        /**< default window title */
-    NkStringView  m_wndIdent;        /**< textual window identifier */
+    NkUuid        m_wndUuid;         /**< unique window identifier */
     NkIRenderer  *mp_rendererRef;    /**< reference to the renderer for this window */
 } __NkInt_WindowsWindow;
 
@@ -393,14 +393,13 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             .m_clearCol     = NK_MAKE_RGB(0, 0, 0)
         }, (NkIBase **)&wndPtr->mp_rendererRef);
         if (errCode != NkErr_Ok) {
-            /** \todo change to release() */
-            DestroyWindow(wndPtr->mp_nativeHandle);
+            /** \todo change to release() and destroy window */
 
             return errCode;
         }
 
         /* Set properties. */
-        NkStringViewCopy(&wndSpecs->m_wndIdent, &wndPtr->m_wndIdent);
+        NkUuidCopy(&wndSpecs->m_wndUuid, &wndPtr->m_wndUuid);
         wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
 
@@ -439,6 +438,14 @@ NK_INTERNAL NkNativeWindowHandle NK_CALL __NkInt_WindowsWindow_QueryNativeWindow
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
 
     return (NkNativeWindowHandle)((__NkInt_WindowsWindow *)self)->mp_nativeHandle;
+}
+
+/**
+ */
+NK_INTERNAL NkUuid const *NK_CALL __NkInt_WindowsWindow_QueryWindowIdentifier(_Inout_ NkIWindow *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
+    return &((__NkInt_WindowsWindow *)self)->m_wndUuid;
 }
 
 /**
@@ -579,6 +586,7 @@ NKOM_DEFINE_VTABLE(NkIWindow) {
     .OnUpdate                = &__NkInt_WindowsWindow_OnUpdate,
     .QueryAllowedWindowModes = &__NkInt_WindowsWindow_QueryAllowedWindowModes,
     .QueryNativeWindowHandle = &__NkInt_WindowsWindow_QueryNativeWindowHandle,
+    .QueryWindowIdentifier   = &__NkInt_WindowsWindow_QueryWindowIdentifier,
     .GetWindowMode           = &__NkInt_WindowsWindow_GetWindowMode,
     .SetWindowMode           = &__NkInt_WindowsWindow_SetWindowMode,
     .GetWindowFlag           = &__NkInt_WindowsWindow_GetWindowFlag,
