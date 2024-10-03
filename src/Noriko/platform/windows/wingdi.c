@@ -91,7 +91,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
         errCode = NkErr_CreateMemDC;
         goto lbl_END;
     }
-    HBITMAP memBmp;
+    HBITMAP memBmp; 
     if ((memBmp = CreateCompatibleBitmap(wndDC, (int)clDim.m_width, (int)clDim.m_height)) == NULL) {
         NK_LOG_ERROR("Could not create memory bitmap compatible with window device context.");
 

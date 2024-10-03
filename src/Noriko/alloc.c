@@ -684,7 +684,7 @@ lbl_RETBLOCKPTR:
 
     /*
      * If no such memory pool could be found, allocate a new pool if possible and
-     * allocate the new block at its firstindex.
+     * allocate the new block at its first index.
      */
     NkErrorCode errorCode = __NkInt_PoolAllocRequestNewPool(gl_DefBlockCount, blockSize, &memPool);
     blockIndex = 0;
