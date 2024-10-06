@@ -14,7 +14,7 @@
  * \file  htable.c
  * \brief implements the hash table data-structure used by Noriko
  */
-#define NK_NAMESPACE "nk::dstruct"
+#define NK_NAMESPACE "nk::dstruct::htable"
 
 
 /* stdlib includes */

@@ -14,7 +14,7 @@
  * \file  vector.c
  * \brief implementation of Noriko's dynamic array (vector) data-structure
  */
-#define NK_NAMESPACE "nk::dstruct"
+#define NK_NAMESPACE "nk::dstruct::vec"
 
 
 /* stdlib includes */
