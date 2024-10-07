@@ -302,6 +302,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\alloc.h" />
+    <ClInclude Include="..\include\Noriko\bmp.h" />
     <ClInclude Include="..\include\Noriko\env.h" />
     <ClInclude Include="..\include\Noriko\def.h" />
     <ClInclude Include="..\include\Noriko\dstruct\htable.h" />
