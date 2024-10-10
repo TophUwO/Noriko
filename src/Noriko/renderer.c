@@ -226,6 +226,11 @@ NkUuid const *NK_CALL NkRendererQueryCLSIDFromApi(_In_ NkRendererApi apiIdent) {
 }
 
 
+NkBoolean NK_CALL NkRendererCompareRectangles(_In_ NkRectF const *r1Ptr, _In_ NkRectF const *r2Ptr) {
+    return r1Ptr->m_width == r2Ptr->m_width && r1Ptr->m_height == r2Ptr->m_height;
+}
+
+
 #undef NK_NAMESPACE
 
 

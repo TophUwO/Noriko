@@ -47,7 +47,10 @@
         #if (!defined NK_EDITOR)
             #define _CRTDBG_MAP_ALLOC
         #endif
-        #define NK_USE_MSVC_MEMORY_LEAK_DETECTOR
+        /* Only enable the memory leak detector when we are not deploying. */
+        #if (!defined NK_CONFIG_DEPLOY)
+            #define NK_USE_MSVC_MEMORY_LEAK_DETECTOR
+        #endif
 
         #define _CRT_RAND_S /* use Microsoft-specific "rand_s()" function */
         #include <stdlib.h>

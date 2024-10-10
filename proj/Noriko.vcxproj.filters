@@ -143,5 +143,8 @@
     <ClCompile Include="..\src\Noriko\renderer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Noriko\bmp.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

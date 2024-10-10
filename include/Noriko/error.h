@@ -115,50 +115,56 @@
  * \brief numeric error code definitions
  */
 typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
-    NkErr_Ok,                   /**< no error */
-    NkErr_Unknown,              /**< unknown error condition */
-    NkErr_NoOperation,          /**< function did nothing */
-    NkErr_ManuallyAborted,      /**< operation was manually aborted by user or callback */
+    NkErr_Ok,                    /**< no error */
+    NkErr_Unknown,               /**< unknown error condition */
+    NkErr_NoOperation,           /**< function did nothing */
+    NkErr_ManuallyAborted,       /**< operation was manually aborted by user or callback */
+                                 
+    NkErr_AccessDenied,          /**< access to resource is denied */
+    NkErr_NotImplemented,        /**< feature not implemented */
+    NkErr_InParameter,           /**< erroneous input parameter */
+    NkErr_OutParameter,          /**< erroneous output parameter */
+    NkErr_InOutParameter,        /**< erroneous input/output parameter */
+    NkErr_InptrParameter,        /**< erroneous input pointer parameter */
+    NkErr_OutptrParameter,       /**< erroneous output pointer parameter */
+    NkErr_CallbackParameter,     /**< erroneous function pointer (callback) parameter */
+    NkErr_MemoryAlignment,       /**< invalid memory alignment specified */
+    NkErr_MemoryAllocation,      /**< error during memory allocation */
+    NkErr_MemoryReallocation,    /**< error during memory reallocation */
+    NkErr_ItemNotFound,          /**< requested item could not be found */
+    NkErr_ArrayOutOfBounds,      /**< array index out of buffer bounds */
+    NkErr_ArrayElemOutOfBounds,  /**< array index out of element bounds */
+    NkErr_InvalidRange,          /**< invalid range tuple */
+    NkErr_UnsignedWrapAround,    /**< operation caused unsigned wrap-around */
+    NkErr_CapLimitExceeded,      /**< container capacity limit exceeded */
+    NkErr_ComponentState,        /**< invalid component state */
+    NkErr_ObjectType,            /**< invalid object type */
+    NkErr_ObjectState,           /**< invalid object state (function precond not met) */
+    NkErr_SynchInit,             /**< error while initializing synchronization object */
+    NkErr_UnexpectedCharacter,   /**< unexpected character during parsing */
+    NkErr_InvalidIdentifier,     /**< invalid identifier during parsing */
+    NkErr_ClosingTokenNotFound,  /**< could not find closing token for compound */
+    NkErr_InterfacePureVirtual,  /**< interface is marked as 'pure-virtual'; cannot be instantiated */
+    NkErr_InterfaceNotImpl,      /**< class does not implement the specified interface */
+    NkErr_UnknownClass,          /**< class is unknown to the current class factory instance */
+    NkErr_AggregationNotSupp,    /**< class does not support NkOM aggregation */
+    NkErr_ClassAlreadyReg,       /**< class is already registered in the global NkOM runtime */
+    NkErr_ClassNotReg,           /**< class is not registered in the global NkOM runtime */
+    NkErr_RegWindowClass,        /**< could not register window class */
+    NkErr_CreateNativeWindow,    /**< could not create native window */
+    NkErr_WndModeNotSupported,   /**< window mode not supported on the current platform */
+    NkErr_AdjustClientArea,      /**< failed to adjust client area size */
+    NkErr_CreateMemDC,           /**< failed to create memory DC */
+    NkErr_CreateCompBitmap,      /**< failed to create compatible bitmap */
+    NkErr_CreateBrush,           /**< failed to create brush */
+    NkErr_OpenFile,              /**< could not open file */
+    NkErr_ErrorDuringDiskIO,     /**< error during I/O operation */
+    NkErr_UnsupportedFileFormat, /**< unsupported file format */
+    NkErr_InvImageDimensions,    /**< invalid image dimensions */
+    NkErr_InvBitDepth,           /**< invalid bit depth */
+    NkErr_CreateDDBFromDIB,      /**< could not create DDB from DIB pixels */
 
-    NkErr_AccessDenied,         /**< access to resource is denied */
-    NkErr_NotImplemented,       /**< feature not implemented */
-    NkErr_InParameter,          /**< erroneous input parameter */
-    NkErr_OutParameter,         /**< erroneous output parameter */
-    NkErr_InOutParameter,       /**< erroneous input/output parameter */
-    NkErr_InptrParameter,       /**< erroneous input pointer parameter */
-    NkErr_OutptrParameter,      /**< erroneous output pointer parameter */
-    NkErr_CallbackParameter,    /**< erroneous function pointer (callback) parameter */
-    NkErr_MemoryAlignment,      /**< invalid memory alignment specified */
-    NkErr_MemoryAllocation,     /**< error during memory allocation */
-    NkErr_MemoryReallocation,   /**< error during memory reallocation */
-    NkErr_ItemNotFound,         /**< requested item could not be found */
-    NkErr_ArrayOutOfBounds,     /**< array index out of buffer bounds */
-    NkErr_ArrayElemOutOfBounds, /**< array index out of element bounds */
-    NkErr_InvalidRange,         /**< invalid range tuple */
-    NkErr_UnsignedWrapAround,   /**< operation caused unsigned wrap-around */
-    NkErr_CapLimitExceeded,     /**< container capacity limit exceeded */
-    NkErr_ComponentState,       /**< invalid component state */
-    NkErr_ObjectType,           /**< invalid object type */
-    NkErr_ObjectState,          /**< invalid object state (function precond not met) */
-    NkErr_SynchInit,            /**< error while initializing synchronization object */
-    NkErr_UnexpectedCharacter,  /**< unexpected character during parsing */
-    NkErr_InvalidIdentifier,    /**< invalid identifier during parsing */
-    NkErr_ClosingTokenNotFound, /**< could not find closing token for compound */
-    NkErr_InterfacePureVirtual, /**< interface is marked as 'pure-virtual'; cannot be instantiated */
-    NkErr_InterfaceNotImpl,     /**< class does not implement the specified interface */
-    NkErr_UnknownClass,         /**< class is unknown to the current class factory instance */
-    NkErr_AggregationNotSupp,   /**< class does not support NkOM aggregation */
-    NkErr_ClassAlreadyReg,      /**< class is already registered in the global NkOM runtime */
-    NkErr_ClassNotReg,          /**< class is not registered in the global NkOM runtime */
-    NkErr_RegWindowClass,       /**< could not register window class */
-    NkErr_CreateNativeWindow,   /**< could not create native window */
-    NkErr_WndModeNotSupported,  /**< window mode not supported on the current platform */
-    NkErr_AdjustClientArea,     /**< failed to adjust client area size */
-    NkErr_CreateMemDC,          /**< failed to create memory DC */
-    NkErr_CreateCompBitmap,     /**< failed to create compatible bitmap */
-    NkErr_CreateBrush,          /**< failed to create brush */
-
-    __NkErr_Count__             /**< used internally */
+    __NkErr_Count__              /**< used internally */
 } NkErrorCode;
 
 /**
@@ -196,7 +202,6 @@ NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeStr(_In_ 
  * \note   The return value of this function is a pointer to static read-only memory.
  */
 NK_NATIVE NK_API _Return_ok_ NkStringView const *NK_CALL NkGetErrorCodeDesc(_In_ _Ecode_range_ NkErrorCode code);
-
 
 /**
  * \brief terminates the application immediately providing additional information on the

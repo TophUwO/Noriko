@@ -87,7 +87,13 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AdjustClientArea)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateMemDC)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateCompBitmap)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateBrush))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateBrush)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_OpenFile)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_ErrorDuringDiskIO)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_UnsupportedFileFormat)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvImageDimensions)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvBitDepth)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateDDBFromDIB))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -137,7 +143,13 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("could not adjust client area size to fit requested viewport"),
     NK_MAKE_STRING_VIEW("could not create memory device context"),
     NK_MAKE_STRING_VIEW("failed to create memory bitmap compatible with given device context"),
-    NK_MAKE_STRING_VIEW("failed to create paint brush")
+    NK_MAKE_STRING_VIEW("failed to create paint brush"),
+    NK_MAKE_STRING_VIEW("could not open file stream"),
+    NK_MAKE_STRING_VIEW("error during disk I/O operation"),
+    NK_MAKE_STRING_VIEW("unsupported file format"),
+    NK_MAKE_STRING_VIEW("invalid image dimensions (zero or negative?)"),
+    NK_MAKE_STRING_VIEW("invalid bit depth (not a power of 2 or unsupported?)"),
+    NK_MAKE_STRING_VIEW("could not copy DIB pixels into DDB pixel buffer (pixel format invalid?)")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

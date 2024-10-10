@@ -143,7 +143,7 @@
 #else
     NK_NATIVE typedef _Bool NkBoolean;
 #endif
-NK_NATIVE typedef void      NkVoid;
+NK_NATIVE typedef void      NkVoid, *NkHandle;
 NK_NATIVE typedef size_t    NkSize;
 NK_NATIVE typedef ptrdiff_t NkOffset;
 NK_NATIVE typedef float     NkFloat, NkSingle;

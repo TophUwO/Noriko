@@ -39,6 +39,7 @@
 #include <include/Noriko/window.h>
 #include <include/Noriko/helpers.h>
 #include <include/Noriko/renderer.h>
+#include <include/Noriko/bmp.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>

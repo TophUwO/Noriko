@@ -29,6 +29,7 @@
 #include <include/Noriko/renderer.h>
 #include <include/Noriko/platform.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/bmp.h>
 
 
 /* All code is stripped from the compilation if we are not on Windows. */
@@ -51,15 +52,17 @@ NK_NATIVE typedef struct __NkInt_GdiRenderer {
      * \brief  represents the collection of basic resources used by the GDI renderer
      */
     struct __NkInt_GdiResources {
-        HDC       mp_memDC;    /**< memory DC to render contents to */
-        HBITMAP   mp_memBmp;   /**< bitmap to render to */
-        HBITMAP   mp_oldBmp;   /**< initial bitmap of the memory DC */
-        HBRUSH    mp_clearBr;  /**< brush used for clearing the screen */
+        HDC       mp_memDC;     /**< memory DC to render contents to */
+        HDC       mp_texDC;     /**< DC holding the currently bound texture */
+        HBITMAP   mp_memBmp;    /**< bitmap to render to */
+        HBITMAP   mp_oldBmp;    /**< initial bitmap of the memory DC */
+        HBITMAP   mp_defTexBmp; /**< default bitmap for the texture DC */
+        HBRUSH    mp_clearBr;   /**< brush used for clearing the screen */
 #if (!defined NK_CONFIG_DEPLOY)
-        HBRUSH    m_vpBkgndBr; /**< brush used for the viewport background */
+        HBRUSH    m_vpBkgndBr;  /**< brush used for the viewport background */
 #endif /* NK_CONFIG_DEPLOY */
-        NkSize2D  m_bbDim;     /**< dimensions of the internal back buffer */
-        NkPoint2D m_vpOri;     /**< viewport origin, in client space */
+        NkSize2D  m_bbDim;      /**< dimensions of the internal back buffer */
+        NkPoint2D m_vpOri;      /**< viewport origin, in client space */
     } m_gdiRes;
 } __NkInt_GdiRenderer;
 /* Define IID and CLSID. */
@@ -68,6 +71,18 @@ NKOM_DEFINE_IID(NkIGdiRenderer, { 0xf2cd4199, 0xe8f2, 0x45ff, 0x89ec14f8785af2c6
 // { 819653F5-28C1-4EDF-A49F-09613C47A5E6 }
 NKOM_DEFINE_CLSID(NkIGdiRenderer, { 0x819653f5, 0x28c1, 0x4edf, 0xa49f09613c47a5e6 });
 
+
+/**
+ */
+NK_INTERNAL int __NkInt_GdiRenderer_MapToStretchBltMode(_In_ NkTextureInterpolationMode iMode) {
+    switch (iMode) {
+        case NkTexIMd_Default:
+        case NkTexIMd_NearestNeighbor: return COLORONCOLOR;
+        case NkTexIMd_Bilinear:        return HALFTONE;
+    }
+
+    return -1;
+}
 
 /**
  * \todo free resources properly in case of an error 
@@ -84,7 +99,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
     NkSize2D clDim     = rdSpecs->mp_wndRef->VT->GetClientDimensions(rdSpecs->mp_wndRef);
 
     /* Create resources. */
-    HDC memDC;
+    HDC memDC, texDC;
     if ((memDC = CreateCompatibleDC(wndDC)) == NULL) {
         NK_LOG_ERROR("Could not create memory device context from window device context.");
 
@@ -99,6 +114,12 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
         goto lbl_END;
     }
     HBITMAP oldBmp = SelectObject(memDC, memBmp);
+    if ((texDC = CreateCompatibleDC(wndDC)) == NULL) {
+        NK_LOG_ERROR("Could not create texture device context.");
+
+        errCode = NkErr_CreateMemDC;
+        goto lbl_END;
+    }
     HBRUSH clBrush = CreateSolidBrush(
         RGB(
             rdSpecs->m_clearCol.m_rVal,
@@ -125,21 +146,26 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateBasicResou
 
     /* Initialize the fields. */
     *resPtr = (struct __NkInt_GdiResources){
-        .mp_memDC    = memDC,
-        .mp_memBmp   = memBmp,
-        .mp_oldBmp   = oldBmp,
-        .mp_clearBr  = clBrush,
+        .mp_memDC     = memDC,
+        .mp_texDC     = texDC,
+        .mp_memBmp    = memBmp,
+        .mp_oldBmp    = oldBmp,
+        .mp_defTexBmp = (HBITMAP)GetCurrentObject(texDC, OBJ_BITMAP),
+        .mp_clearBr   = clBrush,
 #if (!defined NK_CONFIG_DEPLOY)
-        .m_vpBkgndBr = vpBrush,
+        .m_vpBkgndBr  = vpBrush,
 #endif /* NK_CONFIG_DEPLOY */
-        .m_bbDim     = clDim,
-        .m_vpOri     = NkCalculateViewportOrigin(
+        .m_bbDim      = clDim,
+        .m_vpOri      = NkCalculateViewportOrigin(
             rdSpecs->m_vpAlignment,
             rdSpecs->m_vpExtents,
             rdSpecs->m_dispTileSize,
             clDim
         )
     };
+
+    /* Set some DC properties. */
+    SetStretchBltMode(resPtr->mp_memDC, __NkInt_GdiRenderer_MapToStretchBltMode(rdSpecs->m_texInterMode));
 
 lbl_END:
     ReleaseDC(wndHandle, wndDC);
@@ -148,9 +174,15 @@ lbl_END:
 
 /**
  */
-NK_INTERNAL NkVoid NK_CALL __NkInt_GdiRenderer_Destroy(_Inout_ __NkInt_GdiRenderer *self) {
+NK_INTERNAL NkVoid __NkInt_GdiRenderer_Destroy(_Inout_ __NkInt_GdiRenderer *self) {
     NK_LOG_INFO("shutdown: GDI renderer");
     
+    /*
+     * Select the default texture. In an ideal world, the resources get deleted before
+     * the renderer gets deleted, so this should really not do anything as deleting a
+     * bound texture will automatically unbind it.
+     */
+    SelectObject(self->m_gdiRes.mp_texDC, self->m_gdiRes.mp_defTexBmp);
     /*
      * Select the old bitmap into the DC to free it when the DC is destroyed. Our actual
      * bitmap must be freed by us since it was not indirectly created by the memory DC
@@ -167,9 +199,33 @@ NK_INTERNAL NkVoid NK_CALL __NkInt_GdiRenderer_Destroy(_Inout_ __NkInt_GdiRender
     DeleteObject(self->m_gdiRes.m_vpBkgndBr);
 #endif /* NK_CONFIG_DEPLOY */
     DeleteDC(self->m_gdiRes.mp_memDC);
+    DeleteDC(self->m_gdiRes.mp_texDC);
 
     /* Release the parent window. */
     self->mp_wndRef->VT->Release(self->mp_wndRef);
+}
+
+/**
+ */
+NK_INTERNAL NkVoid __NkInt_GdiRenderer_InternalDeleteResource(
+    _Inout_ NkIRenderer *self,
+    _Inout_ NkRendererResource *resPtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_InOutParameter);
+
+    /* Get pointer to internal renderer structure. */
+    __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
+
+    switch (resPtr->m_resType) {
+        case NkRdResTy_Texture:
+            /* If the texture is currently bound to our texture DC, unbind it first. */
+            if (GetCurrentObject(rdRef->m_gdiRes.mp_texDC, OBJ_BITMAP) == (HGDIOBJ)resPtr->m_resHandle)
+                SelectObject(rdRef->m_gdiRes.mp_texDC, rdRef->m_gdiRes.mp_defTexBmp);
+
+            DeleteObject((HGDIOBJ)resPtr->m_resHandle);
+            break;
+    }
 }
 
 
@@ -363,8 +419,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_BeginDraw(_Inout
         &(RECT const){
             (LONG)rdRef->m_gdiRes.m_vpOri.m_xCoord,
             (LONG)rdRef->m_gdiRes.m_vpOri.m_yCoord,
-            (LONG)rdRef->m_gdiRes.m_vpOri.m_xCoord + vpDim.m_width,
-            (LONG)rdRef->m_gdiRes.m_vpOri.m_yCoord + vpDim.m_height,
+            (LONG)(rdRef->m_gdiRes.m_vpOri.m_xCoord + vpDim.m_width),
+            (LONG)(rdRef->m_gdiRes.m_vpOri.m_yCoord + vpDim.m_height),
         },
         rdRef->m_gdiRes.m_vpBkgndBr
     );
@@ -401,6 +457,186 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_EndDraw(_Inout_ 
     return NkErr_Ok;
 }
 
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_DrawTexture(
+    _Inout_  NkIRenderer *self,
+    _In_     NkRectF const *dstRect,
+    _In_     NkRendererResource const *texPtr,
+    _In_opt_ NkRectF const *srcRect
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(dstRect != NULL, NkErr_InParameter);
+    NK_ASSERT(texPtr != NULL && texPtr->m_resType == NkRdResTy_Texture, NkErr_InParameter);
+
+    /* Get pointer to renderer structure. */
+    __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
+
+    /*
+     * To know which blit function we need to use, we must first determine if scaling is
+     * needed. This may require us to first 'normalize' our source rectangle.
+     */
+    NkRectF normSrcRect;
+    /* Get bitmap width and height if the source rectangle is not entirely "valid". */
+    if (srcRect == NULL || srcRect->m_width == -1 || srcRect->m_height == -1) {
+        BITMAP tInfo;
+        GetObject((HANDLE)texPtr->m_resHandle, (int)sizeof(BITMAP), (NkVoid *)&tInfo);
+
+        /* Normalize upper-left corner. */
+        NkFloat const xCoord = srcRect ? srcRect->m_xCoord : 0.f;
+        NkFloat const yCoord = srcRect ? srcRect->m_yCoord : 0.f;
+        /* Normalize width and height. */
+        NkFloat const width  = !srcRect
+            ? tInfo.bmWidth
+            : (srcRect->m_width < 0.f ? tInfo.bmWidth - srcRect->m_width : srcRect->m_width)
+        ;
+        NkFloat const height = !srcRect
+            ? tInfo.bmHeight
+            : (srcRect->m_height < 0.f ? tInfo.bmHeight - srcRect->m_height : srcRect->m_height)
+        ;
+
+        normSrcRect = (NkRectF){ xCoord, yCoord, width, height };
+    } else normSrcRect = *srcRect;
+
+    /* Bind the new bitmap. */
+    SelectObject(rdRef->m_gdiRes.mp_texDC, (HGDIOBJ)texPtr->m_resHandle);
+    /*
+     * Determine if scaling is needed by simply checking if the source and destination
+     * rectangles are the same size, and draw the bitmap.
+     */
+    if (NkRendererCompareRectangles(&normSrcRect, dstRect) == 0) {
+        /*
+         * Both rectangles are exactly the same size. Great, no scaling is required. That
+         * should be the normal case.
+         */
+        BitBlt(
+            rdRef->m_gdiRes.mp_memDC,
+            (int)dstRect->m_xCoord,
+            (int)dstRect->m_yCoord,
+            (int)dstRect->m_width,
+            (int)dstRect->m_height,
+            rdRef->m_gdiRes.mp_texDC,
+            (int)dstRect->m_xCoord,
+            (int)dstRect->m_yCoord,
+            SRCCOPY
+        );
+    } else {
+        /* Fuck, scaling is required. Well, that sucks but what we gonna do? */
+        StretchBlt(
+            rdRef->m_gdiRes.mp_memDC,
+            (int)dstRect->m_xCoord,
+            (int)dstRect->m_yCoord,
+            (int)dstRect->m_width,
+            (int)dstRect->m_height,
+            rdRef->m_gdiRes.mp_texDC,
+            (int)normSrcRect.m_xCoord,
+            (int)normSrcRect.m_yCoord,
+            (int)normSrcRect.m_width,
+            (int)normSrcRect.m_height,
+            SRCCOPY
+        );
+    }
+    
+    /* All good. */
+    return NkErr_Ok;
+}
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_CreateTexture(
+    _Inout_        NkIRenderer *self,
+    _In_           NkDIBitmap const *dibPtr,
+    _Maybe_reinit_ NkRendererResource **resourcePtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(dibPtr != NULL, NkErr_InParameter);
+
+    /* Get pointer to renderer structure. */
+    __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
+
+    /* Query bitmap specification. */
+    NkBitmapSpecification const *bmSpecs = NkDIBitmapGetSpecification(dibPtr);
+    /* Create device-dependent texture. */
+    HBITMAP ddTex = CreateCompatibleBitmap(rdRef->m_gdiRes.mp_memDC, bmSpecs->m_bmpWidth, bmSpecs->m_bmpHeight);
+    if (ddTex == NULL)
+        return NkErr_CreateCompBitmap;
+
+    /* Copy DIB pixels into the created DDB. */
+    NkUint32 dibPxBufSize;
+    NkByte *dibPixels = NkDIBitmapGetPixels(dibPtr, &dibPxBufSize);
+    int cLinesCopied = SetDIBits(NULL, ddTex, 0, bmSpecs->m_bmpHeight, (NkVoid const *)dibPixels, &(BITMAPINFO const){
+        .bmiHeader = {
+            .biSize          = sizeof(BITMAPINFOHEADER),
+            .biWidth         = bmSpecs->m_bmpWidth,
+            .biHeight        = bmSpecs->m_bmpHeight,
+            .biBitCount      = bmSpecs->m_bitsPerPx,
+            .biPlanes        = 1,
+            .biCompression   = BI_RGB,
+            .biSizeImage     = (DWORD)dibPxBufSize,
+            .biXPelsPerMeter = 0,
+            .biYPelsPerMeter = 0,
+            .biClrUsed       = 0,
+            .biClrImportant  = 0
+        }
+    }, DIB_RGB_COLORS);
+    if ((NkInt32)cLinesCopied ^ bmSpecs->m_bmpHeight) {
+        /* None or not all scan lines were copied successfully; an error happened. */
+        DeleteObject(ddTex);
+
+        return NkErr_CreateDDBFromDIB;
+    }
+
+    /*
+     * Initialize the result structure. But first, we must check if the result structure
+     * is already valid. In such a case, we must first delete the old instance. This
+     * allows us to reuse instances without having to reallocate memory all the time.
+     */
+    if (*resourcePtr != NULL) {
+        __NkInt_GdiRenderer_InternalDeleteResource(self, *resourcePtr);
+
+        goto lbl_INITSTRUCT;
+    }
+    NkErrorCode errCode = NkPoolAlloc(NULL, sizeof **resourcePtr, 1, resourcePtr);
+    if (errCode != NkErr_Ok) {
+        DeleteObject(ddTex);
+
+        return errCode;
+    }
+
+lbl_INITSTRUCT:
+    /* (Re-)initialize result structure. */
+    **resourcePtr = (NkRendererResource){
+        .mp_rdRef    = self,
+        .m_resType   = NkRdResTy_Texture,
+        .m_resHandle = (NkRendererResourceHandle)ddTex,
+        .m_resFlags  = 0
+    };
+    self->VT->AddRef(self);
+    /* All good. */
+    return NkErr_Ok;
+}
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_DeleteResource(
+    _Inout_      NkIRenderer *self,
+    _Uninit_ptr_ NkRendererResource **resourcePtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(resourcePtr != NULL && *resourcePtr != NULL, NkErr_InOutParameter);
+    NK_ASSERT((*resourcePtr)->mp_rdRef == self, NkErr_InOutParameter);
+
+    /* Delete the resource on the device first. */
+    __NkInt_GdiRenderer_InternalDeleteResource(self, *resourcePtr);
+    /* Deallocate memory on host. */
+    NkPoolFree(*resourcePtr);
+    *resourcePtr = NULL;
+
+    /* All good. */
+    self->VT->Release(self);
+    return NkErr_Ok;
+}
+
 
 /**
  */
@@ -414,7 +650,10 @@ NKOM_DEFINE_VTABLE(NkIRenderer) {
     .QueryWindow        = &__NkInt_GdiRenderer_QueryWindow,
     .Resize             = &__NkInt_GdiRenderer_Resize,
     .BeginDraw          = &__NkInt_GdiRenderer_BeginDraw,
-    .EndDraw            = &__NkInt_GdiRenderer_EndDraw
+    .EndDraw            = &__NkInt_GdiRenderer_EndDraw,
+    .DrawTexture        = &__NkInt_GdiRenderer_DrawTexture,
+    .CreateTexture      = &__NkInt_GdiRenderer_CreateTexture,
+    .DeleteResource     = &__NkInt_GdiRenderer_DeleteResource
 };
 
 /**
