@@ -138,37 +138,6 @@ NK_INTERNAL NkErrorCode __NkInt_VectorResizeBuffer(_Inout_ NkVector *vecPtr, _In
 }
 
 /**
- * \brief  shifts the internal buffer's contents at a given index by \c positions to make
- *         space for elements or to erase an existing element
- * \param  [in,out] vecPtr pointer to the NkVector data-structure of which the internal
- *                  buffer is to be modified
- * \param  [in] offset offset of where to move the elements from
- * \param  [in] dist shift distance in elements 
- * \param  [in] isLeft direction of the shift operation (\c true for left direction (to
- *              lower index) or \c false for right direction (to higher index)
- * \return \c NkErr_Ok on success, \c NkErr_UnsignedWrapAround if the operation could not
- *         be carried out due to an unsigned wrap-around having occurred (i.e., shifting
- *         distance exceeded array boundaries)
- */
-NK_INTERNAL NkErrorCode __NkInt_VectorShiftBuffer(
-    _Inout_ NkVector *vecPtr,
-    _In_    NkSize offset,
-    _In_    NkSize dist,
-    _In_    NkBoolean isLeft
-) {
-    NkSize const destIndex = offset + (isLeft ? -1 : 1) * dist;
-    if (isLeft && destIndex > offset || !isLeft && offset > destIndex)
-        return NkErr_UnsignedWrapAround;
-
-    memmove(
-        (NkVoid *)&vecPtr->mp_dataPtr[destIndex],
-        (NkVoid const *)&vecPtr->mp_dataPtr[offset],
-        (vecPtr->m_elemCount - offset - 1) * sizeof(NkVoid *)
-    );
-    return NkErr_Ok;
-}
-
-/**
  * \brief  copy array of elements into internal buffer
  * \param  [in,out] vecPtr pointer to the NkVector data-structure of which the internal
  *                  buffer is to be modified
@@ -185,7 +154,7 @@ NK_INTERNAL NkVoid __NkInt_VectorCopyBuffer(
     _In_ NkVoid const **elemArray,
     _In_ NkSize nElems
 ) {
-    memcpy((NkVoid *)&vecPtr->mp_dataPtr[index], (NkVoid const *)elemArray, nElems);
+    memcpy((NkVoid *)&vecPtr->mp_dataPtr[index], (NkVoid const *)elemArray, nElems * sizeof(NkVoid *));
 }
 /** \endcond */
 
@@ -302,11 +271,15 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorInsertMulti(
         vecPtr->m_elemCap = newCap;
     }
     /* Shift buffer right by the needed number of slots. */
-    if ((errorCode = __NkInt_VectorShiftBuffer(vecPtr, index, nElems, NK_FALSE)) != NkErr_Ok)
-        return errorCode;
+    memmove(
+        (void *)&vecPtr->mp_dataPtr[index + nElems],
+        (void const *)elemArray,
+        (vecPtr->m_elemCount - index) * sizeof(NkVoid *)
+    );
 
     /* Copy pointers into buffer. */
     __NkInt_VectorCopyBuffer(vecPtr, index, elemArray, nElems);
+    vecPtr->m_elemCount += nElems;
     return NkErr_Ok;
 }
 
@@ -335,20 +308,23 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
      */
     NkSize const lenToDel = NK_MIN(maxN, vecPtr->m_elemCount - sInd);
     if (lenToDel > 0 && elemArray != NULL) {
-        if (__NkInt_VectorTryFreeRange(vecPtr, sInd, sInd + lenToDel) == NkErr_NoOperation) {
+        if (__NkInt_VectorTryFreeRange(vecPtr, sInd, sInd + lenToDel - 1) == NkErr_NoOperation) {
             /*
              * Copy range into output buffer for the caller to (possibly and hopefully)
              * free them.
              */
-            memcpy(*elemArray, (NkVoid *)&vecPtr->mp_dataPtr[sInd], lenToDel * sizeof(NkVoid *));
-            return NkErr_Ok;
+            memcpy(*elemArray, (NkVoid const *)&vecPtr->mp_dataPtr[sInd], lenToDel * sizeof(NkVoid *));
         }
 
         /*
          * Shift buffer by one to the left to remove the element from the buffer. This
          * function can also not fail because sInd + lenToDel > lenToDel is always true.
          */
-        __NkInt_VectorShiftBuffer(vecPtr, sInd + lenToDel, lenToDel, NK_TRUE);
+        memmove(
+            (void *)&vecPtr->mp_dataPtr[sInd],
+            (void const *)&vecPtr->mp_dataPtr[sInd + lenToDel],
+            (vecPtr->m_elemCount - sInd - lenToDel) * sizeof(NkVoid *)
+        );
         vecPtr->m_elemCount -= lenToDel;
         /*
          * Set the first element of the result buffer to NULL to adhere to the
@@ -385,7 +361,11 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseIf(
             else
                 elemArray[j] = elemPtr;
 
-            __NkInt_VectorShiftBuffer(vecPtr, i, 1, NK_TRUE);
+            memmove(
+                (NkVoid *)&vecPtr->mp_dataPtr[i],
+                (NkVoid const *)&vecPtr->mp_dataPtr[i + 1],
+                (vecPtr->m_elemCount - i - 1) * sizeof(NkVoid *)
+            );
             ++j;
         } else ++i;
 
