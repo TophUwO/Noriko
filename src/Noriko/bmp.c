@@ -365,7 +365,7 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapSave(_In_ NkDIBitmap const *bmpPtr, _I
     __NkInt_DIBitmap *actBmpPtr = (__NkInt_DIBitmap *)bmpPtr;
 
     /* Prepare the bitmap file header. */
-    NkUint32 arrSize = __NkInt_DIBitmap_CalculateRawArraySize(
+    NkUint32 const arrSize = __NkInt_DIBitmap_CalculateRawArraySize(
         actBmpPtr->m_bSpec.m_bmpWidth,
         actBmpPtr->m_bSpec.m_bmpHeight,
         actBmpPtr->m_bSpec.m_bitsPerPx
