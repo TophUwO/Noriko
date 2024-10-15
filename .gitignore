@@ -371,3 +371,4 @@ interm/
 *.tmp
 docs/html/
 *.i
+/res/def/ts_main.bmp

@@ -66,7 +66,8 @@ NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,      &NkOMUninitialize     },
     { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,   &NkRendererShutdown   },
     { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown },
-    { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     }
+    { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
+    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      }
 };
 /**
  * \brief number of elements in the component-init table 

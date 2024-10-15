@@ -186,8 +186,9 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkVectorErase(
  * \param   [out] elemArray pointer to an array that will receive the elements that were
  *                erased from the vector if they were not destroyed
  * \return  \c NkErr_Ok on success, non-zero on failure
- * \note    If the elements were destroyed, \c elemArray will not be changed, otherwise
- *          it will receive up to \c maxN elements that were erased from the vector.
+ * \note    If the elements were destroyed, \c elemArray will be initialized to all
+ *          <tt>NULL</tt>, otherwise it will receive up to \c maxN elements that were
+ *          erased from the vector.
  * \warning If <tt>[sInd, sInd + maxN]</tt> is out of bounds, the behavior is undefined.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(

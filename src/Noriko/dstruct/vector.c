@@ -272,8 +272,8 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorInsertMulti(
     }
     /* Shift buffer right by the needed number of slots. */
     memmove(
-        (void *)&vecPtr->mp_dataPtr[index + nElems],
-        (void const *)elemArray,
+        (NkVoid *)&vecPtr->mp_dataPtr[index + nElems],
+        (NkVoid const *)elemArray,
         (vecPtr->m_elemCount - index) * sizeof(NkVoid *)
     );
 
@@ -301,19 +301,21 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
     NK_ASSERT(vecPtr != NULL, NkErr_InParameter);
     NK_ASSERT(sInd < vecPtr->m_elemCount, NkErr_ArrayElemOutOfBounds);
     NK_ASSERT(elemArray != NULL, NkErr_OutptrParameter);
-
+    
     /*
      * Get pointer that is to be erased. If it can be freed, free it, else write it to
      * **elemPtr**.
      */
     NkSize const lenToDel = NK_MIN(maxN, vecPtr->m_elemCount - sInd);
     if (lenToDel > 0 && elemArray != NULL) {
-        if (__NkInt_VectorTryFreeRange(vecPtr, sInd, sInd + lenToDel - 1) == NkErr_NoOperation) {
+        /* Try to free the elements in the given range. */
+        NkErrorCode freeState = NkErr_Ok;
+        if ((freeState = __NkInt_VectorTryFreeRange(vecPtr, sInd, sInd + lenToDel)) == NkErr_NoOperation) {
             /*
              * Copy range into output buffer for the caller to (possibly and hopefully)
              * free them.
              */
-            memcpy(*elemArray, (NkVoid const *)&vecPtr->mp_dataPtr[sInd], lenToDel * sizeof(NkVoid *));
+             memcpy((NkVoid *)elemArray, (NkVoid const *)&vecPtr->mp_dataPtr[sInd], lenToDel * sizeof(NkVoid *));
         }
 
         /*
@@ -321,16 +323,15 @@ _Return_ok_ NkErrorCode NK_CALL NkVectorEraseMulti(
          * function can also not fail because sInd + lenToDel > lenToDel is always true.
          */
         memmove(
-            (void *)&vecPtr->mp_dataPtr[sInd],
-            (void const *)&vecPtr->mp_dataPtr[sInd + lenToDel],
+            (NkVoid *)&vecPtr->mp_dataPtr[sInd],
+            (NkVoid const *)&vecPtr->mp_dataPtr[sInd + lenToDel],
             (vecPtr->m_elemCount - sInd - lenToDel) * sizeof(NkVoid *)
         );
         vecPtr->m_elemCount -= lenToDel;
-        /*
-         * Set the first element of the result buffer to NULL to adhere to the
-         * constraints posed on the return value by NkVectorErase().
-         */
-        elemArray[0] = NULL;
+
+        /* If we did destroy the elements, we initialize the result array to NULL. */
+        if (freeState != NkErr_NoOperation)
+            memset(*elemArray, 0, maxN * sizeof(NkVoid *));
     } else return NkErr_NoOperation;
 
     return NkErr_Ok;

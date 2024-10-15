@@ -483,7 +483,7 @@ NkVoid NK_CALL NkLogMessage(
             currDev,
             lvlId,
             msgCxtPtr,
-            (NkStringView){ tsBuf, msgSize  },
+            (NkStringView){ tsBuf,  msgSize },
             (NkStringView){ msgBuf, msgSize }
         );
         NK_LOCK(gl_LogContext.m_mtxLock);

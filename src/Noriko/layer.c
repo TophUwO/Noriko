@@ -38,6 +38,13 @@
 #include <include/Noriko/dstruct/vector.h>
 
 
+/* Define NkILayer IID and CLSID. */
+// { 50EBA425-5F11-4FDB-9C29-2E0EB49D3204 }
+NKOM_DEFINE_IID(NkILayer, { 0x50eba425, 0x5f11, 0x4fdb, 0x9c292e0eb49d3204 });
+// { 00000000-0000-0000-0000-000000000000 }
+NKOM_DEFINE_CLSID(NkILayer, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
+
+
 /** \cond INTERNAL */
 /**
  * \struct __NkInt_LayerStack
@@ -53,14 +60,6 @@ NK_NATIVE typedef struct __NkInt_LayerStack {
  * \brief actual instance of the global layer stack 
  */
 NK_INTERNAL __NkInt_LayerStack gl_LayerStack;
-
-
-/**
- */
-NK_INTERNAL NkVoid NK_CALL __NkInt_OnLayerStackDestroy(_Inout_ NkILayer *layerRef) {
-    if (layerRef != NULL)
-        layerRef->VT->Release(layerRef);
-}
 /** \endcond */
 
 
@@ -74,7 +73,7 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
         .m_minCap     = 8,
         .m_maxCap     = SIZE_MAX - 2,
         .m_growFactor = 1.5f
-    }, (NkVoid (NK_CALL *)(NkVoid *))&__NkInt_OnLayerStackDestroy, &gl_LayerStack.mp_layerStack);
+    }, NULL, &gl_LayerStack.mp_layerStack);
     if (errCode != NkErr_Ok)
         return errCode;
 
@@ -130,7 +129,13 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In
      * increase the ref-count of the layer.
      */
     NK_LOCK(gl_LayerStack.m_mtxLock);
-    errCode = NkVectorInsert(gl_LayerStack.mp_layerStack, (NkVoid const *)layerRef, whereInd);
+    errCode = NkVectorInsert(
+        gl_LayerStack.mp_layerStack,
+        (NkVoid const *)layerRef,
+        whereInd != NK_AS_NORMAL
+            ? whereInd
+            : NkVectorGetElementCount(gl_LayerStack.mp_layerStack)
+    );
     NK_UNLOCK(gl_LayerStack.m_mtxLock);
     if (errCode == NkErr_Ok)
         layerRef->VT->AddRef(layerRef);
@@ -139,23 +144,16 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In
 
 NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd) {
     NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
-
-    NK_LOCK(gl_LayerStack.m_mtxLock);
-    NkILayer *layerRef = NkVectorAt(gl_LayerStack.mp_layerStack, whereInd);
-    NK_UNLOCK(gl_LayerStack.m_mtxLock);
-    NK_ASSERT(layerRef != NULL, NkErr_InParameter);
-
-    /*
-     * Since we are running the destructor on the layer object, we must increase its
-     * ref-count so that it doesn't actually get destroyed. The user is then free to
-     * destroy it.
-     */
-    layerRef->VT->AddRef(layerRef);
-    NK_IGNORE_RETURN_VALUE(layerRef->VT->OnPop(layerRef));
     
-    NK_LOCK(gl_LayerStack.m_mtxLock);
-    NK_IGNORE_RETURN_VALUE(NkVectorErase(gl_LayerStack.mp_layerStack, whereInd, &layerRef));
-    NK_UNLOCK(gl_LayerStack.m_mtxLock);
+    NkILayer *layerRef;
+    /*
+     * Remove the layer from the stack. The layer stack vector will not destroy the layer,
+     * so it will return the layer in 'layerRef'.
+     */
+    NK_SYNCHRONIZED(gl_LayerStack.m_mtxLock, {
+        NK_IGNORE_RETURN_VALUE(NkVectorErase(gl_LayerStack.mp_layerStack, whereInd, &layerRef));
+    });
+
     return layerRef;
 }
 
@@ -211,6 +209,23 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat aheadBy) {
 lbl_END:
     NK_UNLOCK(gl_LayerStack.m_mtxLock);
     return layerCount == 0 ? NkErr_NoOperation : NkErr_Ok;
+}
+
+NkSize NK_CALL NkLayerstackQueryIndex(_In_ NkILayer const *layerRef) {
+    NK_ASSERT(layerRef != NULL, NkErr_InOutParameter);
+
+    NK_LOCK(gl_LayerStack.m_mtxLock);
+    NkSize const layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);
+    for (NkSize i = 0; i < layerCount; i++)
+        if (NkVectorAt(gl_LayerStack.mp_layerStack, i) == layerRef) {
+            NK_UNLOCK(gl_LayerStack.m_mtxLock);
+
+            return i;
+        }
+    NK_UNLOCK(gl_LayerStack.m_mtxLock);
+
+    /* Layer could not be found. */
+    return SIZE_MAX;
 }
 
 

@@ -119,7 +119,6 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
             NK_IGNORE_RETURN_VALUE(
                 NkEventDispatch(NkEv_WindowClosed, (NkWindowEvent){ .mp_wndRef = (NkIWindow *)wndRef })
             );
-
             /* Don't destroy the window yet, just hide it. */
             ShowWindow(wndHandle, SW_HIDE);
 
@@ -391,7 +390,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
             .m_dispTileSize = wndSpecs->m_dispTileSize,
             .m_vpAlignment  = wndSpecs->m_vpAlignment,
             .m_clearCol     = NK_MAKE_RGB(0, 0, 0),
-            .m_texInterMode = NkTexIMd_Bilinear
+            .m_texInterMode = NkTexIMd_NearestNeighbor
         }, (NkIBase **)&wndPtr->mp_rendererRef);
         if (errCode != NkErr_Ok) {
             /** \todo change to release() and destroy window */

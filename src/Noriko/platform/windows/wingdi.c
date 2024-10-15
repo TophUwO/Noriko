@@ -511,8 +511,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_DrawTexture(
          */
         BitBlt(
             rdRef->m_gdiRes.mp_memDC,
-            (int)dstRect->m_xCoord,
-            (int)dstRect->m_yCoord,
+            (int)dstRect->m_xCoord + (int)rdRef->m_gdiRes.m_vpOri.m_xCoord,
+            (int)dstRect->m_yCoord + (int)rdRef->m_gdiRes.m_vpOri.m_yCoord,
             (int)dstRect->m_width,
             (int)dstRect->m_height,
             rdRef->m_gdiRes.mp_texDC,
@@ -524,8 +524,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_DrawTexture(
         /* Fuck, scaling is required. Well, that sucks but what we gonna do? */
         StretchBlt(
             rdRef->m_gdiRes.mp_memDC,
-            (int)dstRect->m_xCoord,
-            (int)dstRect->m_yCoord,
+            (int)dstRect->m_xCoord + (int)rdRef->m_gdiRes.m_vpOri.m_xCoord,
+            (int)dstRect->m_yCoord + (int)rdRef->m_gdiRes.m_vpOri.m_yCoord,
             (int)dstRect->m_width,
             (int)dstRect->m_height,
             rdRef->m_gdiRes.mp_texDC,

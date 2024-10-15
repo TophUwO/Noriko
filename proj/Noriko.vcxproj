@@ -322,6 +322,7 @@
     </ClInclude>
     <ClInclude Include="..\include\Noriko\util.h" />
     <ClInclude Include="..\include\Noriko\window.h" />
+    <ClInclude Include="..\include\Noriko\world.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />
@@ -344,6 +345,7 @@
     <ClCompile Include="..\src\Noriko\timer.c" />
     <ClCompile Include="..\src\Noriko\util.c" />
     <ClCompile Include="..\src\Noriko\window.c" />
+    <ClCompile Include="..\src\Noriko\world.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

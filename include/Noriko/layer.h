@@ -130,5 +130,8 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnUpdate(NkVoid);
 /**
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat aheadBy);
+/**
+ */
+NK_NATIVE NK_API NkSize NK_CALL NkLayerstackQueryIndex(_In_ NkILayer const *layerRef);
 
 

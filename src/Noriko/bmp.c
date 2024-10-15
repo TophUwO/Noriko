@@ -247,7 +247,7 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapCreate(
     NkSize rowSize = __NkInt_DIBitmap_CalculateStride(bmpSpecs->m_bmpWidth, bmpSpecs->m_bitsPerPx);
     /* Allocate the pixel array. */
     NkByte *pixelArray;
-    errCode = NkGPAlloc(NULL, bmpSpecs->m_bmpHeight * rowSize, 0, NK_FALSE, &pixelArray);
+    errCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), bmpSpecs->m_bmpHeight * rowSize, 0, NK_FALSE, &pixelArray);
     if (errCode != NkErr_Ok)
         return errCode;
 
@@ -309,7 +309,7 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapLoad(_In_z_ char const *filePath, _Out
         ? dibHead.m_biSizeImage
         : __NkInt_DIBitmap_CalculateRawArraySize(dibHead.m_biWidth, dibHead.m_biHeight, dibHead.m_biBitCount)
     ;
-    NkErrorCode errCode = NkGPAlloc(NULL, (NkSize)pxBufSize, 0, NK_FALSE, &pxBuf);
+    NkErrorCode errCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), (NkSize)pxBufSize, 0, NK_FALSE, &pxBuf);
     if (errCode != NkErr_Ok) {
         fclose(fStream);
 
