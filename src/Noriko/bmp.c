@@ -365,9 +365,14 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapSave(_In_ NkDIBitmap const *bmpPtr, _I
     __NkInt_DIBitmap *actBmpPtr = (__NkInt_DIBitmap *)bmpPtr;
 
     /* Prepare the bitmap file header. */
+    NkUint32 arrSize = __NkInt_DIBitmap_CalculateRawArraySize(
+        actBmpPtr->m_bSpec.m_bmpWidth,
+        actBmpPtr->m_bSpec.m_bmpHeight,
+        actBmpPtr->m_bSpec.m_bitsPerPx
+    );
     __NkInt_BitmapFileHeader const fileHead = {
         .m_bfType     = 'MB',
-        .m_bfSize     = 8294522,
+        .m_bfSize     = 14 + 108 + arrSize,
         .m_bfReserved = 0,
         .m_bfOffBytes = 14 + 108
     };
@@ -387,11 +392,7 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapSave(_In_ NkDIBitmap const *bmpPtr, _I
         .m_biPlanes        = 1,
         .m_biBitCount      = actBmpPtr->m_bSpec.m_bitsPerPx,
         .m_biCompression   = __NkInt_DIBitmap_MapToCompressionMethod(actBmpPtr->m_bSpec.m_bmpFlags),
-        .m_biSizeImage     = __NkInt_DIBitmap_CalculateRawArraySize(
-            actBmpPtr->m_bSpec.m_bmpWidth,
-            actBmpPtr->m_bSpec.m_bmpHeight,
-            actBmpPtr->m_bSpec.m_bitsPerPx
-        ),
+        .m_biSizeImage     = arrSize,
         .m_biYPelsPerMeter = 0,
         .m_biYPelsPerMeter = 0,
         .m_blClrUsed       = 0,
