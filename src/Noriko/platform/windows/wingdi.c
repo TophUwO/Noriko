@@ -349,6 +349,21 @@ NK_INTERNAL NkIWindow *NK_CALL __NkInt_GdiRenderer_QueryWindow(_Inout_ NkIRender
 
 /**
  */
+NK_INTERNAL NkSize2D NK_CALL __NkInt_GdiRenderer_QueryViewportDimensions(_In_ NkIRenderer *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
+    /* Get pointer to internal renderer state. */
+    __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
+
+    /* Calculate current viewport dimensions. */
+    return (NkSize2D) {
+        rdRef->m_currSpec.m_dispTileSize.m_width  * rdRef->m_currSpec.m_vpExtents.m_width,
+        rdRef->m_currSpec.m_dispTileSize.m_height * rdRef->m_currSpec.m_vpExtents.m_height
+    };
+}
+
+/**
+ */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_Resize(
     _Inout_ NkIRenderer *self,
     _In_    NkSize2D clAreaSize
@@ -439,7 +454,6 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_EndDraw(_Inout_ 
     __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
 
     HDC windowDC = GetDC(rdRef->mp_wndRef->VT->QueryNativeWindowHandle(rdRef->mp_wndRef));
-
     BitBlt(
         windowDC,
         0,
@@ -451,8 +465,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_EndDraw(_Inout_ 
         0,
         SRCCOPY
     );
-
     ReleaseDC(rdRef->mp_wndRef->VT->QueryNativeWindowHandle(rdRef->mp_wndRef), windowDC);
+    
     if (rdRef->m_currSpec.m_isVSync)
         DwmFlush();
     return NkErr_Ok;
@@ -705,20 +719,21 @@ lbl_END:
  * \brief VTable for the NkIGdiRenderer class 
  */
 NKOM_DEFINE_VTABLE(NkIRenderer) {
-    .QueryInterface     = &__NkInt_GdiRenderer_QueryInterface,
-    .AddRef             = &__NkInt_GdiRenderer_AddRef,
-    .Release            = &__NkInt_GdiRenderer_Release,
-    .Initialize         = &__NkInt_GdiRenderer_Initialize,
-    .QueryRendererApi   = &__NkInt_GdiRenderer_QueryRendererApi,
-    .QuerySpecification = &__NkInt_GdiRenderer_QuerySpecification,
-    .QueryWindow        = &__NkInt_GdiRenderer_QueryWindow,
-    .Resize             = &__NkInt_GdiRenderer_Resize,
-    .BeginDraw          = &__NkInt_GdiRenderer_BeginDraw,
-    .EndDraw            = &__NkInt_GdiRenderer_EndDraw,
-    .DrawTexture        = &__NkInt_GdiRenderer_DrawTexture,
-    .CreateTexture      = &__NkInt_GdiRenderer_CreateTexture,
-    .DeleteResource     = &__NkInt_GdiRenderer_DeleteResource,
-    .GrabFramebuffer    = &__NkInt_GdiRenderer_GrabFramebuffer
+    .QueryInterface          = &__NkInt_GdiRenderer_QueryInterface,
+    .AddRef                  = &__NkInt_GdiRenderer_AddRef,
+    .Release                 = &__NkInt_GdiRenderer_Release,
+    .Initialize              = &__NkInt_GdiRenderer_Initialize,
+    .QueryRendererApi        = &__NkInt_GdiRenderer_QueryRendererApi,
+    .QuerySpecification      = &__NkInt_GdiRenderer_QuerySpecification,
+    .QueryWindow             = &__NkInt_GdiRenderer_QueryWindow,
+    .QueryViewportDimensions = &__NkInt_GdiRenderer_QueryViewportDimensions,
+    .Resize                  = &__NkInt_GdiRenderer_Resize,
+    .BeginDraw               = &__NkInt_GdiRenderer_BeginDraw,
+    .EndDraw                 = &__NkInt_GdiRenderer_EndDraw,
+    .DrawTexture             = &__NkInt_GdiRenderer_DrawTexture,
+    .CreateTexture           = &__NkInt_GdiRenderer_CreateTexture,
+    .DeleteResource          = &__NkInt_GdiRenderer_DeleteResource,
+    .GrabFramebuffer         = &__NkInt_GdiRenderer_GrabFramebuffer
 };
 
 /**

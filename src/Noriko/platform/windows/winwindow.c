@@ -222,6 +222,19 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
 
             break;
         }
+        case WM_GETMINMAXINFO: {
+            /* Retrieve current viewport dimensions. */
+            if (wndRef == NULL || wndRef->mp_rendererRef == NULL)
+                break;
+            NkSize2D const currVpDim = wndRef->mp_rendererRef->VT->QueryViewportDimensions(wndRef->mp_rendererRef);
+
+            /* Set the minimum client size. */
+            ((LPMINMAXINFO)lParam)->ptMinTrackSize = (POINT){
+                (LONG)currVpDim.m_width,
+                (LONG)currVpDim.m_height
+            };
+            return 0;
+        }
         case WM_ERASEBKGND:
             /* See comment in the 'WM_PAINT' section. */
             return 1;

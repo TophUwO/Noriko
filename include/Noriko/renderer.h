@@ -222,6 +222,9 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      *   count of the returned object.
      */
     NkIWindow *(NK_CALL *QueryWindow)(_Inout_ NkIRenderer *self);
+    /**
+     */
+    NkSize2D (NK_CALL *QueryViewportDimensions)(_Inout_ NkIRenderer *self);
 
     /**
      * \brief  resizes the client area of the renderer which is usually congruent with
