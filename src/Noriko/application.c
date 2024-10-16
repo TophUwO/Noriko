@@ -31,7 +31,6 @@
 NK_NATIVE typedef struct __NkInt_Application {
     NkApplicationSpecification m_appSpecs; /**< application specification */
 } __NkInt_Application;
-
 /**
  * \brief actual instance of the global application context 
  */
@@ -67,7 +66,8 @@ NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,   &NkRendererShutdown   },
     { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown },
     { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
-    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      }
+    { NK_MAKE_STRING_VIEW("input abstraction layer"),    &NkInputStartup,      &NkInputShutdown      },
+    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      },
 };
 /**
  * \brief number of elements in the component-init table 

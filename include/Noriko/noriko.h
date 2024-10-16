@@ -41,6 +41,7 @@
 #include <include/Noriko/renderer.h>
 #include <include/Noriko/bmp.h>
 #include <include/Noriko/world.h>
+#include <include/Noriko/input.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>

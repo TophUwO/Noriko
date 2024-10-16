@@ -34,6 +34,7 @@
 #include <include/Noriko/error.h>
 #include <include/Noriko/nkom.h>
 #include <include/Noriko/window.h>
+#include <include/Noriko/input.h>
 
 
 /**
@@ -112,9 +113,11 @@ NK_NATIVE typedef struct NkWindowEvent {
  * \brief  additional data for keyboard events
  */
 NK_NATIVE typedef struct NkKeyboardEvent {
-    NkInt32 m_pKeyCode;    /**< physical key-code */
-    NkInt32 m_vKeyCode;    /**< virtual key-code */
-    NkInt32 m_repeatCount; /**< repeat-count */
+    NkInt32        m_pKeyCode;    /**< physical key-code (i.e., <em>scan-code</em>) */
+    NkInt32        m_vNtKeyCode;  /**< virtual platform-dependent key-code */
+    NkKeyboardKey  m_vKeyCode;    /**< virtual **Noriko** key-code */
+    NkModifierKeys m_modKeys;     /**< what modifier keys are currently down */
+    NkInt32        m_repeatCount; /**< repeat-count */
 } NkKeyboardEvent;
 
 /**
@@ -124,9 +127,10 @@ NK_NATIVE typedef struct NkKeyboardEvent {
  *          be any button pressed, so the \c m_mouseBtn field may be invalid.
  */
 NK_NATIVE typedef struct NkMouseEvent {
-    NkPoint2D m_curPos;   /**< current (window-local) cursor position */
-    NkPoint2D m_glCurPos; /**< global (screen-wide) cursor position */
-    NkInt32   m_mouseBtn; /**< mouse button */
+    NkPoint2D      m_curPos;   /**< current (window-local) cursor position */
+    NkPoint2D      m_glCurPos; /**< global (screen-wide) cursor position */
+    NkMouseButton  m_mouseBtn; /**< mouse button */
+    NkModifierKeys m_modKeys;  /**< what modifier keys are currently down */
 } NkMouseEvent;
 
 /**
