@@ -227,11 +227,24 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
             if (wndRef == NULL || wndRef->mp_rendererRef == NULL)
                 break;
             NkSize2D const currVpDim = wndRef->mp_rendererRef->VT->QueryViewportDimensions(wndRef->mp_rendererRef);
+            /*
+             * Adjust the rectangle so that it reflects the actual required window size.
+             * This has to be done since WM_MINMAXINFO asks for window dimensions, not
+             * client dimensions. If we don't do this adjustment, the minimum client area
+             * size will be slightly smaller than the viewport.
+             */
+            RECT clRect = { 0, 0, (LONG)currVpDim.m_width, (LONG)currVpDim.m_height };
+            AdjustWindowRectEx(
+                &clRect,
+                (DWORD)GetWindowLongPtr(wndHandle, GWL_STYLE),
+                FALSE,
+                (DWORD)GetWindowLongPtr(wndHandle, GWL_EXSTYLE)
+            );
 
             /* Set the minimum client size. */
             ((LPMINMAXINFO)lParam)->ptMinTrackSize = (POINT){
-                (LONG)currVpDim.m_width,
-                (LONG)currVpDim.m_height
+                clRect.right - clRect.left,
+                clRect.bottom - clRect.top
             };
             return 0;
         }
