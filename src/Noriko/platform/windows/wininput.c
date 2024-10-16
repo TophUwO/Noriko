@@ -411,6 +411,26 @@ NK_INTERNAL NkModifierKeys NK_CALL __NkInt_WindowsInput_GetModifierKeyStates(_In
         | __NkInt_WindowsInput_IsKeyPressed(self, NkKey_RSuper)   << 8
     );
 }
+
+
+/**
+ * \brief actual instance of the Win32 IAL 
+ */
+NK_INTERNAL NkIInput const gl_Win32Ial = {
+    .VT = &(struct __NkIInput_VTable__) {
+        .QueryInterface           = &__NkInt_WindowsInput_QueryInterface,
+        .AddRef                   = &__NkInt_WindowsInput_AddRef,
+        .Release                  = &__NkInt_WindowsInput_Release,
+        .MapFromNativeKey         = &__NkInt_WindowsInput_MapFromNativeKey,
+        .MapFromNativeMouseButton = &__NkInt_WindowsInput_MapFromNativeMouseButton,
+        .MapToNativeKey           = &__NkInt_WindowsInput_MapToNativeKey,
+        .MapToNativeMouseButton   = &__NkInt_WindowsInput_MapToNativeMouseButton,
+        .IsKeyPressed             = &__NkInt_WindowsInput_IsKeyPressed,
+        .IsMouseButtonPressed     = &__NkInt_WindowsInput_IsMouseButtonPressed,
+        .GetMousePosition         = &__NkInt_WindowsInput_GetMousePosition,
+        .GetModifierKeyStates     = &__NkInt_WindowsInput_GetModifierKeyStates
+    }
+};
 /** \endcond */
 
 
@@ -430,30 +450,11 @@ _Return_ok_ NkErrorCode NK_CALL NkInputShutdown(NkVoid) {
 
 
 NkIInput *NK_CALL NkInputQueryInstance(NkVoid) {
-    /** \cond INTERNAL */
-    /**
-     * \brief actual instance of the input translator's VTable 
-     */
-    NKOM_DEFINE_VTABLE(NkIInput) {
-        .QueryInterface           = &__NkInt_WindowsInput_QueryInterface,
-        .AddRef                   = &__NkInt_WindowsInput_AddRef,
-        .Release                  = &__NkInt_WindowsInput_Release,
-        .MapFromNativeKey         = &__NkInt_WindowsInput_MapFromNativeKey,
-        .MapFromNativeMouseButton = &__NkInt_WindowsInput_MapFromNativeMouseButton,
-        .MapToNativeKey           = &__NkInt_WindowsInput_MapToNativeKey,
-        .MapToNativeMouseButton   = &__NkInt_WindowsInput_MapToNativeMouseButton,
-        .IsKeyPressed             = &__NkInt_WindowsInput_IsKeyPressed,
-        .IsMouseButtonPressed     = &__NkInt_WindowsInput_IsMouseButtonPressed,
-        .GetMousePosition         = &__NkInt_WindowsInput_GetMousePosition,
-        .GetModifierKeyStates     = &__NkInt_WindowsInput_GetModifierKeyStates
-    };
-    /** \endcond */
-
     /*
      * Since this instance is static and does not have any data, we do not need to
      * increment the instance's reference count.
      */
-    return (NkIInput *)&NKOM_VTABLEOF(NkIInput);
+    return (NkIInput *)&gl_Win32Ial;
 }
 
 

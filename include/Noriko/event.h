@@ -113,11 +113,10 @@ NK_NATIVE typedef struct NkWindowEvent {
  * \brief  additional data for keyboard events
  */
 NK_NATIVE typedef struct NkKeyboardEvent {
-    NkInt32        m_pKeyCode;    /**< physical key-code (i.e., <em>scan-code</em>) */
-    NkInt32        m_vNtKeyCode;  /**< virtual platform-dependent key-code */
-    NkKeyboardKey  m_vKeyCode;    /**< virtual **Noriko** key-code */
-    NkModifierKeys m_modKeys;     /**< what modifier keys are currently down */
-    NkInt32        m_repeatCount; /**< repeat-count */
+    NkInt32        m_pKeyCode;   /**< physical key-code (i.e., <em>scan-code</em>) */
+    NkInt32        m_vNtKeyCode; /**< virtual platform-dependent key-code */
+    NkKeyboardKey  m_vKeyCode;   /**< virtual **Noriko** key-code */
+    NkInt32        m_reserved;   /**< reserved field; unused (always 0) */
 } NkKeyboardEvent;
 
 /**
@@ -130,7 +129,7 @@ NK_NATIVE typedef struct NkMouseEvent {
     NkPoint2D      m_curPos;   /**< current (window-local) cursor position */
     NkPoint2D      m_glCurPos; /**< global (screen-wide) cursor position */
     NkMouseButton  m_mouseBtn; /**< mouse button */
-    NkModifierKeys m_modKeys;  /**< what modifier keys are currently down */
+    NkInt32        m_reserved; /**< reserved field; unused (always 0) */
 } NkMouseEvent;
 
 /**

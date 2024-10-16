@@ -21,6 +21,13 @@
 #include <include/Noriko/input.h>
 
 
+/* Define IID and CLSID of the NkIInput class. */
+// { E2BF3AEB-584A-474E-A767-3B6EDD3FC3E3 }
+NKOM_DEFINE_IID(NkIInput, { 0xe2bf3aeb, 0x584a, 0x474e, 0xa7673b6edd3fc3e3 });
+// { 00000000-0000-0000-0000-000000000000 }
+NKOM_DEFINE_CLSID(NkIInput, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
+
+
 NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode) {
     NK_ASSERT(keyCode >= 0 && keyCode < NK_MAX_NUM_KEY_CODES, NkErr_InParameter);
 

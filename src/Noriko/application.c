@@ -174,7 +174,7 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
     NkErrorCode    errCode    = NkErr_Ok;
     NkUint64       prevTime   = NkGetCurrentTime();
     NkUint64       currLag    = 0;
-    NkUint64 const maxElapsed = 0.016f * NkGetTimerFrequency();
+    NkUint64 const maxElapsed = (NkUint64)(0.016f * (NkFloat)NkGetTimerFrequency());
 
 #if (defined NK_TARGET_WINDOWS)
     MSG currMsg;
@@ -190,11 +190,13 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
 #if (defined NK_TARGET_WINDOWS)
         /* Then, dispatch windows messages. */
         while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
-            /*
-             * Check if the message was actually the Windows 'WM_QUIT' message. The
-             * 'WM_QUIT' message is not sent to any window procedures.
-             */
             if (currMsg.message == WM_QUIT) {
+                /*
+                 * Check if the message was actually the Windows 'WM_QUIT' message.
+                 * The 'WM_QUIT' message is not sent to any window procedures. When
+                 * this message is received, we leave the main loop because the app
+                 * was instructed to quit in an orderly manner.
+                 */
                 errCode = (NkErrorCode)currMsg.wParam;
 
                 goto lbl_CLEANUP;

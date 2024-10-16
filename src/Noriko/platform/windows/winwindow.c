@@ -24,6 +24,7 @@
 #include <include/Noriko/platform.h>
 #include <include/Noriko/log.h>
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/input.h>
 
 
 #if (defined NK_TARGET_WINDOWS)
@@ -35,12 +36,14 @@ NK_NATIVE typedef struct __NkInt_WindowsWindow {
     NKOM_IMPLEMENTS(NkIWindow);
 
     HWND          mp_nativeHandle;   /**< native window handle */
+    POINT         m_lastMousePos;    /**< last mouse position */
     NkWindowMode  m_allowedWndModes; /**< allowed window modes */
     NkWindowMode  m_currWndMode;     /**< current window mode */
     NkWindowFlags m_wndFlags;        /**< window flags */
     NkStringView  m_wndTitle;        /**< default window title */
     NkUuid        m_wndUuid;         /**< unique window identifier */
     NkIRenderer  *mp_rendererRef;    /**< reference to the renderer for this window */
+    NkIInput     *mp_ialRef;         /**< reference to IAL */
 } __NkInt_WindowsWindow;
 
 
@@ -55,11 +58,131 @@ NK_INTERNAL NkWindowMode NK_CALL __NkInt_WindowsWindow_GetNewWindowMode(_In_ HWN
 
 /**
  */
+NK_INTERNAL NkEventType NK_CALL __NkInt_WindowsWindow_MapFromNativeInputEvent(_In_ UINT msgId) {
+    switch (msgId) {
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:  return NkEv_KeyboardKeyDown;
+        case WM_KEYUP:
+        case WM_SYSKEYUP:    return NkEv_KeyboardKeyUp;
+        case WM_LBUTTONDOWN: 
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_XBUTTONDOWN: return NkEv_MouseButtonDown;
+        case WM_LBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_RBUTTONUP:   
+        case WM_XBUTTONUP:   return NkEv_MouseButtonUp;
+    }
+
+    return NkEv_None;
+}
+
+/**
+ */
 NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT msgId, WPARAM wParam, LPARAM lParam) {
     /* Get the pointer to the underlying window structure. */
     __NkInt_WindowsWindow *wndRef = (__NkInt_WindowsWindow *)GetWindowLongPtr(wndHandle, GWLP_USERDATA);
 
     switch (msgId) {
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP: {
+            /* Determine event type. */
+            NkEventType const evType = msgId == WM_KEYDOWN && (lParam & (1 << 30))
+                ? NkEv_KeyboardKeyRepeated
+                : __NkInt_WindowsWindow_MapFromNativeInputEvent(msgId)
+            ;
+
+            /*
+             * Dispatch the event to the layer-stack. The return value is ignored since
+             * Windows mandates that the window procedure return 0 if one of the WM_KEY*
+             * messages was handled.
+             */
+            NK_IGNORE_RETURN_VALUE(
+                NkEventDispatch(evType, &(NkKeyboardEvent const){
+                    .m_pKeyCode   = (NkInt32)(lParam & 0x00FF0000),
+                    .m_vNtKeyCode = (NkInt32)wParam,
+                    .m_vKeyCode   = wndRef->mp_ialRef->VT->MapFromNativeKey(wndRef->mp_ialRef, (int)wParam)
+                })
+            );
+            return 0;
+        }
+        case WM_LBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_XBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_RBUTTONUP:
+        case WM_XBUTTONUP: {
+            /* Determine event type. */
+            NkEventType const evType = __NkInt_WindowsWindow_MapFromNativeInputEvent(msgId);
+            WPARAM      const ntBtn  = wParam >> (msgId == WM_XBUTTONDOWN || msgId == WM_XBUTTONUP) * 16;
+            /* Determine global mouse position. */
+            POINT glPos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ClientToScreen(wndHandle, &glPos);
+
+            /* Dispatch event. */
+            NK_IGNORE_RETURN_VALUE(
+                NkEventDispatch(evType, &(NkMouseEvent const){
+                    .m_curPos   = (NkPoint2D){ (NkInt64)GET_X_LPARAM(lParam), (NkInt64)GET_Y_LPARAM(lParam) },
+                    .m_glCurPos = (NkPoint2D){ (NkInt64)glPos.x, (NkInt64)glPos.y },
+                    .m_mouseBtn = wndRef->mp_ialRef->VT->MapFromNativeMouseButton(wndRef->mp_ialRef, (int)ntBtn)
+                })
+            );
+            return 0;
+        }
+        case WM_MOUSEMOVE: {
+            /*
+             * If the previous mouse position is equal to the current mouse position, the
+             * position hasn't changed so we can safely ignore it. This is significant
+             * since the system may send spurious WM_MOUSEMOVE message to initiate mouse
+             * recalculations. For more information, see:
+             *     https://devblogs.microsoft.com/oldnewthing/20160616-00/?p=93685
+             */
+            if (wndRef->m_lastMousePos.x == GET_X_LPARAM(lParam) && wndRef->m_lastMousePos.y == GET_Y_LPARAM(lParam))
+                return 0;
+            /* Update the mouse position. */
+            wndRef->m_lastMousePos = (POINT){ GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+
+            /* Determine global mouse position. */
+            POINT glPos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ClientToScreen(wndHandle, &glPos);
+
+            /* Dispatch event. */
+            NK_IGNORE_RETURN_VALUE(
+                NkEventDispatch(NkEv_MouseMoved, &(NkMouseEvent const){
+                    .m_curPos   = (NkPoint2D){ (NkInt64)GET_X_LPARAM(lParam), (NkInt64)GET_Y_LPARAM(lParam) },
+                    .m_glCurPos = (NkPoint2D){ (NkInt64)glPos.x, (NkInt64)glPos.y },
+                    .m_mouseBtn = NkBtn_Unknown
+                })
+            );
+            return 0;
+        }
+        case WM_MOUSEWHEEL: {
+            /*
+             * Determine if the wheel was moved up (that is, away from the user), or down
+             * (i.e., towards the user).
+             * Note: This code currently assumes a constant wheel-delta of 120 (default).
+             */
+            if (wParam >> 16 == 0)
+                return 0;
+            NkEventType const evType = GET_WHEEL_DELTA_WPARAM(wParam) > 0 ? NkEv_MouseScrollUp : NkEv_MouseScrollDown;
+            /* Determine global mouse position. */
+            POINT glPos = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ClientToScreen(wndHandle, &glPos);
+
+            /* Dispatch the event. */
+            NK_IGNORE_RETURN_VALUE(
+                NkEventDispatch(evType, &(NkMouseEvent const){
+                    .m_curPos   = (NkPoint2D){ (NkInt64)GET_X_LPARAM(lParam), (NkInt64)GET_Y_LPARAM(lParam) },
+                    .m_glCurPos = (NkPoint2D){ (NkInt64)glPos.x, (NkInt64)glPos.y },
+                    .m_mouseBtn = NkBtn_Unknown
+                })
+            );
+            return 0;
+        };
         case WM_INITMENU:
         case WM_INITMENUPOPUP: {
             /*
@@ -117,7 +240,7 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
              * to do right before the window is closed.
              */
             NK_IGNORE_RETURN_VALUE(
-                NkEventDispatch(NkEv_WindowClosed, (NkWindowEvent){ .mp_wndRef = (NkIWindow *)wndRef })
+                NkEventDispatch(NkEv_WindowClosed, &(NkWindowEvent const){ .mp_wndRef = (NkIWindow *)wndRef })
             );
             /* Don't destroy the window yet, just hide it. */
             ShowWindow(wndHandle, SW_HIDE);
@@ -130,7 +253,7 @@ NK_INTERNAL LRESULT CALLBACK __NkInt_WindowsWindow_WndProc(HWND wndHandle, UINT 
              */
             if (wndRef->m_wndFlags & NkWndFlag_MainWindow)
                 NkApplicationExit(NkErr_Ok);
-            return FALSE;
+            return 0;
         case WM_DESTROY:
             /* Destroy the renderer. */
             wndRef->mp_rendererRef->VT->Release(wndRef->mp_rendererRef);
@@ -270,6 +393,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_QueryInterface
     }
 
     /* Interface not implemented. */
+    *resPtr = NULL;
     return NkErr_InterfaceNotImpl;
 }
 
@@ -402,6 +526,8 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
         NkUuidCopy(&wndSpecs->m_wndUuid, &wndPtr->m_wndUuid);
         wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
+        wndPtr->mp_ialRef         = NkInputQueryInstance();
+        wndPtr->m_lastMousePos    = (POINT){ 0, 0 };
 
         /* Send initial events. */
         NK_IGNORE_RETURN_VALUE(NkEventDispatch(NkEv_WindowOpened, &(NkWindowEvent){ .mp_wndRef = self }));
@@ -577,6 +703,7 @@ NK_INTERNAL NkIRenderer *NK_CALL __NkInt_WindowsWindow_GetRenderer(_Inout_ NkIWi
 
 
 /**
+ * \brief instance of the __NkInt_WindowsWindow class' VTable
  */
 NKOM_DEFINE_VTABLE(NkIWindow) {
     .QueryInterface          = &__NkInt_WindowsWindow_QueryInterface,

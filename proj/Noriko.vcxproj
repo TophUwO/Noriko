@@ -310,6 +310,7 @@
     <ClInclude Include="..\include\Noriko\error.h" />
     <ClInclude Include="..\include\Noriko\event.h" />
     <ClInclude Include="..\include\Noriko\helpers.h" />
+    <ClInclude Include="..\include\Noriko\input.h" />
     <ClInclude Include="..\include\Noriko\layer.h" />
     <ClInclude Include="..\include\Noriko\log.h" />
     <ClInclude Include="..\include\Noriko\nkom.h" />
@@ -333,12 +334,14 @@
     <ClCompile Include="..\src\Noriko\dstruct\vector.c" />
     <ClCompile Include="..\src\Noriko\error.c" />
     <ClCompile Include="..\src\Noriko\event.c" />
+    <ClCompile Include="..\src\Noriko\input.c" />
     <ClCompile Include="..\src\Noriko\layer.c" />
     <ClCompile Include="..\src\Noriko\log.c" />
     <ClCompile Include="..\src\Noriko\nkom.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\wingdi.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winhelpers.c" />
+    <ClCompile Include="..\src\Noriko\platform\windows\wininput.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winwindow.c" />
     <ClCompile Include="..\src\Noriko\renderer.c" />
     <ClCompile Include="..\src\Noriko\sort.c" />
