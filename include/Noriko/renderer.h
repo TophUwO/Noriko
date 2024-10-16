@@ -319,6 +319,9 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      *   <tt>*resourcePtr</tt> will be <tt>NULL</tt>.
      */
     NkErrorCode (NK_CALL *DeleteResource)(_Inout_ NkIRenderer *self, _Uninit_ptr_ NkRendererResource **resourcePtr);
+    /**
+     */
+    NkErrorCode (NK_CALL *GrabFramebuffer)(_Inout_ NkIRenderer *self, _Inout_ NkDIBitmap *resPtr);
 };
 
 

@@ -79,12 +79,15 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_RendererFactory_QueryInterfa
     NK_ASSERT(resPtr != NULL, NkErr_OutptrParameter);
 
     if (NkUuidIsEqual(iId, NKOM_IIDOF(NkIBase)) || NkUuidIsEqual(iId, NKOM_IIDOF(NkIClassFactory))) {
+        /* Interface is implemented. */
         *resPtr = (NkVoid *)self;
 
         __NkInt_RendererFactory_AddRef(self);
         return NkErr_Ok;
     }
 
+    /* Interface not implemented. */
+    *resPtr = NULL;
     return NkErr_InterfaceNotImpl;
 }
 

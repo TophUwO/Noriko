@@ -279,6 +279,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_QueryInterface(
     }
 
     /* Interface not implemented. */
+    *resPtr = NULL;
     return NkErr_InterfaceNotImpl;
 }
 
@@ -637,8 +638,71 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_DeleteResource(
     return NkErr_Ok;
 }
 
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_GdiRenderer_GrabFramebuffer(
+    _Inout_ NkIRenderer *self,
+    _Inout_ NkDIBitmap *resPtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_InOutParameter);
+
+    NkErrorCode errCode = NkErr_Ok;
+    /* Get pointer to renderer structure. */
+    __NkInt_GdiRenderer *rdRef = (__NkInt_GdiRenderer *)self;
+    /* Make sure that all pending draw commands have been written to the device. */
+    GdiFlush();
+
+    /*
+     * Before we can copy the pixels, we must unbind the framebuffer from the rendering
+     * device context.
+     * See: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-getdibits
+     */
+    HGDIOBJ currFB = SelectObject(rdRef->m_gdiRes.mp_memDC, rdRef->m_gdiRes.mp_oldBmp);
+
+    /* Determine the DI bitmap specifications. */
+    NkBitmapSpecification const *dibSpecs = NkDIBitmapGetSpecification(resPtr);
+    /* Copy pixels. */
+    int cLinesCopied = GetDIBits(
+        rdRef->m_gdiRes.mp_memDC,
+        currFB,
+        0,
+        NK_MIN(dibSpecs->m_bmpHeight, rdRef->m_gdiRes.m_bbDim.m_height),
+        (LPVOID)NkDIBitmapGetPixels(resPtr, NULL),
+        &(BITMAPINFO){
+            .bmiHeader = {
+                .biSize          = sizeof(BITMAPINFOHEADER),
+                .biWidth         = dibSpecs->m_bmpWidth,
+                .biHeight        = dibSpecs->m_bmpHeight,
+                .biBitCount      = dibSpecs->m_bitsPerPx,
+                .biPlanes        = 1,
+                .biCompression   = BI_RGB,
+                .biSizeImage     = (DWORD)(dibSpecs->m_bmpStride * dibSpecs->m_bmpHeight),
+                .biXPelsPerMeter = 0,
+                .biYPelsPerMeter = 0,
+                .biClrUsed       = 0,
+                .biClrImportant  = 0
+            }
+        },
+        DIB_RGB_COLORS
+    );
+    if (cLinesCopied != NK_MIN(dibSpecs->m_bmpHeight, rdRef->m_gdiRes.m_bbDim.m_height)) {
+        /* There was an error copying the pixels; couldn't copy all scan-lines. */
+        errCode = NkErr_CopyDDBPixels;
+
+        goto lbl_END;
+    }
+
+lbl_END:
+    /* Reselect the framebuffer into the rendering device context. */
+    SelectObject(rdRef->m_gdiRes.mp_memDC, currFB);
+
+    return errCode;
+}
+
 
 /**
+ * \brief VTable for the NkIGdiRenderer class 
  */
 NKOM_DEFINE_VTABLE(NkIRenderer) {
     .QueryInterface     = &__NkInt_GdiRenderer_QueryInterface,
@@ -653,7 +717,8 @@ NKOM_DEFINE_VTABLE(NkIRenderer) {
     .EndDraw            = &__NkInt_GdiRenderer_EndDraw,
     .DrawTexture        = &__NkInt_GdiRenderer_DrawTexture,
     .CreateTexture      = &__NkInt_GdiRenderer_CreateTexture,
-    .DeleteResource     = &__NkInt_GdiRenderer_DeleteResource
+    .DeleteResource     = &__NkInt_GdiRenderer_DeleteResource,
+    .GrabFramebuffer    = &__NkInt_GdiRenderer_GrabFramebuffer
 };
 
 /**

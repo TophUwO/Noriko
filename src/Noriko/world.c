@@ -25,15 +25,16 @@
 #include <include/Noriko/renderer.h>
 #include <include/Noriko/window.h>
 #include <include/Noriko/layer.h>
-#include <include/Noriko/log.h>W
+#include <include/Noriko/log.h>
 
 
+/** \cond INTERNAL */
 /**
  */
 NK_NATIVE typedef struct __NkInt_WorldLayer {
     NKOM_IMPLEMENTS(NkILayer);
 
-    NkIWindow          *mp_renderTarget; /**< cached reference to the render window */
+    NkIWindow          *mp_rdTarget;     /**< cached reference to the render window */
     NkIRenderer        *mp_rdRef;        /**< cached reference to the window's renderer */
     NkRendererResource *mp_mainTexAtlas; /**< texture atlas for world, etc. */
 } __NkInt_WorldLayer;
@@ -49,7 +50,66 @@ NK_INTERNAL NkVoid __NkInt_WorldLayer_DeleteResources(_Inout_ __NkInt_WorldLayer
 
     /* Release renderer and window. */
     self->mp_rdRef->VT->Release(self->mp_rdRef);
-    self->mp_renderTarget->VT->Release(self->mp_renderTarget);
+    self->mp_rdTarget->VT->Release(self->mp_rdTarget);
+}
+
+/**
+ */
+NK_INTERNAL NkVoid __NkInt_WorldLayer_ActionScreenshot(_Inout_ __NkInt_WorldLayer *self, char const *filePath) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(filePath != NULL && *filePath ^ '\0', NkErr_InParameter);
+
+    /* Retrieve current client area dimensions. */
+    NkSize2D const currDim = self->mp_rdTarget->VT->GetClientDimensions(self->mp_rdTarget);
+    /* Create device-independent bitmap to hold the current framebuffer's contents. */
+    NkDIBitmap newScreenshot;
+    NkErrorCode errCode = NkDIBitmapCreate(&(NkBitmapSpecification const) {
+        .m_structSize = sizeof(NkBitmapSpecification),
+            .m_bmpWidth   = (NkInt32)currDim.m_width,
+            .m_bmpHeight  = (NkInt32)currDim.m_height,
+            .m_bitsPerPx  = 32
+    }, NULL, &newScreenshot);
+    if (errCode != NkErr_Ok) {
+        /* Failed to create DI bitmap. */
+        NK_LOG_ERROR(
+            "Failed to create device-independent bitmap for receiving the pixel buffer. Reason: %s (%i)",
+            NkGetErrorCodeStr(errCode)->mp_dataPtr,
+            (int)errCode
+        );
+
+        return;
+    }
+
+    /* Grab the pixel data from the framebuffer. */
+    if ((errCode = self->mp_rdRef->VT->GrabFramebuffer(self->mp_rdRef, &newScreenshot)) != NkErr_Ok) {
+        /* Failed to copy pixels. */
+        NK_LOG_ERROR(
+            "Failed to grab current framebuffer. Reason: %s (%i)",
+            NkGetErrorCodeStr(errCode)->mp_dataPtr,
+            (int)errCode
+        );
+
+        NkDIBitmapDestroy(&newScreenshot);
+        return;
+    }
+
+    /*
+     * Save the bitmap to the file. We use one filePath for now, can only save the
+     * latest screenshot.
+     * TODO: Generate random number or use timestamp for screenshot file names.
+     */
+    if ((errCode = NkDIBitmapSave(&newScreenshot, filePath)) != NkErr_Ok)
+        /* Failed to write bitmap file to disk. */
+        NK_LOG_ERROR(
+            "Failed to write screenshot file to \"%s\". Reason: %s (%i)",
+            filePath,
+            NkGetErrorCodeStr(errCode)->mp_dataPtr,
+            (int)errCode
+        );
+
+    NK_LOG_INFO("Successfully wrote screenshot to \"%s\".", filePath);
+    /* At last, delete bitmap. */
+    NkDIBitmapDestroy(&newScreenshot);
 }
 
 
@@ -100,6 +160,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_QueryInterface(
     }
 
     /* Interface not implemented. */
+    *resPtr = NULL;
     return NkErr_InterfaceNotImpl;
 }
 
@@ -112,6 +173,9 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnPush(
     _In_     NkSize index
 ) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(index);
+    NK_UNREFERENCED_PARAMETER(beforeRef);
+    NK_UNREFERENCED_PARAMETER(afterRef);
 
     /* Get internal structure of world layer. */
     __NkInt_WorldLayer *actWorldLayer = (__NkInt_WorldLayer *)self;
@@ -137,7 +201,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnPush(
     *actWorldLayer = (__NkInt_WorldLayer){
         .NkILayer_Iface = actWorldLayer->NkILayer_Iface,
 
-        .mp_renderTarget = mainWnd,
+        .mp_rdTarget     = mainWnd,
         .mp_rdRef        = mainRd,
         .mp_mainTexAtlas = mainTsRes
     };
@@ -163,7 +227,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnPop(_Inout_ NkI
     actWorldLayer->mp_rdRef->VT->DeleteResource(actWorldLayer->mp_rdRef, &actWorldLayer->mp_mainTexAtlas);
     /* Release components. */
     actWorldLayer->mp_rdRef->VT->Release(actWorldLayer->mp_rdRef);
-    actWorldLayer->mp_renderTarget->VT->Release(actWorldLayer->mp_renderTarget);
+    actWorldLayer->mp_rdTarget->VT->Release(actWorldLayer->mp_rdTarget);
 
     /* All good. */
     return NkErr_Ok;
@@ -177,26 +241,33 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnEvent(
 ) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
     NK_ASSERT(evPtr != NULL, NkErr_InParameter);
-    NK_UNREFERENCED_PARAMETER(self);
-    NK_UNREFERENCED_PARAMETER(evPtr);
 
-    /* Stub for now. */
-    return NkErr_Ok;
+    /* Allow taking screenshots. */
+    if (evPtr->m_evType == NkEv_KeyboardKeyDown && evPtr->m_kbEvent.m_vKeyCode == NkKey_F11) {
+        __NkInt_WorldLayer_ActionScreenshot((__NkInt_WorldLayer *)self, "latestScreenshot.bmp");
+
+        /* Event was handled. */
+        return NkErr_Ok;
+    }
+
+    /* Event was not handled. */
+    return NkErr_NoOperation;
 }
 
 /**
  */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnRender(_Inout_ NkILayer *self, _In_ NkFloat aheadBy) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(aheadBy);
 
     /* Get internal structure of world layer. */
-    __NkInt_WorldLayer *actWorldLayer = (__NkInt_WorldLayer *)self;
+    __NkInt_WorldLayer *actWorldLy = (__NkInt_WorldLayer *)self;
 
     /* Draw world. */
-    actWorldLayer->mp_rdRef->VT->DrawTexture(
-        actWorldLayer->mp_rdRef,
+    actWorldLy->mp_rdRef->VT->DrawTexture(
+        actWorldLy->mp_rdRef,
         &(NkRectF){ 0, 0, 8 * 32, 8 * 32 },
-        actWorldLayer->mp_mainTexAtlas,
+        actWorldLy->mp_mainTexAtlas,
         &(NkRectF){ 0, 0, 8 * 32, 8 * 32 }
     );
 
@@ -206,6 +277,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WorldLayer_OnRender(_Inout_ 
 
 
 /**
+ * \brief actual world layer instance
  */
 NK_INTERNAL __NkInt_WorldLayer gl_WorldLayer = {
     .NkILayer_Iface = {
@@ -219,10 +291,11 @@ NK_INTERNAL __NkInt_WorldLayer gl_WorldLayer = {
             .OnRender       = &__NkInt_WorldLayer_OnRender
         }
     },
-    .mp_renderTarget = NULL,
+    .mp_rdTarget     = NULL,
     .mp_rdRef        = NULL,
     .mp_mainTexAtlas = NULL
 };
+/** \endcond */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkWorldStartup(NkVoid) {

@@ -55,10 +55,10 @@ NK_NATIVE typedef struct NkBitmapSpecification {
     NkUint32 m_bmpStride;  /**< size of a row, in bytes (incl. padding) */
     NkUint16 m_bitsPerPx;  /**< size of one pixel, in bits */
     NkUint16 m_bmpFlags;   /**< boolean-representable bitmap settings */
-    NkUint32 m_redMask;    /**< position of the pixel's 'red component' */
-    NkUint32 m_greenMask;  /**< position of the pixel's 'green component' */
-    NkUint32 m_blueMask;   /**< position of the pixel's 'blue component' */
-    NkUint32 m_alphaMask;  /**< position of the pixel's 'alpha component' */
+    NkUint32 m_redMask;    /**< position of the pixel's red component */
+    NkUint32 m_greenMask;  /**< position of the pixel's green component */
+    NkUint32 m_blueMask;   /**< position of the pixel's blue component */
+    NkUint32 m_alphaMask;  /**< position of the pixel's alpha component */
 } NkBitmapSpecification;
 
 /**

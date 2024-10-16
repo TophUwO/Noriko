@@ -61,7 +61,7 @@
 
     /* Suppress some non-important warnings. */
     #pragma warning (disable: 4668) /* macro not defined; replacing with '0' */
-    #pragma warning (disable: 5045) /* spectre migitation for memory loads */
+    #pragma warning (disable: 5045) /* spectre mitigation for memory loads */
     #pragma warning (disable: 4061) /* enumerator not explicitly handled in switch-case */
     #pragma warning (disable: 4062) /* enumerator not handled in switch-case */
     #pragma warning (disable: 4065) /* switch-case contains default but no case labels */

@@ -139,7 +139,7 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_CapLimitExceeded,      /**< container capacity limit exceeded */
     NkErr_ComponentState,        /**< invalid component state */
     NkErr_ObjectType,            /**< invalid object type */
-    NkErr_ObjectState,           /**< invalid object state (function precond not met) */
+    NkErr_ObjectState,           /**< invalid object state (function pre-cond not met) */
     NkErr_SynchInit,             /**< error while initializing synchronization object */
     NkErr_UnexpectedCharacter,   /**< unexpected character during parsing */
     NkErr_InvalidIdentifier,     /**< invalid identifier during parsing */
@@ -163,6 +163,7 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InvImageDimensions,    /**< invalid image dimensions */
     NkErr_InvBitDepth,           /**< invalid bit depth */
     NkErr_CreateDDBFromDIB,      /**< could not create DDB from DIB pixels */
+    NkErr_CopyDDBPixels,         /**< could not copy pixels from DDB to DIB */
 
     __NkErr_Count__              /**< used internally */
 } NkErrorCode;
