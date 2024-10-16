@@ -23,9 +23,43 @@
 #include <include/Noriko/error.h>
 #include <include/Noriko/nkom.h>
 
+/**
+ * \def   NK_MAX_NUM_KEY_CODES
+ * \brief maximum keycode index (the implementation must handle at least the following
+ *        number of key-codes)
+ * \note  This number must be non-zero and a power of two.
+ * 
+ * \par Remarks
+ *   This limit refers to the maximum key-code number, not necessarily how many different
+ *   codes exist. That is, no key-code above this number must be supported.
+ */
+#define NK_MAX_NUM_KEY_CODES ((NkSize)(0x400))
+/* Verify integrity. */
+static_assert(
+    NK_MAX_NUM_KEY_CODES > 0 && NK_ISBITFLAG(NK_MAX_NUM_KEY_CODES) == NK_TRUE,
+    "'NK_MAX_NUM_KEY_CODES' is not a power of two. Check definition."
+);
+/**
+ * \def   NK_MAX_NUM_MOUSE_BTNS
+ * \brief maximum mouse button index (the implementation must handle at least the
+ *        following number of mouse buttons)
+ * \note  This number must be non-zero and a power of two.
+ * 
+ * \par Remarks
+ *   This limit refers to the numerically highest possible mouse button code, not
+ *   necessarily how many different codes exist. That is, no mouse button code above this
+ *   number must be supported.
+ */
+#define NK_MAX_NUM_MOUSE_BTNS ((NkSize)(0x020))
+/* Verify integrity. */
+static_assert(
+    NK_MAX_NUM_MOUSE_BTNS > 0 && NK_ISBITFLAG(NK_MAX_NUM_MOUSE_BTNS) == NK_TRUE,
+    "'NK_MAX_NUM_MOUSE_BTNS' is not a power of two. Check definitions."
+);
+
 
 /**
- * \emum  NkKeyboardKey
+ * \enum  NkKeyboardKey
  * \brief represents all virtual key-codes supported by Noriko
  * 
  * \par Remarks
@@ -39,6 +73,7 @@ NK_NATIVE typedef enum NkKeyboardKey {
     NkKey_Enter,           /**< 'return/enter' key */
     NkKey_Escape,          /**< escape key key */
     NkKey_Tab,             /**< tabulator key */
+    NkKey_CapsLock,        /**< CAPSLOCK key */
     NkKey_LShift,          /**< left shift key */
     NkKey_RShift,          /**< right shift key */
     NkKey_LControl,        /**< left CTRL key */
@@ -47,6 +82,7 @@ NK_NATIVE typedef enum NkKeyboardKey {
     NkKey_RAlt,            /**< right ALT/menu key */
     NkKey_LSuper,          /**< left 'Windows/...' key */
     NkKey_RSuper,          /**< right 'Windows/...' key */
+    NkKey_Context,         /**< context menu key */
     NkKey_F1,              /**< dedicated F1 key */
     NkKey_F2,              /**< dedicated F2 key */
     NkKey_F3,              /**< dedicated F3 key */
@@ -65,7 +101,7 @@ NK_NATIVE typedef enum NkKeyboardKey {
     NkKey_PageDown,        /**< page-down control key */
     NkKey_Insert,          /**< 'insert' (INS) key */
     NkKey_Delete,          /**< 'delete' (DEL) key */
-    NkKey_Print,           /**< print-screen/snapshot key */
+    NkKey_PrintScreen,     /**< print-screen/snapshot key */
     NkKey_Scroll,          /**< scroll-lock key */
     NkKey_Pause,           /**< pause key */
     NkKey_Up,              /**< arrow-up key */
@@ -90,42 +126,42 @@ NK_NATIVE typedef enum NkKeyboardKey {
     NkKey_NumpadSeparator, /**< numpad '.' key */
     NkKey_NumpadDecimal,   /**< numpad '' key */
     NkKey_Space,           /**< alpha-numeric ' ' key */
-    NkKey_Key0,            /**< alpha-numeric '0' key */
-    NkKey_Key1,            /**< alpha-numeric '1' key */
-    NkKey_Key2,            /**< alpha-numeric '2' key */
-    NkKey_Key3,            /**< alpha-numeric '3' key */
-    NkKey_Key4,            /**< alpha-numeric '4' key */
-    NkKey_Key5,            /**< alpha-numeric '5' key */
-    NkKey_Key6,            /**< alpha-numeric '6' key */
-    NkKey_Key7,            /**< alpha-numeric '7' key */
-    NkKey_Key8,            /**< alpha-numeric '8' key */
-    NkKey_Key9,            /**< alpha-numeric '9' key */
-    NkKey_KeyA,            /**< alpha-numeric 'A' key */
-    NkKey_KeyB,            /**< alpha-numeric 'B' key */
-    NkKey_KeyC,            /**< alpha-numeric 'C' key */
-    NkKey_KeyD,            /**< alpha-numeric 'D' key */
-    NkKey_KeyE,            /**< alpha-numeric 'E' key */
-    NkKey_KeyF,            /**< alpha-numeric 'F' key */
-    NkKey_KeyG,            /**< alpha-numeric 'G' key */
-    NkKey_KeyH,            /**< alpha-numeric 'H' key */
-    NkKey_KeyI,            /**< alpha-numeric 'I' key */
-    NkKey_KeyJ,            /**< alpha-numeric 'J' key */
-    NkKey_KeyK,            /**< alpha-numeric 'K' key */
-    NkKey_KeyL,            /**< alpha-numeric 'L' key */
-    NkKey_KeyM,            /**< alpha-numeric 'M' key */
-    NkKey_KeyN,            /**< alpha-numeric 'N' key */
-    NkKey_KeyO,            /**< alpha-numeric 'O' key */
-    NkKey_KeyP,            /**< alpha-numeric 'P' key */
-    NkKey_KeyQ,            /**< alpha-numeric 'Q' key */
-    NkKey_KeyR,            /**< alpha-numeric 'R' key */
-    NkKey_KeyS,            /**< alpha-numeric 'S' key */
-    NkKey_KeyT,            /**< alpha-numeric 'T' key */
-    NkKey_KeyU,            /**< alpha-numeric 'U' key */
-    NkKey_KeyV,            /**< alpha-numeric 'V' key */
-    NkKey_KeyW,            /**< alpha-numeric 'W' key */
-    NkKey_KeyX,            /**< alpha-numeric 'X' key */
-    NkKey_KeyY,            /**< alpha-numeric 'Y' key */
-    NkKey_KeyZ,            /**< alpha-numeric 'Z' key */
+    NkKey_Alnum0,          /**< alpha-numeric '0' key */
+    NkKey_Alnum1,          /**< alpha-numeric '1' key */
+    NkKey_Alnum2,          /**< alpha-numeric '2' key */
+    NkKey_Alnum3,          /**< alpha-numeric '3' key */
+    NkKey_Alnum4,          /**< alpha-numeric '4' key */
+    NkKey_Alnum5,          /**< alpha-numeric '5' key */
+    NkKey_Alnum6,          /**< alpha-numeric '6' key */
+    NkKey_Alnum7,          /**< alpha-numeric '7' key */
+    NkKey_Alnum8,          /**< alpha-numeric '8' key */
+    NkKey_Alnum9,          /**< alpha-numeric '9' key */
+    NkKey_AlnumA,          /**< alpha-numeric 'A' key */
+    NkKey_AlnumB,          /**< alpha-numeric 'B' key */
+    NkKey_AlnumC,          /**< alpha-numeric 'C' key */
+    NkKey_AlnumD,          /**< alpha-numeric 'D' key */
+    NkKey_AlnumE,          /**< alpha-numeric 'E' key */
+    NkKey_AlnumF,          /**< alpha-numeric 'F' key */
+    NkKey_AlnumG,          /**< alpha-numeric 'G' key */
+    NkKey_AlnumH,          /**< alpha-numeric 'H' key */
+    NkKey_AlnumI,          /**< alpha-numeric 'I' key */
+    NkKey_AlnumJ,          /**< alpha-numeric 'J' key */
+    NkKey_AlnumK,          /**< alpha-numeric 'K' key */
+    NkKey_AlnumL,          /**< alpha-numeric 'L' key */
+    NkKey_AlnumM,          /**< alpha-numeric 'M' key */
+    NkKey_AlnumN,          /**< alpha-numeric 'N' key */
+    NkKey_AlnumO,          /**< alpha-numeric 'O' key */
+    NkKey_AlnumP,          /**< alpha-numeric 'P' key */
+    NkKey_AlnumQ,          /**< alpha-numeric 'Q' key */
+    NkKey_AlnumR,          /**< alpha-numeric 'R' key */
+    NkKey_AlnumS,          /**< alpha-numeric 'S' key */
+    NkKey_AlnumT,          /**< alpha-numeric 'T' key */
+    NkKey_AlnumU,          /**< alpha-numeric 'U' key */
+    NkKey_AlnumV,          /**< alpha-numeric 'V' key */
+    NkKey_AlnumW,          /**< alpha-numeric 'W' key */
+    NkKey_AlnumX,          /**< alpha-numeric 'X' key */
+    NkKey_AlnumY,          /**< alpha-numeric 'Y' key */
+    NkKey_AlnumZ,          /**< alpha-numeric 'Z' key */
     NkKey_Oem1,            /**< ';:' for US */
     NkKey_Oem2,            /**< '+' for any country/region */
     NkKey_Oem3,            /**< ',' for any country/region */
@@ -165,13 +201,13 @@ NK_NATIVE typedef enum NkModifierKeys {
  * \brief represents platform-independent 
  */
 NK_NATIVE typedef enum NkMouseButton {
-    NkBtn_Unknown = 0,  /**< unknown/unsupported mouse buttom */
+    NkBtn_Unknown = 0,  /**< unknown/unsupported mouse button */
 
-    NkBtn_LeftButton,   /**< left mouse buttom */
+    NkBtn_LeftButton,   /**< left mouse button */
     NkBtn_MiddleButton, /**< middle mouse (scroll-wheel) button */
-    NkBtn_RightButton,  /**< right mouse buttom */
+    NkBtn_RightButton,  /**< right mouse button */
     NkBtn_Button4,      /**< first side button ('UP') */
-    NkBtn_Button5       /**< second side buttom ('DOWN') */
+    NkBtn_Button5       /**< second side button ('DOWN') */
 } NkMouseButton;
 
 
@@ -213,6 +249,9 @@ NKOM_DECLARE_INTERFACE(NkIInput) {
     /**
      */
     NkPoint2D (NK_CALL *GetMousePosition)(_Inout_ NkIInput *self);
+    /**
+     */
+    NkModifierKeys (NK_CALL *GetModifierKeyStates)(_Inout_ NkIInput *self);
 };
 
 
@@ -234,7 +273,14 @@ NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkInputStartup(NkVoi
 NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkInputShutdown(NkVoid);
 
 /**
- * \brief  retrieves the platform-dependent input translator instance
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode);
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ NkMouseButton mouseBtn);
+
+/**
+ * \brief  retrieves the platform-dependent input abstraction layer (IAL) instance
  * \return pointer to the instance
  * \note   The reference count of the returned instance is incremented. Please call
  *         <tt>Release()</tt> on the returned instance after you are done with it.
