@@ -50,7 +50,7 @@
  * \par Remarks
  *   While this symbol has no significance to the compiler, it is there for annotation
  *   purposes. It makes it obvious what functions a developer porting Noriko to a new
- *   platform must implement in order for it to work. Each virtual functions has detailed
+ *   platform must implement in order for it to work. Each virtual function has detailed
  *   behavioral documentation attached to it.
  */
 #define NK_VIRTUAL

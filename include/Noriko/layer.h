@@ -105,6 +105,9 @@ NKOM_DECLARE_INTERFACE(NkILayer) {
     NkErrorCode (NK_CALL *OnEvent)(_Inout_ NkILayer *self, _In_ NkEvent const *evPtr);
     /**
      */
+    NkErrorCode (NK_CALL *OnUpdate)(_Inout_ NkILayer *self, _In_ NkFloat updTime);
+    /**
+     */
     NkErrorCode (NK_CALL *OnRender)(_Inout_ NkILayer *self, _In_ NkFloat aheadBy);
 };
 
@@ -126,7 +129,7 @@ NK_NATIVE NK_API NkILayer *NK_CALL NkLayerstackPop(_In_ NkSize whereInd);
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnEvent(_In_ NkEvent const *evPtr);
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnUpdate(NkVoid);
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnUpdate(_In_ NkFloat updTime);
 /**
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat aheadBy);

@@ -2515,7 +2515,8 @@ PREDEFINED             = _Struct_size_bytes_(x)= \
                          _Return_ok_= \
                          _In_= \
                          _Inout_opt_= \
-                         _Out_=
+                         _Out_= \
+                         NK_VIRTUAL=virtual
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The

@@ -274,10 +274,10 @@ NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkInputShutdown(NkVo
 
 /**
  */
-NK_NATIVE NK_API NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode);
+NK_NATIVE NK_API NK_INLINE NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode);
 /**
  */
-NK_NATIVE NK_API NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ NkMouseButton mouseBtn);
+NK_NATIVE NK_API NK_INLINE NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ NkMouseButton mouseBtn);
 
 /**
  * \brief  retrieves the platform-dependent input abstraction layer (IAL) instance
@@ -285,6 +285,6 @@ NK_NATIVE NK_API NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ 
  * \note   The reference count of the returned instance is incremented. Please call
  *         <tt>Release()</tt> on the returned instance after you are done with it.
  */
-NK_NATIVE NK_API NK_VIRTUAL NkIInput *NK_CALL NkInputQueryInstance(NkVoid);
+NK_NATIVE NK_API NK_VIRTUAL NK_INLINE NkIInput *NK_CALL NkInputQueryInstance(NkVoid);
 
 

@@ -53,11 +53,12 @@ NK_NATIVE typedef enum NkRendererApi {
  * \brief represents a renderer resource type
  */
 NK_NATIVE typedef enum NkRendererResourceType {
-    NkRdResTy_None = 0, /**< invalid resource type */
+    NkRdResTy_None = 0,    /**< invalid resource type */
+    
+    NkRdResTy_Texture,     /**< texture */
+    NkRdResTy_TextureMask, /**< monochrome texture mask */
 
-    NkRdResTy_Texture,  /**< texture */
-
-    __NkRdResTy_Count__ /**< *only used internally* */
+    __NkRdResTy_Count__    /**< *only used internally* */
 } NkRendererResourceType;
 
 /**
@@ -139,6 +140,15 @@ NK_NATIVE typedef struct NkRendererResource {
 } NkRendererResource;
 
 /**
+ * \struct NkVec2F
+ * \brief  represents a two-dimensional floating-point vector
+ */
+NK_NATIVE typedef struct NkVec2F {
+    NkFloat m_xVal; /**< x-value (coordinate, extents, ...) */
+    NkFloat m_yVal; /**< y-value (coordinate, extents, ...) */
+} NkVec2F;
+
+/**
  * \struct NkRectF
  * \brief  represents a rectangular area in the renderer, relative to viewport space
  */
@@ -152,6 +162,7 @@ NK_NATIVE typedef struct NkRectF {
 /**
  * \struct NkRendererSpecification
  * \brief  represents the configuration data used when configuring
+ * \todo   add void member so that we can pass init data to a renderer when creating framebuffers, holds parent dc so we can create a suitable render dc
  */
 NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkRendererSpecification {
     NkSize                      m_structSize;   /**< size of this structure, in bytes */
@@ -275,13 +286,48 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
         _In_     NkRendererResource const *texPtr,
         _In_opt_ NkRectF const *srcRect
     );
+    /**
+     * \brief   draws a portion of the given source texture into the destination
+     *          rectangle, supporting transparency through a supplied monochrome bitmask
+     * \param   [in, out] self current \c NkIRenderer instance
+     * \param   [in] dstRect rectangle describing the destination of where the texture
+     *               (-portion) is to be rendered
+     * \param   [in] texPtr pointer to the \c NkRendererResource instance that represents
+     *               the texture
+     * \param   [in] srcOff offset in pixels of where the portion is to be taken out of
+     *               the source bitmap
+     * \param   [in] maskPtr pointer to the \c NkRendererResource instance that holds the
+     *               monochrome bitmask that is used in deciding which pixels are to be
+     *               treated as transparent and which are to be treated as opaque
+     * \param   [in] maskOff offset in pixels of where the mask portion for the source
+     *               rectangle starts in the mask bitmap
+     * \return  \c NkErr_Ok on success, non-zero on failure
+     * \warning This operation does not support scaling. Therefore, the extents of the
+     *          rectangle described by \c dstRect also apply to both \c texPtr and
+     *          <tt>maskPtr</tt>. If one or more bitmaps does not completely cover
+     *          <tt>dstRect</tt>, the behavior is undefined.
+     * 
+     * \par Remarks
+     *   This function supports transparency via <tt>color-keying</tt> by first creating
+     *   a monochrome bitmask from a source texture and then using it with this function.
+     *   For more complex transparency effects such as alpha blending from source alpha,
+     *   use the <tt>NkIRenderer::DrawTexture()</tt> method.
+     */
+    NkErrorCode (NK_CALL *DrawMaskedTexture)(
+        _Inout_ NkIRenderer *self,
+        _In_    NkRectF const *dstRect,
+        _In_    NkRendererResource const *texPtr, 
+        _In_    NkVec2F srcOff, 
+        _In_    NkRendererResource const *maskPtr,
+        _In_    NkVec2F maskOff
+    );
 
     /**
      * \brief  creates a new resource representing a texture, that is, a 2D array of
      *         pixels, from an existing <em>device-independent</em> bitmap
      * \param  [in, out] self current \c NkIRenderer instance
-     * \param  [in] resourcePtr pointer to the <em>device-independent</em> bitmap that is
-     *              to be used to create the resource
+     * \param  [in] dibPtr pointer to the <em>device-independent</em> bitmap that is to
+     *              be used to create the resource
      * \param  [out] resourcePtr pointer to a variable that will receive the pointer to
      *               the newly-created resource instance; an existing instance may be
      *               passed which will cause the old resource to be deleted and the new
@@ -297,6 +343,31 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
     NkErrorCode (NK_CALL *CreateTexture)(
         _Inout_        NkIRenderer *self,
         _In_           NkDIBitmap const *dibPtr,
+        _Maybe_reinit_ NkRendererResource **resourcePtr
+    );
+    /**
+     * \brief   creates a monochrome bitmask from a texture resource and a <em>key color</em>
+     *          which is masked out, that is, treated transparently
+     * \param   [in, out] self current \c NkIRenderer instance
+     * \param   [in] texPtr pointer to a texture resource that is to be created a mask of
+     * \param   [in] colKey color that is to be treated as transparent
+     * \param   [out] resourcePtr pointer to a variable that will receive the pointer to
+     *                the newly-created bitmask resource instance; an existing instance
+     *                may be passed which will cause the old resource to be deleted and
+     *                the new resource to be created in-place
+     * \return  \c NkErr_Ok on success, non-zero on failure
+     * \note    If the function succeeds, the \c mp_rdRef member's reference count will
+     *          be incremented.
+     * \warning The behavior is undefined if either <tt>self</tt>, <tt>texPtr</tt>, or
+     *          <tt>resourcePtr</tt> are <tt>NULL</tt>, \c texPtr or <tt>*resourcePtr</tt>,
+     *          if the latter is not <tt>NULL</tt>, were not created by the renderer
+     *          identified by <tt>self</tt> or \c texPtr is not a device-dependent
+     *          texture.
+     */
+    NkErrorCode (NK_CALL *CreateTextureMask)(
+        _Inout_        NkIRenderer *self,
+        _In_           NkRendererResource const *texPtr,
+        _In_           NkRgbaColor colKey,
         _Maybe_reinit_ NkRendererResource **resourcePtr
     );
     /**
@@ -323,8 +394,15 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
      */
     NkErrorCode (NK_CALL *DeleteResource)(_Inout_ NkIRenderer *self, _Uninit_ptr_ NkRendererResource **resourcePtr);
     /**
+     * \brief   creates a device-independent bitmap from the current renderer's
+     *          framebuffer
+     * \param   [in, out] self current \c NkIRenderer instance
+     * \param   [in, out] resPtr pointer to an \c NkDIBitmap instance (uninitialized)
+     *                    that will be initialized with the current framebuffer state
+     * \return  \c NkErr_Ok on success, non-zero on failure
+     * \warning The behavior is undefined if \c resPtr is <tt>NULL</tt>.
      */
-    NkErrorCode (NK_CALL *GrabFramebuffer)(_Inout_ NkIRenderer *self, _Inout_ NkDIBitmap *resPtr);
+    NkErrorCode (NK_CALL *GrabFramebuffer)(_Inout_ NkIRenderer *self, _Out_ NkDIBitmap *resPtr);
 };
 
 

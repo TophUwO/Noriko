@@ -182,12 +182,30 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnEvent(_In_ NkEvent const *evPtr) {
     return eventWasHandled ? NkErr_Ok : NkErr_NoOperation;
 }
 
+_Return_ok_ NkErrorCode NK_CALL NkLayerstackOnUpdate(_In_ NkFloat updTime) {
+    NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
+
+    NK_LOCK(gl_LayerStack.m_mtxLock);
+    NkSize const layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);
+    for (NkSize i = 0; i < layerCount; i++) {
+        NkILayer *currLayer = NkVectorAt(gl_LayerStack.mp_layerStack, i);
+        NK_ASSERT(currLayer != NULL, NkErr_ObjectState);
+
+        NK_UNLOCK(gl_LayerStack.m_mtxLock);
+        currLayer->VT->OnUpdate(currLayer, updTime);
+        NK_LOCK(gl_LayerStack.m_mtxLock);
+    }
+
+    NK_UNLOCK(gl_LayerStack.m_mtxLock);
+    return NkErr_Ok;
+}
+
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackOnRender(_In_ NkFloat aheadBy) {
     NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
 
     NK_LOCK(gl_LayerStack.m_mtxLock);
     /*
-     * Iterate over the layerstack backwards, that is, from the lowest layer to the
+     * Iterate over the layer-stack backwards, that is, from the lowest layer to the
      * top-most layer.
      */
     NkSize const layerCount = NkVectorGetElementCount(gl_LayerStack.mp_layerStack);

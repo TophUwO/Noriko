@@ -215,7 +215,8 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
          * consistent.
          */
         while (currLag > ticksPerUpdate) {
-            /* \todo Update game objects and everything. */
+            /* Update game objects and everything. */
+            NK_IGNORE_RETURN_VALUE(NkLayerstackOnUpdate(ticksPerUpdate / (NkFloat)NkGetTimerFrequency()));
 
             /* Frame was processed; go ahead and catch up more possibly. */
             currLag -= (NkUint64)ticksPerUpdate;

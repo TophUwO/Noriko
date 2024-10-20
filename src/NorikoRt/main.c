@@ -38,7 +38,7 @@ int main(int argc, char **argv, char **envp) {
         .m_rendererApi     = NkRdApi_Win32GDI,
         .m_isVSync         = NK_FALSE,
         .m_vpAlignment     = NkVpAlign_HCenter | NkVpAlign_VCenter,
-        .m_vpExtents       = { 30, 20 },
+        .m_vpExtents       = { 16, 16 },
         .m_dispTileSize    = { 32, 32 },
         .m_allowedWndModes = NkWndMode_All,
         .m_initialWndMode  = NkWndMode_Normal,

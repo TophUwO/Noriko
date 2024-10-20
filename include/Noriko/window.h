@@ -89,7 +89,7 @@ NK_NATIVE typedef enum NkWindowFlags {
  *   A valid viewport alignment is a combination of exactly one value of the first (i.e.,
  *   vertical) group and the second (i.e., horizontal) group each. If the given alignment
  *   is none (i.e., <tt>0</tt>), the behavior is undefined. All other permutations are
- *   reported as <em>invalid viewport alignment</tt>.
+ *   reported as <em>invalid viewport alignment</em>.
  */
 NK_NATIVE typedef enum NkViewportAlignment {
     /* first group - vertical */
@@ -223,7 +223,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid);
  *   Like with all functions that return an NkOM object, they increment the reference
  *   count of the returned object.
  */
-NK_NATIVE NK_VIRTUAL NK_INLINE NK_API NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
+NK_NATIVE NK_API NK_VIRTUAL NK_INLINE NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid);
 
 /**
  */
