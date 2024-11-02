@@ -90,6 +90,15 @@
     <ClInclude Include="..\include\Noriko\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Noriko\asset.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Noriko\dstruct\string.h">
+      <Filter>Header Files\dstruct</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Noriko\path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\platform.c">
@@ -160,6 +169,21 @@
     </ClCompile>
     <ClCompile Include="..\src\Noriko\input.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\winpath.c">
+      <Filter>Source Files\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\path.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\dstruct\string.c">
+      <Filter>Source Files\dstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\winloop.c">
+      <Filter>Source Files\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\wintimer.c">
+      <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

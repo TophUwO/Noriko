@@ -54,14 +54,7 @@ NK_NATIVE typedef enum NkTimerPrecision {
  * \note   This structure acts as a placeholder to allow opaque types that can be
  *         statically instantiated.
  */
-NK_NATIVE typedef struct NkTimer {
-#if (defined __cplusplus)
-    alignas(NkInt64)
-#else
-    _Alignas(NkInt64)
-#endif
-        NkByte const m_reserved[24]; /**< placeholder for internal state */
-} NkTimer;
+NK_DEFINE_PROTOTYPE(NkTimer, NK_ALIGNOF(NkAlign8), 24);
 
 
 /**
@@ -78,6 +71,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid);
  *         have been killed.
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid);
+
 /**
  * \brief   creates a new timing device with the specified properties
  * \param   [in] tiType type ID of the new timer
@@ -153,12 +147,12 @@ NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr,
  * \return numeric value of the timestamp, or \c 0 if there is no high-precision timer
  *         available on the current platform
  */
-NK_NATIVE NK_API NkUint64 NK_CALL NkGetCurrentTime(NkVoid);
+NK_NATIVE NK_API NK_INLINE NK_VIRTUAL NkUint64 NK_CALL NkTimerGetCurrentTicks(NkVoid);
 /**
  * \brief  returns the timing device's frequency, that is, the number of ticks per second
  *         elapsed
  * \return timer frequency, in ticks per second, or \c 0 of this value is unavailable
  */
-NK_NATIVE NK_API NkUint64 NK_CALL NkGetTimerFrequency(NkVoid);
+NK_NATIVE NK_API NK_INLINE NK_VIRTUAL NkUint64 NK_CALL NkTimerGetFrequency(NkVoid);
 
 

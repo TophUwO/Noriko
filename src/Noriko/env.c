@@ -357,7 +357,10 @@ _Return_ok_ NkErrorCode NK_CALL NkEnvStartup(NkVoid) {
         appSpecs->mp_envp,
         NK_FALSE
     );
-    /* Parse all command-line arguments. */
+    /*
+     * Parse all command-line arguments. Offset the argv array by one to skip the first
+     * parameter which is pretty much always the path to the executable file.
+     */
     __NkInt_EnvParseOptionArray(appSpecs->m_argc - 1, &appSpecs->mp_argv[1], NK_TRUE);
     return NkErr_Ok;
 }

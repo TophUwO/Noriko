@@ -100,7 +100,7 @@ NK_INTERNAL NkUuid **NK_CALL __NkInt_RendererFactory_QueryInstantiableClasses(_I
     /**
      * \brief lists all classes instantiable by the current factory
      */
-    NK_INTERNAL NkUuid const *gl_InstClasses[] = { NKOM_CLSIDOF(NkIGdiRenderer) };
+    NK_INTERNAL NkUuid const *gl_InstClasses[] = { NKOM_CLSIDOF(NkIGdiRenderer), NULL };
 
     return (NkUuid **)gl_InstClasses;
 }

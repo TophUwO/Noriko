@@ -58,10 +58,7 @@ NK_NATIVE typedef struct __NkInt_Timer {
  * must make sure that the internal type and the public type are compatible, that is,
  * they adhere to the same size and alignment requirements.
  */
-static_assert(
-    _Alignof(NkTimer) == _Alignof(__NkInt_Timer) && sizeof(NkTimer) == sizeof(__NkInt_Timer),
-    "Size or alignment mismatch between \"NkTimer\" and \"__NkInt_Timer\". Check definitions."
-);
+NK_VERIFY_TYPE(NkTimer, __NkInt_Timer);
 
 /**
  * \struct __NkInt_TimingDeviceContext
@@ -76,55 +73,11 @@ NK_NATIVE typedef struct __NkInt_TimingDeviceContext {
         NkUint64  m_globalBias;     /**< overhead of the timing functions themselves */
     };
 } __NkInt_TimingDeviceContext;
-
-
 /**
  * \brief actual instance of the global timer context
  */
 NK_INTERNAL __NkInt_TimingDeviceContext gl_tdContext;
 
-
-/**
- * \brief  retrieves the current timestamp in a platform-independent way
- * \param  [out] retPtr pointer to an NkUint64 variable which will receive the current
- *              timestamp
- * \return \c NkErr_Ok on success, non-zero on failure.
- * \note   If no timing support is implemented on the current target platform, this
- *         function sets \c retPtr to \c 0 and returns <tt>NkErr_NotImplemented</tt>.
- */
-NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_TimerGetClock(_Out_ NkUint64 *retPtr) {
-#if (defined NK_TARGET_WINDOWS)
-    static_assert(
-        _Alignof(LARGE_INTEGER) == _Alignof(NkUint64) && sizeof(LARGE_INTEGER) == sizeof(NkUint64),
-        "Size or alignment mismatch between \"NkUint64\" and \"LARGE_INTEGER\". Check definitions."
-    );
-    QueryPerformanceCounter((LARGE_INTEGER *)retPtr);
-
-    return NkErr_Ok;
-#else
-    *retPtr = 0ULL;
-    return NkErr_NotImplemented;
-#endif
-}
-
-/**
- * \brief  retrieves the underlying timer's frequency a platform-independent way
- * \param  [out] retPtr pointer to an NkUint64 variable which will receive the frequency
- *               value
- * \return \c NkErr_Ok on success, non-zero on failure.
- * \note   If no timing support is implemented on the current target platform, this
- *         function sets \c retPtr to \c 0 and returns <tt>NkErr_NotImplemented</tt>.
- */
-NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_TimerGetFrequency(_Out_ NkUint64 *retPtr) {
-#if (defined NK_TARGET_WINDOWS)
-    QueryPerformanceFrequency((LARGE_INTEGER *)retPtr);
-
-    return NkErr_Ok;
-#else
-    *retPtr = 0ULL;
-    return NkErr_NotImplemented;
-#endif
-}
 
 /**
  * \brief  retrieves the global timer overhead
@@ -133,7 +86,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_TimerGetFrequency(_Out_ NkUint64 *re
  * \note   \li If there is no timer support implemented for the current target platform,
  *         this function will return 0.
  */
-NK_INTERNAL NkUint64 __NkInt_TimerGetOverhead(NkVoid) {
+NK_INTERNAL NkUint64 __NkInt_Timer_GetOverhead(NkVoid) {
     /**
      * \brief number of iterations to find average timer bias
      */
@@ -141,9 +94,8 @@ NK_INTERNAL NkUint64 __NkInt_TimerGetOverhead(NkVoid) {
 
     NkUint64 diffSum = 0;
     for (NkUint64 i = 0; i < gl_TimerBiasIterCount; i++) {
-        NkUint64 startTime, endTime;
-        NK_IGNORE_RETURN_VALUE(__NkInt_TimerGetClock(&startTime));
-        NK_IGNORE_RETURN_VALUE(__NkInt_TimerGetClock(&endTime));
+        NkUint64 startTime = NkTimerGetCurrentTicks();
+        NkUint64 endTime   = NkTimerGetCurrentTicks();
 
         diffSum += endTime - startTime;
     }
@@ -157,21 +109,12 @@ NK_INTERNAL NkUint64 __NkInt_TimerGetOverhead(NkVoid) {
  * \note   \li This function is automatically invoked upon the first call to the
  *         \c NkTimerCreate() function.
  * \note   \li Since this function does not acquire any resources that need cleanup, a
- *         matching \c __NkInt_TimerUninitializeStaticContext() function does not
+ *         matching \c __NkInt_Timer_UninitializeStaticContext() function does not
  *         exist.
  */
-NK_INTERNAL NkErrorCode __NkInt_TimerInitializeStaticContext(NkVoid) {
-    /* Print error if there is no timer support on this platform. */
-    if (__NkInt_TimerGetFrequency(&gl_tdContext.m_timerFrequency) != NkErr_Ok) {
-        NK_LOG_CRITICAL("Support for timing devices is not implemented on this platform.");
-
-#pragma warning (suppress: 4127) /* 'constant expression in branch' */
-        NK_ASSERT(NK_FALSE, NkErr_NotImplemented);
-        return NkErr_NotImplemented;
-    }
-
+NK_INTERNAL NkErrorCode __NkInt_Timer_InitializeStaticContext(NkVoid) {
     /* Determine timing device overhead. */
-    gl_tdContext.m_globalBias = __NkInt_TimerGetOverhead();
+    gl_tdContext.m_globalBias = __NkInt_Timer_GetOverhead();
     return NkErr_Ok;
 }
 /** \endcond */
@@ -180,7 +123,7 @@ NK_INTERNAL NkErrorCode __NkInt_TimerInitializeStaticContext(NkVoid) {
 _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid) {
     NK_LOG_INFO("startup: timing device context");
 
-    return __NkInt_TimerInitializeStaticContext();
+    return __NkInt_Timer_InitializeStaticContext();
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid) {
@@ -243,9 +186,7 @@ NkVoid NK_CALL NkTimerStart(_Inout_ NkTimer *tiPtr) {
     __NkInt_Timer *intTimerPtr = (__NkInt_Timer *)tiPtr;
     switch (intTimerPtr->m_type) {
         case NkTiType_Elapsed:
-            NK_IGNORE_RETURN_VALUE(
-                __NkInt_TimerGetClock(&intTimerPtr->m_tiState.m_elTiState.m_startTime)
-            );
+            intTimerPtr->m_tiState.m_elTiState.m_startTime = NkTimerGetCurrentTicks();
 
             break;
     }
@@ -262,9 +203,7 @@ NkVoid NK_CALL NkTimerStop(_Inout_ NkTimer *tiPtr) {
     __NkInt_Timer *intTimerPtr = (__NkInt_Timer *)tiPtr;
     switch (intTimerPtr->m_type) {
         case NkTiType_Elapsed:
-            NK_IGNORE_RETURN_VALUE(
-                __NkInt_TimerGetClock(&intTimerPtr->m_tiState.m_elTiState.m_endTime)
-            );
+            intTimerPtr->m_tiState.m_elTiState.m_endTime = NkTimerGetCurrentTicks();
 
             break;
     }
@@ -292,28 +231,17 @@ NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrec
      */
     NkUint64 endTime = 0;
     __NkInt_Timer *intTimerPtr = (__NkInt_Timer *)tiPtr;
-    if (intTimerPtr->m_isRunning == NK_TRUE)
-        NK_IGNORE_RETURN_VALUE(__NkInt_TimerGetClock(&endTime));
-    else 
-        endTime = intTimerPtr->m_tiState.m_elTiState.m_endTime;
+    /* Determine timer end time. */
+    endTime = intTimerPtr->m_isRunning == NK_TRUE
+        ? NkTimerGetCurrentTicks()
+        : intTimerPtr->m_tiState.m_elTiState.m_endTime
+    ;
 
     /* Calculate difference. */
     NkUint64 const timeDiff = endTime - intTimerPtr->m_tiState.m_elTiState.m_startTime - gl_tdContext.m_globalBias;
 
     /* Convert to requested precision. */
     return timeDiff / (gl_tdContext.m_timerFrequency / (NkDouble)precId);
-}
-
-
-NkUint64 NK_CALL NkGetCurrentTime(NkVoid) {
-    NkUint64 res;
-    NK_IGNORE_RETURN_VALUE(__NkInt_TimerGetClock(&res));
-
-    return res;
-}
-
-NkUint64 NK_CALL NkGetTimerFrequency(NkVoid) {
-    return gl_tdContext.m_timerFrequency;
 }
 
 

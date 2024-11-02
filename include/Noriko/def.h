@@ -80,6 +80,8 @@
     #define _Maybe_reinit_          _Init_ptr_ _Deref_pre_opt_valid_
     #define _In_to_null_            _In_reads_to_ptr_opt_(NULL)
     #define _Pre_maybevalid_        _Pre_ _Maybevalid_
+
+    #define _Utf8_
 #else
     #define _In_
     #define _In_opt_
@@ -120,6 +122,8 @@
     #define _Pre_maybevalid_
     #define _Outptr_result_maybenull_
     #define _Outptr_opt_result_maybenull_
+
+    #define _Utf8_
 #endif
 
 /*
@@ -156,6 +160,11 @@ NK_NATIVE typedef uint8_t   NkUint8, NkByte;
 NK_NATIVE typedef uint16_t  NkUint16;
 NK_NATIVE typedef uint32_t  NkUint32;
 NK_NATIVE typedef uint64_t  NkUint64, NkFlags;
+
+NK_NATIVE typedef int8_t    NkAlign1;
+NK_NATIVE typedef int16_t   NkAlign2;
+NK_NATIVE typedef int32_t   NkAlign4;
+NK_NATIVE typedef int64_t   NkAlign8;
 /** @} */
 
 

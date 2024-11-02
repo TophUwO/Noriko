@@ -234,6 +234,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
     return NkErr_NotImplemented;
 #endif
     
+    /** \todo use exact convention of when exactly to log init/uninit infos (either before or after) */
     NK_LOG_INFO("startup: PRNG");
     return NkErr_Ok;
 }

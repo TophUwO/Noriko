@@ -94,7 +94,8 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvImageDimensions)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvBitDepth)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateDDBFromDIB)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CopyDDBPixels))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CopyDDBPixels)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_QueryStdLocation))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -151,7 +152,8 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("invalid image dimensions (zero or negative?)"),
     NK_MAKE_STRING_VIEW("invalid bit depth (not a power of 2 or unsupported?)"),
     NK_MAKE_STRING_VIEW("could not copy DIB pixels into DDB pixel buffer (pixel format invalid?)"),
-    NK_MAKE_STRING_VIEW("could not copy pixels from DDB to DIB (pixel format/dimensions invalid?)")
+    NK_MAKE_STRING_VIEW("could not copy pixels from DDB to DIB (pixel format/dimensions invalid?)"),
+    NK_MAKE_STRING_VIEW("failed to retrieve standard folder location")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

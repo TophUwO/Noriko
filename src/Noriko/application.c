@@ -30,6 +30,8 @@
  */
 NK_NATIVE typedef struct __NkInt_Application {
     NkApplicationSpecification m_appSpecs; /**< application specification */
+
+    NkInt64                    m_nInit;    /**< number of successfully initialized components */
 } __NkInt_Application;
 /**
  * \brief actual instance of the global application context 
@@ -59,15 +61,16 @@ NK_NATIVE typedef struct __NkInt_ComponentInitInfo {
 NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
     { NK_MAKE_STRING_VIEW("allocators"),                 &NkAllocInitialize,   &NkAllocUninitialize  },
     { NK_MAKE_STRING_VIEW("logging"),                    &NkLogStartup,        &NkLogShutdown        },
-    { NK_MAKE_STRING_VIEW("timing devices"),             &NkTimerInitialize,   &NkTimerUninitialize  },
     { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,    &NkPRNGUninitialize   },
+    { NK_MAKE_STRING_VIEW("timing devices"),             &NkTimerInitialize,   &NkTimerUninitialize  },
     { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,        &NkEnvShutdown        },
     { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,      &NkOMUninitialize     },
+    { NK_MAKE_STRING_VIEW("path services"),              &NkPathStartup,       &NkPathShutdown       },
     { NK_MAKE_STRING_VIEW("input abstraction layer"),    &NkInputStartup,      &NkInputShutdown      },
     { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,   &NkRendererShutdown   },
     { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown },
     { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
-    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      },
+    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      }
 };
 /**
  * \brief number of elements in the component-init table 
@@ -115,11 +118,11 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationStartup(_In_ NkApplicationSpecifica
 
         return errCode;
     }
-    /* 
-     * Copy the application specs before initializing since the init-functions may need
-     * to query for the application specification.
-     */
-    gl_Application.m_appSpecs = *specsPtr;
+    /* Initialize global application context. */
+    gl_Application = (__NkInt_Application){
+        .m_appSpecs = *specsPtr,
+        .m_nInit    = 0
+    };
 
     /* Initialize the internal components in order. */
     for (NkSize i = 0; i < gl_c_CompInitTblSize; i++) {
@@ -135,6 +138,8 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationStartup(_In_ NkApplicationSpecifica
 
             return errCode;
         }
+
+        ++gl_Application.m_nInit;
     }
 
     /* Startup was successful. */
@@ -142,8 +147,12 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationStartup(_In_ NkApplicationSpecifica
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid) {
+    /* If no component was initialized, do nothing. */
+    if (gl_Application.m_nInit == 0)
+        return NkErr_Ok;
+
     /* Shutdown all components in the reverse order they were started up. */
-    for (NkInt64 i = (NkInt64)gl_c_CompInitTblSize - 1; i >= 0; i--) {
+    for (NkInt64 i = gl_Application.m_nInit - 1; i >= 0; i--) {
         NkErrorCode const errCode = (*gl_c_CompInitTable[i].mp_uninitFn)();
 
         if (errCode != NkErr_Ok) {
@@ -164,50 +173,58 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationShutdown(NkVoid) {
 
 _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
     /** \cond INTERNAL */
+    NkFloat const tiFreq         = (NkFloat)NkTimerGetFrequency();
     /**
      * \brief fixed update rate of the game's physics, animation, etc.; currently 120 Hz
      * \note  This is subject to change in the future.
      */
-    NkFloat ticksPerUpdate = (8.333f / 1000.f) * NkGetTimerFrequency();
+    NkFloat const ticksPerUpdate = (8.333f / 1000.f) * tiFreq;
     /** \endcond */
 
-    NkErrorCode    errCode    = NkErr_Ok;
-    NkUint64       prevTime   = NkGetCurrentTime();
-    NkUint64       currLag    = 0;
-    NkUint64 const maxElapsed = (NkUint64)(0.016f * (NkFloat)NkGetTimerFrequency());
+    /* Query main window renderer. */
+    NkIWindow      *mainWnd    = NkWindowQueryInstance();
+    NkIRenderer    *mainWndRd  = mainWnd->VT->GetRenderer(mainWnd);
+    /* Initialize miscellaneous state. */
+    NkBoolean       isLeave    = NK_TRUE;
+    NkErrorCode     errCode    = NkErr_Ok;
+    NkUint64        prevTime   = NkTimerGetCurrentTicks();
+    NkUint64        currLag    = 0;
+    NkUint64 const  maxElapsed = (NkUint64)(0.016f * tiFreq);
 
-#if (defined NK_TARGET_WINDOWS)
-    MSG currMsg;
-#endif
+    /** \cond INTERNAL */
+    /**
+     * \brief  invokes platform-dependent message handling facilities
+     * \param  [out] isLeave set to \c NK_TRUE if the application needs to exit the main
+     *               loop
+     * \param  [in,out] extraCxt pointer to a variable that contains extra context needed
+     *                  for the platform
+     * \return error state of the event handling; if \c isLeave is <tt>NK_FALSE</tt>, the
+     *         return value is always <tt>NkErr_Ok</tt>.
+     * 
+     * \par Remarks
+     *   This function must be implemented per platform.
+     */
+    NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Application_PlatformLoop(
+        _Out_       NkBoolean *isLeave,
+        _Inout_opt_ NkVoid *extraCxt
+    );
+    /** \endcond */
 
     for (;;) {
         /* First, calculate timestep. */
-        NkUint64 currTime    = NkGetCurrentTime();
+        NkUint64 currTime    = NkTimerGetCurrentTicks();
         NkUint64 elapsedTime = NK_MIN(currTime - prevTime, maxElapsed);
         prevTime = currTime;
         currLag += elapsedTime;
 
-#if (defined NK_TARGET_WINDOWS)
-        /* Then, dispatch windows messages. */
-        while (PeekMessage(&currMsg, NULL, 0, 0, PM_REMOVE) ^ 0) {
-            if (currMsg.message == WM_QUIT) {
-                /*
-                 * Check if the message was actually the Windows 'WM_QUIT' message.
-                 * The 'WM_QUIT' message is not sent to any window procedures. When
-                 * this message is received, we leave the main loop because the app
-                 * was instructed to quit in an orderly manner.
-                 */
-                errCode = (NkErrorCode)currMsg.wParam;
-
-                goto lbl_CLEANUP;
-            }
-
-            TranslateMessage(&currMsg);
-            DispatchMessage(&currMsg);
-        }
-#else
-    #error Need to implement main loop message handling on this platform.
-#endif
+        /*
+         * Then, run the platform-dependent main loop portion. This, for example, invokes
+         * platform-dependent event handling facilities like the message pump on Windows,
+         * etc.
+         */
+        errCode = __NkInt_Application_PlatformLoop(&isLeave, NULL);
+        if (isLeave == NK_TRUE)
+            goto lbl_CLEANUP;
 
         /*
          * Update the game's layers. If the game cannot keep up with the framerate,
@@ -216,26 +233,23 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
          */
         while (currLag > ticksPerUpdate) {
             /* Update game objects and everything. */
-            NK_IGNORE_RETURN_VALUE(NkLayerstackOnUpdate(ticksPerUpdate / (NkFloat)NkGetTimerFrequency()));
+            NK_IGNORE_RETURN_VALUE(NkLayerstackOnUpdate(ticksPerUpdate / tiFreq));
 
             /* Frame was processed; go ahead and catch up more possibly. */
             currLag -= (NkUint64)ticksPerUpdate;
         }
 
         /* Run the renderer at the variable timestep. */
-        NkIWindow   *mainWnd   = NkWindowQueryInstance();
-        NkIRenderer *mainWndRd = mainWnd->VT->GetRenderer(mainWnd);
-
         mainWndRd->VT->BeginDraw(mainWndRd);
         NK_IGNORE_RETURN_VALUE(NkLayerstackOnRender(currLag / ticksPerUpdate));
         mainWndRd->VT->EndDraw(mainWndRd);
-
-        /* Release the renderer since 'GetRenderer()' acquired it. */
-        mainWnd->VT->Release(mainWnd);
-        mainWndRd->VT->Release(mainWndRd);
     }
 
 lbl_CLEANUP:
+    /* Release the renderer since 'GetRenderer()' acquired it. */
+    mainWndRd->VT->Release(mainWndRd);
+    mainWnd->VT->Release(mainWnd);
+
     return errCode;
 }
 

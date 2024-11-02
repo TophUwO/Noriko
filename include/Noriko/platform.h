@@ -81,6 +81,7 @@
     #include <windows.h>
     #include <dwmapi.h>
     #include <windowsx.h>
+    #include <shlobj.h>
 #else
     #error Noriko's engine component currently only supports Microsoft Windows.
 #endif

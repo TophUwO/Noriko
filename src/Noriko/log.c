@@ -67,7 +67,11 @@ NK_NATIVE typedef struct __NkInt_LogContext {
  */
 NK_INTERNAL __NkInt_LogContext gl_LogContext = {
     .m_nOfDev     = 0,
+#if (defined NK_CONFIG_DEBUG)
     .m_glMinLevel = NkLogLvl_None,
+#else
+    .m_glMinLevel = NkLogLvl_Info,
+#endif
     .m_glMaxLevel = NkLogLvl_Critical,
     .m_defTsFmt   = NK_MAKE_STRING_VIEW("%m-%d-%y %H:%M:%S"),
     .m_devArray   = { NULL }

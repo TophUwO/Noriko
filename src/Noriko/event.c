@@ -19,7 +19,7 @@
  * the event. If the layer chooses to process the event, layers underneath it in the
  * stack will not receive the event. If the layer does not process the event, the event
  * is propagated through the layer stack until the entire stack has been traversed or the
- * event has been handled.<br>
+ * event has been handled.
  * 
  * \note  Note that this event system is for application- and host-system events, not for
  *        in-game events.
@@ -101,7 +101,7 @@ _Return_ok_ NkErrorCode NK_CALL NkEventDispatch(_In_ NkEventType evType, ...) {
     NkEvent specEvent = (NkEvent){
         .m_evType    = evType,
         .m_evCat     = gl_c_EvTypeTbl[evType].m_evCat,
-        .m_timestamp = NkGetCurrentTime()
+        .m_timestamp = NkTimerGetCurrentTicks()
     };
     /*
      * If the event requires additional data, query the parameter after the event type.

@@ -582,7 +582,7 @@ _Return_ok_ NkErrorCode NK_CALL NkGPRealloc(
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkGPFree(_In_ NkVoid *memPtr) {
+NkVoid NK_CALL NkGPFree(NkVoid *memPtr) {
     if (memPtr == NULL)
         return;
 

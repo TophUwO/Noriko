@@ -36,6 +36,28 @@
 #define NK_MESC(x)                   NK_ESC(x)
 
 /**
+ */
+#define NK_DEFINE_PROTOTYPE(tn, a, s)         \
+    NK_NATIVE typedef struct tn {             \
+        alignas(a) NkByte __placeholder__[s]; \
+    } tn;
+/**
+ */
+#define NK_VERIFY_TYPE(pub, priv)                                                                          \
+    static_assert(                                                                                         \
+        sizeof(pub) == sizeof(priv) && alignof(pub) == alignof(priv),                                      \
+        "Size and/or alignment mismatch between public type \"" #pub "\" and private type \"" #priv "\". " \
+        "Check definitions."                                                                               \
+    )
+/**
+ */
+#define NK_VERIFY_LUT(lut, e, s)                                                                            \
+    static_assert(                                                                                          \
+        NK_ARRAYSIZE(lut) == s,                                                                             \
+        "Mismatch between LUT \"" #lut "\" and controlling enum \"" #e "\" (s: " #s "). Check definitions." \
+    )
+
+/**
  * \def   NK_INRANGE_INCL(x, lo, hi)
  * \brief checks whether lo <= x <= hi is *true*
  * \param x numeric value to compare against *lo* and *hi*
@@ -101,12 +123,21 @@
 #define NK_OFFSETOF(st, m)           ((NkSize)((char *)&((st *)0)->m - (char *)0))
 /**
  * \def   NK_SIZEOF(st, m)
- * \brief returns the size in bytes of the member \c m of data-structure \c st, i.e.
+ * \brief returns the size in bytes of the member \c m of data-structure <tt>st</tt>, i.e.
  *        <tt>sizeof st.m</tt>
  * \param st type name of the data-structure
  * \param m identifier of the member
  */
 #define NK_SIZEOF(st, m)             ((NkSize)(sizeof ((st *)0)->m))
+/**
+ * \def   NK_ALIGNOF(e)
+ * \brief returns the <em>natural</em> alignment requirement of the given type
+ * \param e name of the type of which the alignment requirement is to be retrieved
+ * \note  This macro returns the <em>minimum alignment requirement</em>; \c e can also
+ *        be validly aligned more stringently (that is, with greater alignment
+ *        requirement)
+ */
+#define NK_ALIGNOF(e)                ((NkSize)(alignof(e)))
 
 
 /**

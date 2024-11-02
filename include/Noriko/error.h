@@ -164,9 +164,11 @@ typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InvBitDepth,           /**< invalid bit depth */
     NkErr_CreateDDBFromDIB,      /**< could not create DDB from DIB pixels */
     NkErr_CopyDDBPixels,         /**< could not copy pixels from DDB to DIB */
+    NkErr_QueryStdLocation,      /**< failed to retrieve standard location */
 
     __NkErr_Count__              /**< used internally */
 } NkErrorCode;
+
 
 /**
  * \struct NkFatalErrorContext

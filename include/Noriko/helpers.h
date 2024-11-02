@@ -13,6 +13,7 @@
 /**
  * \file  helpers.h
  * \brief defines global platform-dependent helper functions
+ * \todo  merge this into window.h
  */
 
 

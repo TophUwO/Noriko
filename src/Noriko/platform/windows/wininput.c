@@ -388,7 +388,7 @@ NK_INTERNAL NkPoint2D NK_CALL __NkInt_WindowsInput_GetMousePosition(_Inout_ NkII
     GetCursorPos(&curPos);
 
     /* Initialize and return structure. */
-    return (NkPoint2D) {
+    return (NkPoint2D){
         .m_xCoord = (NkInt64)curPos.x,
         .m_yCoord = (NkInt64)curPos.y
     };
@@ -417,7 +417,7 @@ NK_INTERNAL NkModifierKeys NK_CALL __NkInt_WindowsInput_GetModifierKeyStates(_In
  * \brief actual instance of the Win32 IAL 
  */
 NK_INTERNAL NkIInput const gl_Win32Ial = {
-    .VT = &(struct __NkIInput_VTable__) {
+    .VT = &(struct __NkIInput_VTable__){
         .QueryInterface           = &__NkInt_WindowsInput_QueryInterface,
         .AddRef                   = &__NkInt_WindowsInput_AddRef,
         .Release                  = &__NkInt_WindowsInput_Release,

@@ -371,7 +371,4 @@ interm/
 *.tmp
 docs/html/
 *.i
-/res/def/ts_main.bmp
-/res/def/terrain.png
-/res/def/ts_main2.bmp
-/res/def/ts_main_indices.png
+/res/def

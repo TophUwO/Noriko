@@ -469,34 +469,12 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
      * \param  [in,out] self pointer to the current \c NkIClassFactory instance
      * \param  [out] clsidArr pointer to a variable that will receive the pointer to an
      *              array of CLSIDs
-     * \return \c NkOM_ErrOk on success, non-zero on failure<br>
-     *         Aside from the error code mentioned above, the function can also return
-     *         the following error codes:
+     * \return \c NkOM_ErrOk on success, non-zero on failure
      * 
-     * <table>
-     *  <tr>
-     *   <th>Error Code Identifier</th>
-     *   <th>Error Condition</th>
-     *  </tr>
-     *  <tr>
-     *   <td>\c NkOM_ErrInvalidParameter</td>
-     *   <td>
-     *    This is an optional return value that may be returned if you decide to validate
-     *    the parameters.
-     *   </td>
-     *  </tr>
-     *  <tr>
-     *   <td>\c NkOM_ErrOutOfMemory</td>
-     *   <td>
-     *    If your implementation allocates dynamic memory, it can return this error code
-     *    if the memory allocation failed.
-     *   </td>
-     *  </tr>
-     * </table>
-     * 
-     * \note   Although not strictly required, it is recommended that the internal CLSID
-     *         array be static and constant. If memory is dynamically allocated, the
-     *         documentation of your implementation must make that clear.
+     * \note   \li The last element of the result array shall be a <tt>NULL</tt>-pointer.
+     * \note   \li Although not strictly required, it is recommended that the internal
+     *             CLSID array be static and constant. If memory is dynamically allocated,
+     *             the documentation of your implementation must make that clear.
      */
     NkUuid const **(NK_CALL *QueryInstantiableClasses)(_Inout_ NkIClassFactory *self);
     /**

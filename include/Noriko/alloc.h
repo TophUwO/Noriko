@@ -141,7 +141,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkGPRealloc(
  * \param  [in] memPtr pointer to the memory address that is to be freed
  * \note   If \c memPtr is <tt>NULL</tt>, the function does nothing.
  */
-NK_NATIVE NK_API NkVoid NK_CALL NkGPFree(_In_ NkVoid *memPtr);
+NK_NATIVE NK_API NkVoid NK_CALL NkGPFree(NkVoid *memPtr);
 
 /**
  * \brief   allocates one or more blocks of memory using the pool allocator

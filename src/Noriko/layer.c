@@ -66,6 +66,8 @@ NK_INTERNAL __NkInt_LayerStack gl_LayerStack;
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
     NK_ASSERT(gl_LayerStack.mp_layerStack == NULL, NkErr_ComponentState);
 
+    NK_LOG_INFO("startup: layer stack");
+
     /* Initialize the layer vector. */
     NkErrorCode errCode = NkVectorCreate(&(NkVectorProperties) {
         .m_structSize = sizeof(NkVectorProperties),
@@ -83,8 +85,6 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
 
         return NkErr_SynchInit;
     }
-
-    NK_LOG_INFO("startup: layer stack");
     return NkErr_Ok;
 }
 
