@@ -114,7 +114,7 @@
  * \enum  NkErrorCode
  * \brief numeric error code definitions
  */
-typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
+NK_NATIVE typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_Ok,                    /**< no error */
     NkErr_Unknown,               /**< unknown error condition */
     NkErr_NoOperation,           /**< function did nothing */

@@ -48,7 +48,7 @@ int main(int argc, char **argv, char **envp) {
         .m_argc            = argc,
         .mp_argv           = argv,
         .mp_envp           = envp,
-        .m_workingDir      = NK_MAKE_STRING_VIEW("$(appDir)")
+        .m_gameRootDir     = NK_MAKE_STRING_VIEW(NULL)
     });
     if (errCode != NkErr_Ok)
         goto lbl_END;

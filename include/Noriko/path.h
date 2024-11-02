@@ -64,70 +64,26 @@ NK_NATIVE typedef enum NkStdLocation {
 
 /**
  */
-NKOM_DECLARE_INTERFACE(NkIStandardPaths) {
-    /**
-     * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
-     */
-    NkErrorCode (NK_CALL *QueryInterface)(
-        _Inout_  NkIStandardPaths *self,
-        _In_     NkUuid const *iId,
-        _Outptr_ NkVoid **resPtr
-    );
-    /**
-     * \brief reimplements <tt>NkIBase::AddRef()</tt>
-     */
-    NkOMRefCount (NK_CALL *AddRef)(_Inout_ NkIStandardPaths *self);
-    /**
-     * \brief reimplements <tt>NkIBase::Release()</tt>
-     */
-    NkOMRefCount (NK_CALL *Release)(_Inout_ NkIStandardPaths *self);
-
-    /**
-     */
-    NkStringView const *(NK_CALL *QueryStdLocation)(_Inout_ NkIStandardPaths *self, _In_ NkStdLocation locId);
-};
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid);
+/**
+ */
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid);
 
 /**
  */
-NKOM_DECLARE_INTERFACE(NkIPathFactory) {
-    /**
-     * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
-     */
-    NkErrorCode (NK_CALL *QueryInterface)(
-        _Inout_  NkIPathFactory *self,
-        _In_     NkUuid const *iId,
-        _Outptr_ NkVoid **resPtr
-    );
-    /**
-     * \brief reimplements <tt>NkIBase::AddRef()</tt>
-     */
-    NkOMRefCount (NK_CALL *AddRef)(_Inout_ NkIPathFactory *self);
-    /**
-     * \brief reimplements <tt>NkIBase::Release()</tt>
-     */
-    NkOMRefCount (NK_CALL *Release)(_Inout_ NkIPathFactory *self);
-
-    /**
-     */
-    NkString *(NK_CALL *Build)(
-        _Inout_  NkIPathFactory *self,
-        _In_     NkStringView const *stemCompArr,
-        _In_opt_ NkStringView const *fileName,
-        _In_opt_ NkStringView const *extStr
-    );
-    /**
-     */
-    NkString *(NK_CALL *ToNativeSeparators)(_Inout_ NkIPathFactory *self, _Inout_ NkString *pathStr);
-};
-
+NK_NATIVE NK_API NkString *NK_CALL NkPathBuild(
+    _In_opt_ NkStringView const *sepCh,
+    _In_opt_ NkStringView const *stemCompArr,
+    _In_opt_ NkStringView const *fileName,
+    _In_opt_ NkStringView const *extStr
+);
+/**
+ */
+NK_NATIVE NK_API NkString *NK_CALL NkPathToNativeSeparators(_Inout_ NkString *strPtr);
 
 /**
  */
-NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid);
-/**
- */
-NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid);
-
+NK_NATIVE NK_API NkStringView const *NK_CALL NkPathQueryStdLocation(_In_ NkStdLocation locId);
 /**
  */
 NK_NATIVE NK_API NkStringView const *NK_CALL NkPathQueryStandardLocIdStr(_In_ NkStdLocation locId);

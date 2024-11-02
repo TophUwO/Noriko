@@ -27,18 +27,107 @@
 
 /* Noriko includes */
 #include <include/Noriko/path.h>
+#include <include/Noriko/log.h>
+#include <include/Noriko/noriko.h>
 
 
-/* Define IID and CLSID for NkIStandardPaths and NkIPathFactory. */
-// { B9049E25-6A42-48B3-84E5-3D85EBD4217C }
-NKOM_DEFINE_IID(NkIStandardPaths, { 0xb9049e25, 0x6a42, 0x48b3, 0x84e53d85ebd4217c });
-// { 9DA2DEA4-1D4B-44C4-AB50-B06E91A23A95 }
-NKOM_DEFINE_IID(NkIPathFactory, { 0x9da2dea4, 0x1d4b, 0x44c4, 0xab50b06e91a23a95 });
+/** \cond INTERNAL */
+/**
+ */
+NK_INTERNAL NkStringView gl_StandardPaths[] = {
+    [NkStdLoc_SystemRoot] = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Desktop]    = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Documents]  = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Home]       = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Music]      = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Videos]     = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Downloads]  = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_Fonts]      = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_AppData]    = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_AppDir]     = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameSaves]  = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameRoot]   = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameBin]    = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameData]   = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameDocs]   = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameCache]  = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameAssets] = NK_MAKE_STRING_VIEW(NULL),
+    [NkStdLoc_GameExt]    = NK_MAKE_STRING_VIEW(NULL)
+};
+NK_VERIFY_LUT(gl_StandardPaths, NkStdLocation, __NkStdLoc_Count__);
 
-// { 51C11A7F-1F3C-4F2A-A179-778167D5746A }
-NKOM_DEFINE_CLSID(NkIStandardPaths, { 0x51c11a7f, 0x1f3c, 0x4f2a, 0xa179778167d5746a });
-// { 27509DCE-B0C4-4F2F-A4B6-1D95098B67C8 }
-NKOM_DEFINE_CLSID(NkIPathFactory, { 0x27509dce, 0xb0c4, 0x4f2f, 0xa4b61d95098b67c8 });
+/**
+ * \brief array of game-specific standard locations. 
+ */
+NK_INTERNAL NkStdLocation const gl_c_GameLocs[] = {
+    NkStdLoc_GameSaves,  NkStdLoc_GameRoot, 
+    NkStdLoc_GameBin,    NkStdLoc_GameData,
+    NkStdLoc_GameDocs,   NkStdLoc_GameCache,
+    NkStdLoc_GameAssets, NkStdLoc_GameExt
+};
+/** \endcond */
+
+
+_Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid) {
+    NK_LOG_INFO("startup: path services");
+
+    /** \cond INTERNAL */
+    /**
+     */
+    NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkInt_StandardPaths_QueryPlatformLocs(NkStringView *stdLocs);
+    /** \endcond */
+
+    /* Query platform-dependent paths. */
+    NkErrorCode errCode = __NkInt_StandardPaths_QueryPlatformLocs(gl_StandardPaths);
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /* Now, do the game-dependent paths. */
+    NkStringView const *gameRootDir = &NkApplicationQuerySpecification()->m_gameRootDir;
+    for (NkSize i = 0; i < NK_ARRAYSIZE(gl_c_GameLocs); i++) {
+        NkStdLocation const currLoc = gl_c_GameLocs[i];
+        if (gl_StandardPaths[currLoc].mp_dataPtr != NULL) {
+#pragma warning (suppress: 4127)
+            NK_ASSERT_EXTRA(NK_FALSE, NkErr_Unknown, "System paths initialized game paths. Unexpected behavior");
+
+            continue;
+        }
+
+        /* Initialize the current path. */
+        switch (currLoc) {
+            case NkStdLoc_GameRoot: gl_StandardPaths[currLoc] = *gameRootDir; break;
+            default:
+                NK_LOG_WARNING(
+                    "No standard location available for \"%s\".",
+                    NkPathQueryStandardLocIdStr(currLoc)->mp_dataPtr
+                );
+        }
+    }
+
+    /* All good. */
+    return NkErr_Ok;
+}
+
+_Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid) {
+    NK_LOG_INFO("shutdown: path services");
+
+    /** \cond INTERNAL */
+    /**
+     */
+    NK_EXTERN NK_VIRTUAL NkVoid NK_CALL __NkInt_StandardPaths_DestroyPlatformLocs(NkStringView *stdLocs);
+    /** \endcond */
+
+    /* First, destroy platform-dependent paths. */
+    __NkInt_StandardPaths_DestroyPlatformLocs(gl_StandardPaths);
+
+    return NkErr_Ok;
+}
+
+NkStringView const *NK_CALL NkPathQueryStdLocation(_In_ NkStdLocation locId) {
+    NK_ASSERT(locId >= 0 && locId < __NkStdLoc_Count__, NkErr_InParameter);
+
+    return &gl_StandardPaths[locId];
+}
 
 
 NkStringView const *NK_CALL NkPathQueryStandardLocIdStr(_In_ NkStdLocation locId) {
