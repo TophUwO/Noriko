@@ -61,8 +61,12 @@ NK_INTERNAL KNOWNFOLDERID const *__NkInt_WindowsStandardPaths_MapToKNOWNFOLDERID
 /** \endcond */
 
 
-/**
- */
+NkStringView const *NK_CALL __NkInt_StandardPaths_QueryNativeSeparator(NkVoid) {
+    NK_INTERNAL NkStringView const gl_c_DefSep = NK_MAKE_STRING_VIEW("\\");
+
+    return &gl_c_DefSep;
+}
+
 NkVoid NK_CALL __NkInt_StandardPaths_DestroyPlatformLocs(NkStringView *stdLocs) {
     for (NkStdLocation currLoc = NkStdLoc_Unknown + 1; currLoc < __NkStdLoc_Count__; currLoc++) {
         if (__NkInt_WindowsStandardPaths_MapToKNOWNFOLDERID(currLoc) == NULL)
@@ -75,8 +79,6 @@ NkVoid NK_CALL __NkInt_StandardPaths_DestroyPlatformLocs(NkStringView *stdLocs) 
     }
 }
 
-/**
- */
 _Return_ok_ NkErrorCode NK_CALL __NkInt_StandardPaths_QueryPlatformLocs(NkStringView *stdLocs) {
     for (NkStdLocation currLoc = NkStdLoc_Unknown + 1; currLoc < __NkStdLoc_Count__; currLoc++) {
         NkStringView *currEntry = &stdLocs[currLoc];

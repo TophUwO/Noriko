@@ -138,7 +138,7 @@
 
 
 /**
- * \defgroup Aliases
+ * \defgroup Aliases General Typedefs
  * \brief    makes some primitive standard types conforming to Noriko's naming convention
  */
 /** @{ */
@@ -161,10 +161,28 @@ NK_NATIVE typedef uint16_t  NkUint16;
 NK_NATIVE typedef uint32_t  NkUint32;
 NK_NATIVE typedef uint64_t  NkUint64, NkFlags;
 
+/**
+ * \defgroup AlignTypes Types for Alignment
+ * \brief    contains typedefs suitable for satisfying alignment requirements
+ * \note     The type names follow the following pattern: <tt>NkAlign*</tt>, where
+ *           <tt>*</tt> stands for the type's alignment requirement, in bytes.
+ */
+/** @{ */
 NK_NATIVE typedef int8_t    NkAlign1;
 NK_NATIVE typedef int16_t   NkAlign2;
 NK_NATIVE typedef int32_t   NkAlign4;
 NK_NATIVE typedef int64_t   NkAlign8;
 /** @} */
+/** @} */
+
+
+/**
+ * \defgroup VirtFn Virtual Functions
+ * 
+ * The following section lists all functions and symbols that are marked as <em>virtual</em>,
+ * that is, functions that are not provided by Noriko directly but must be implemented by
+ * each platform individually. As such, this page is very important for developers who
+ * want to port Noriko to other platforms.
+ */
 
 

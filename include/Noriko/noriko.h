@@ -42,6 +42,8 @@
 #include <include/Noriko/bmp.h>
 #include <include/Noriko/world.h>
 #include <include/Noriko/input.h>
+#include <include/Noriko/asset.h>
+#include <include/Noriko/path.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -67,7 +69,7 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkApplicationSpecific
     int                    m_argc;            /**< number of command-line parameters */
     char                 **mp_argv;           /**< command-line parameters */
     char                 **mp_envp;           /**< (optional) environment variables */
-    NkStringView           m_workingDir;      /**< default working directory */
+    NkStringView           m_gameRootDir;     /**< default working directory */
 } NkApplicationSpecification;
 
 

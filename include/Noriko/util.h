@@ -36,12 +36,24 @@
 #define NK_MESC(x)                   NK_ESC(x)
 
 /**
+ * \def   NK_DEFINE_PROTOTYPE(t, a, s)
+ * \brief defines a semi-opaque prototype which is a type that is statically instantiable
+ *        while exposing the least amount of implementation details
+ * \param t type name
+ * \param a alignment requirement; either a number, a type, or <tt>NK_ALIGNOF(NkAlign*)</tt>
+ * \param s size of the type, in bytes
  */
-#define NK_DEFINE_PROTOTYPE(tn, a, s)         \
-    NK_NATIVE typedef struct tn {             \
-        alignas(a) NkByte __placeholder__[s]; \
-    } tn;
+#define NK_DEFINE_PROTOTYPE(t, a, s)                                                                       \
+    static_assert(s != 0, "Invalid size for type \"" #t "\": " #s);                                        \
+    static_assert(a != 0 && (a & (a - 1)) == 0, "Invalid alignment requirement for type \"" #t "\": " #a); \
+    NK_NATIVE typedef struct t { alignas(a) NkByte __placeholder__[s]; } t;
 /**
+ * \def   NK_VERIFY_TYPE(pub, priv)
+ * \brief verifies size and alignment between public prototype defined with
+ *        <tt>NK_DEFINE_PROTOTYPE()</tt> and the implementation structure, denoted by
+ *        \c priv
+ * \param pub name of the public prototype
+ * \param priv name of the implementation struct
  */
 #define NK_VERIFY_TYPE(pub, priv)                                                                          \
     static_assert(                                                                                         \
@@ -50,6 +62,13 @@
         "Check definitions."                                                                               \
     )
 /**
+ * \def   NK_VERIFY_LUT(lut, e, s)
+ * \brief validates the size of a lookup table against a controlling enum and an element
+ *        count
+ * \param lut name of the lookup table symbol
+ * \param e name of the controlling enum
+ * \param s must-size of the LUT, should normally be the <tt>\_\_\*\_Count\_\_</tt>
+ *          member of \c e
  */
 #define NK_VERIFY_LUT(lut, e, s)                                                                            \
     static_assert(                                                                                          \
@@ -59,7 +78,7 @@
 
 /**
  * \def   NK_INRANGE_INCL(x, lo, hi)
- * \brief checks whether lo <= x <= hi is *true*
+ * \brief checks whether <tt>lo <= x <= hi</tt> is *true*
  * \param x numeric value to compare against *lo* and *hi*
  * \param lo lower bound of the comparison
  * \param hi higher bound of the comparison
@@ -67,7 +86,7 @@
 #define NK_INRANGE_INCL(x, lo, hi)   (NkBoolean)((((hi) - (x)) * ((x) - (lo))) >= 0)
 /**
  * \def   NK_INRANGE_EXCL(x, lo, hi)
- * \brief checks whether lo < x < hi is *true*
+ * \brief checks whether <tt>lo < x < hi</tt> is *true*
  * \param x numeric value to compare against *lo* and *hi*
  * \param lo lower bound of the comparison
  * \param hi higher bound of the comparison

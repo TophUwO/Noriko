@@ -68,9 +68,13 @@ NK_NATIVE NK_API NkVoid NK_CALL NkStringDestroy(NkString *strPtr);
 
 /**
  */
+NK_NATIVE NK_API NkVoid NK_CALL NkStringClear(_Inout_ NkString *strPtr);
+/**
+ */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkStringJoin(
     _Inout_       NkString *strPtr,
-    _In_z_ _Utf8_ char const *elemStr
+    _In_z_ _Utf8_ char const *elemStr,
+    _In_opt_      NkUint32 strLen
 );
 
 /**

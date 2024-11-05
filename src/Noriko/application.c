@@ -79,6 +79,22 @@ NK_INTERNAL NkSize const gl_c_CompInitTblSize = NK_ARRAYSIZE(gl_c_CompInitTable)
 
 
 /**
+ * \ingroup VirtFn
+ * \brief   invokes platform-dependent message handling facilities
+ * \param   [out] isLeave set to \c NK_TRUE if the application needs to exit the main
+ *                loop
+ * \param   [in,out] extraCxt pointer to a variable that contains extra context needed
+ *                   for the platform
+ * \return  error state of the event handling; if \c isLeave is <tt>NK_FALSE</tt>, the
+ *          return value is always <tt>NkErr_Ok</tt>.
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Application_PlatformLoop(
+    _Out_       NkBoolean *isLeave,
+    _Inout_opt_ NkVoid *extraCxt
+);
+
+
+/**
  */
 _Return_ok_ NK_INTERNAL NkErrorCode __NkInt_ValidateAppSpecification(_In_ NkApplicationSpecification const *specsPtr) {
     NkErrorCode errCode = NkErr_Ok;
@@ -190,25 +206,6 @@ _Return_ok_ NkErrorCode NK_CALL NkApplicationRun(NkVoid) {
     NkUint64        prevTime   = NkTimerGetCurrentTicks();
     NkUint64        currLag    = 0;
     NkUint64 const  maxElapsed = (NkUint64)(0.016f * tiFreq);
-
-    /** \cond INTERNAL */
-    /**
-     * \brief  invokes platform-dependent message handling facilities
-     * \param  [out] isLeave set to \c NK_TRUE if the application needs to exit the main
-     *               loop
-     * \param  [in,out] extraCxt pointer to a variable that contains extra context needed
-     *                  for the platform
-     * \return error state of the event handling; if \c isLeave is <tt>NK_FALSE</tt>, the
-     *         return value is always <tt>NkErr_Ok</tt>.
-     * 
-     * \par Remarks
-     *   This function must be implemented per platform.
-     */
-    NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Application_PlatformLoop(
-        _Out_       NkBoolean *isLeave,
-        _Inout_opt_ NkVoid *extraCxt
-    );
-    /** \endcond */
 
     for (;;) {
         /* First, calculate timestep. */

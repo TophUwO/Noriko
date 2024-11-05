@@ -40,6 +40,7 @@
 
 /* Noriko includes */
 #include <include/Noriko/alloc.h>
+#include <include/Noriko/platform.h>
 
 #include <include/Noriko/dstruct/string.h>
 
@@ -77,26 +78,6 @@ NK_INTERNAL NK_INLINE NkUint8 __NkInt_String_CharSize(_In_z_ _Utf8_ char const *
     };
 
     return gl_c_Utf8CharSizes[*encChar];
-}
-
-/**
- */
-NK_INTERNAL NkUint32 __NkInt_String_DecodeChar(_In_z_ _Utf8_ char const *encChar) {
-    NK_ASSERT(encChar != NULL, NkErr_InParameter);
-
-    /*
-     * Decode the character, that is, transform it into its corresponding Unicode
-     * codepoint.
-     */
-    switch (__NkInt_String_CharSize(encChar)) {
-        case 1: return *encChar;
-        case 2: return ((*encChar & 31) << 6  | (*++encChar & 63));
-        case 3: return ((*encChar & 15) << 12 | (*++encChar & 63) << 6  | (*++encChar & 63));
-        case 4: return ((*encChar & 7)  << 18 | (*++encChar & 63) << 12 | (*++encChar & 63) << 6 | (*++encChar & 63));
-    }
-
-    /* Codepoint is not of valid size; return codepoint that signifies an error. */
-    return 0xFFFD; /* unicode replacement character (U+FFFD) */
 }
 
 /**
@@ -200,7 +181,21 @@ NkVoid NK_CALL NkStringDestroy(NkString *strPtr) {
 }
 
 
-_Return_ok_ NkErrorCode NK_CALL NkStringJoin(_Inout_ NkString *strPtr, _In_z_ _Utf8_ char const *elemStr) {
+NkVoid NK_CALL NkStringClear(_Inout_ NkString *strPtr) {
+    NK_ASSERT(strPtr != NULL, NkErr_InOutParameter);
+
+    /* Get pointer to internal string type. */
+    __NkInt_String *intStr = (__NkInt_String *)strPtr;
+
+    intStr->mp_charBuf[0] = '\0';
+    intStr->m_currLen     = 0;
+}
+
+_Return_ok_ NkErrorCode NK_CALL NkStringJoin(
+    _Inout_       NkString *strPtr,
+    _In_z_ _Utf8_ char const *elemStr,
+    _In_opt_      NkUint32 strLen
+) {
     NK_ASSERT(strPtr != NULL, NkErr_InOutParameter);
     NK_ASSERT(elemStr != NULL, NkErr_InParameter);
     if (*elemStr == '\0')
@@ -211,7 +206,7 @@ _Return_ok_ NkErrorCode NK_CALL NkStringJoin(_Inout_ NkString *strPtr, _In_z_ _U
 
     /* Check if the current string + element string exceeds the current buffer. */
     NkUint32 reqBufSize;
-    NkUint32 const elemStrlen = (NkUint32)strlen(elemStr);
+    NkUint32 const elemStrlen = strLen == (NkUint32)(-1) ? (NkUint32)strlen(elemStr) : strLen;
     if (!NkCheckedUint32Add(intStr->m_currLen, elemStrlen, &reqBufSize))
         return NkErr_UnsignedWrapAround;
     if (reqBufSize > intStr->m_currSize) {
@@ -242,11 +237,12 @@ char const *NK_CALL NkStringAt(_In_ NkString const *strPtr, _In_ NkUint32 off) {
     NK_ASSERT(strPtr != NULL, NkErr_InOutParameter);
     
     char const *currIter = ((__NkInt_String *)strPtr)->mp_charBuf;
-    while (off--) {
+    while (off != 0) {
         currIter += __NkInt_String_CharSize(currIter);
 
         if (currIter == '\0')
             break;
+        --off;
     }
 
     return off > 0 ? NULL : currIter;

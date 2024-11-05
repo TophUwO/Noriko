@@ -61,6 +61,23 @@ NK_NATIVE typedef enum NkStdLocation {
     __NkStdLoc_Count__
 } NkStdLocation;
 
+/**
+ */
+NK_NATIVE typedef enum NkGameDirectory {
+    NkGameDir_Unknown = 0,
+
+    NkGameDir_BinRoot,
+    NkGameDir_DataRoot,
+    NkGameDir_DocsRoot,
+    NkGameDir_CacheRoot,
+    NkGameDir_ExtRoot,
+    NkGameDir_AssetRoot,
+    NkGameDir_MapAssets,
+    NkGameDir_TilesetAssets,
+
+    __NkGameDir_Count__
+} NkGameDirectory;
+
 
 /**
  */
@@ -71,11 +88,12 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid);
 
 /**
  */
-NK_NATIVE NK_API NkString *NK_CALL NkPathBuild(
+NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathBuild(
     _In_opt_ NkStringView const *sepCh,
-    _In_opt_ NkStringView const *stemCompArr,
+    _In_opt_ NkStringView const **stemCompArr,
     _In_opt_ NkStringView const *fileName,
-    _In_opt_ NkStringView const *extStr
+    _In_opt_ NkStringView const *extStr,
+    _Out_    NkString *resStr
 );
 /**
  */
@@ -84,6 +102,9 @@ NK_NATIVE NK_API NkString *NK_CALL NkPathToNativeSeparators(_Inout_ NkString *st
 /**
  */
 NK_NATIVE NK_API NkStringView const *NK_CALL NkPathQueryStdLocation(_In_ NkStdLocation locId);
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkPathQueryGameDirectory(_In_ NkGameDirectory dirId);
 /**
  */
 NK_NATIVE NK_API NkStringView const *NK_CALL NkPathQueryStandardLocIdStr(_In_ NkStdLocation locId);

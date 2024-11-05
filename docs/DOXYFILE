@@ -289,7 +289,7 @@ TAB_SIZE               = 4
 # with the commands \{ and \} for these it is advised to use the version @{ and
 # @} or use a double escape (\\{ and \\})
 
-ALIASES                =
+ALIASES                = "virtual=\note <strong>Virtual:</strong> This function is marked as \e virtual and thus must be implemented per platform."
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -765,7 +765,7 @@ GENERATE_DEPRECATEDLIST= YES
 # sections, marked by \if <section_label> ... \endif and \cond <section_label>
 # ... \endcond blocks.
 
-ENABLED_SECTIONS       =
+ENABLED_SECTIONS       = INTERNAL
 
 # The MAX_INITIALIZER_LINES tag determines the maximum number of lines that the
 # initial value of a variable or macro / define can have for it to appear in the
@@ -2516,7 +2516,8 @@ PREDEFINED             = _Struct_size_bytes_(x)= \
                          _In_= \
                          _Inout_opt_= \
                          _Out_= \
-                         NK_VIRTUAL=virtual
+                         NK_VIRTUAL=virtual \
+                         NK_EXTERN=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
