@@ -108,6 +108,9 @@ NKOM_DECLARE_INTERFACE(NkILayer) {
     NkErrorCode (NK_CALL *OnUpdate)(_Inout_ NkILayer *self, _In_ NkFloat updTime);
     /**
      */
+    NkErrorCode (NK_CALL *OnFixedUpdate)(_Inout_ NkILayer *self, _In_ NkFloat updTime);
+    /**
+     */
     NkErrorCode (NK_CALL *OnRender)(_Inout_ NkILayer *self, _In_ NkFloat aheadBy);
 };
 

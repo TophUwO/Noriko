@@ -15,7 +15,7 @@
  * \brief main public API header of the Noriko engine component
  * 
  * This header is to be used by both the Noriko Runtime (NorikoRt) and Noriko Editor
- * (NorikoEd) component. Thus, it exposes an API that is compatible with both C and C++.
+ * (NorikoEd) components. Thus, it exposes an API that is compatible with both C and C++.
  * This header contains important exported symbols that provide access high-level access
  * to Noriko's internal components.
  */
@@ -42,11 +42,11 @@
 #include <include/Noriko/bmp.h>
 #include <include/Noriko/world.h>
 #include <include/Noriko/input.h>
-#include <include/Noriko/asset.h>
 #include <include/Noriko/path.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
+#include <include/Noriko/dstruct/string.h>
 
 
 /**
@@ -103,5 +103,25 @@ NK_NATIVE NK_API NkVoid NK_CALL NkApplicationExit(_Ecode_range_ NkErrorCode errC
  * \note   The return value of this function can never be <tt>NULL</tt>.
  */
 NK_NATIVE NK_API NkApplicationSpecification const *NK_CALL NkApplicationQuerySpecification(NkVoid);
+
+/**
+ * \brief  retrieves the static component instance associated with the given NkOM class
+ *         identifier
+ * \param  [in] clsId ID of the class that implements the desired component
+ * \return pointer to the static component instance, or \c NULL if no instance of the
+ *         desired class ID is available
+ *
+ * \par Remarks
+ *   Like all functions that query NkOM instances, it increments the reference count
+ *   of the returned component. Use <tt>NkIBase::Release()</tt> on the returned instance
+ *   when you are done with the component to ensure proper resource deallocation.
+ */
+NK_NATIVE NK_API NkVoid *NK_CALL NkApplicationQueryInstance(_In_ NkUuid const *clsId);
+
+
+/**
+ * \page Porting Noriko to new platforms
+ * \todo add content
+ */
 
 
