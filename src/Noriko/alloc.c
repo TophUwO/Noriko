@@ -529,11 +529,23 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid) {
 _Return_ok_ NkErrorCode NK_CALL NkAllocUninitialize(NkVoid) {
     NK_LOG_INFO("shutdown: allocators");
 
-    /* Free all memory pools. */
+    /* Free all remaining memory pools. */
     for (NkUint32 i = 0, j = 0; i < gl_MaxPools && j < gl_PoolAllocCxt.m_nAllocPools; i++) {
         /* Skip unallocated pools. */
         if (gl_PoolAllocCxt.m_memPools[i].m_blockSize == 0)
             continue;
+        
+        /*
+         * Print an error message to inform the user that there are still pending memory
+         * allocations.
+         */
+        NK_LOG_WARNING(
+            "Memory pool %u (s=%u, c=%u) has %u blocks still allocated.",
+            i,
+            gl_PoolAllocCxt.m_memPools[i].m_blockSize,
+            gl_PoolAllocCxt.m_memPools[i].m_blockCount,
+            gl_PoolAllocCxt.m_memPools[i].m_nAllocBlocks
+        );
 
         NkGPFree(gl_PoolAllocCxt.m_memPools[i].mp_blockPtr);
         ++j;
@@ -691,6 +703,7 @@ lbl_RETBLOCKPTR:
     if (errorCode != NkErr_Ok) {
         NK_UNLOCK(gl_PoolAllocCxt.m_mtxLock);
 
+        *memPtr = NULL;
         return errorCode;
     }
 

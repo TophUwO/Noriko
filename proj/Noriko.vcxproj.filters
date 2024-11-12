@@ -25,6 +25,9 @@
     <Filter Include="Source Files\platform\windows">
       <UniqueIdentifier>{0c5525fc-3d3f-43eb-bc11-980338318644}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\sql">
+      <UniqueIdentifier>{c540e815-839c-4e2e-990e-db33c196ae6f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\Noriko\noriko.h">
@@ -97,6 +100,9 @@
       <Filter>Header Files\dstruct</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Noriko\path.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Noriko\db.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -185,5 +191,16 @@
     <ClCompile Include="..\src\Noriko\platform\windows\wintimer.c">
       <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\Noriko\asset.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\db.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\sql\sql_assetdb.sql">
+      <Filter>Resource Files\sql</Filter>
+    </None>
   </ItemGroup>
 </Project>

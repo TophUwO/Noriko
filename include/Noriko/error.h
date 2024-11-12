@@ -165,6 +165,10 @@ NK_NATIVE typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_CreateDDBFromDIB,      /**< could not create DDB from DIB pixels */
     NkErr_CopyDDBPixels,         /**< could not copy pixels from DDB to DIB */
     NkErr_QueryStdLocation,      /**< failed to retrieve standard location */
+    NkErr_DatabaseOpen,          /**< could not open database connection */
+    NkErr_SetDatabaseProps,      /**< could not set some database connection properties */
+    NkErr_DatabaseClose,         /**< could not close database connection */
+    NkErr_CompileSqlStatement,   /**< could not compile SQL statement */
 
     __NkErr_Count__              /**< used internally */
 } NkErrorCode;

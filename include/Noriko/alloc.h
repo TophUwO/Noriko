@@ -162,6 +162,7 @@ NK_NATIVE NK_API NkVoid NK_CALL NkGPFree(NkVoid *memPtr);
  * \note    \li \c blockSize must be non-zero and a multiple of eight.
  * \note    \li To return the memory back to the allocator after you are done with it,
  *          use the \c NkPoolFree() function.
+ * \note    \li If the function fails, then \c resPtr will be set to <tt>NULL</tt>.
  * \note    \li This function may allocate new memory pools on the heap if necessary.
  *          This may increase latency a bit for large allocations. To mitigate this, use
  *          the \c NkPoolReserve() function.

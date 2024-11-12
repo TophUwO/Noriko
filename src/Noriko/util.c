@@ -71,10 +71,10 @@ NK_NATIVE typedef struct __NkInt_Variant {
         NkUint16      m_u16Val;
         NkUint32      m_u32Val;
         NkUint64      m_u64Val;
-        NkFloat       m_floatVal;
         NkDouble      m_dblVal;
         NkErrorCode   m_ecVal;
         NkStringView  m_svVal;
+        NkBufferView  m_bufVal;
         NkUuid        m_uuidVal;
         NkVoid       *mp_ptrVal;
         NkVector     *mp_vecVal;
@@ -121,10 +121,10 @@ static_assert(
  * \see   https://de.wikipedia.org/wiki/Xorshift#Xoroshiro_und_Xoshiro
  */
 NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGXoshiro256(_Out_ NkUint64 *dstPtr) {
-    NK_INTERNAL NkUint64 *s0 = (NkUint64 *)&gl_RandContext.m_seedArr[0 * sizeof(NkUint64)];
-    NK_INTERNAL NkUint64 *s1 = (NkUint64 *)&gl_RandContext.m_seedArr[1 * sizeof(NkUint64)];
-    NK_INTERNAL NkUint64 *s2 = (NkUint64 *)&gl_RandContext.m_seedArr[2 * sizeof(NkUint64)];
-    NK_INTERNAL NkUint64 *s3 = (NkUint64 *)&gl_RandContext.m_seedArr[3 * sizeof(NkUint64)];
+    NK_INTERNAL NkUint64 *const s0 = (NkUint64 *const)&gl_RandContext.m_seedArr[0 * sizeof(NkUint64)];
+    NK_INTERNAL NkUint64 *const s1 = (NkUint64 *const)&gl_RandContext.m_seedArr[1 * sizeof(NkUint64)];
+    NK_INTERNAL NkUint64 *const s2 = (NkUint64 *const)&gl_RandContext.m_seedArr[2 * sizeof(NkUint64)];
+    NK_INTERNAL NkUint64 *const s3 = (NkUint64 *const)&gl_RandContext.m_seedArr[3 * sizeof(NkUint64)];
 
     /* Get next number in the sequence. */
     *dstPtr = *s0 + *s3;
@@ -156,10 +156,14 @@ NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGNextNoLock(_Out_ NkUint64 *dstPtr) {
  *          undefined behavior.
  */
 NK_INTERNAL NK_INLINE NkSize __NkInt_VariantGetTypeSize(_In_ NkVariantType varType) {
+    NK_ASSERT(varType >= NkVarTy_None && varType < __NkVarTy_Count__, NkErr_InParameter);
+
+    /** \cond INTERNAL */
     /**
      * \brief static table of variant value sizes
      */
-    NK_INTERNAL NkSize const gl_VarTypeSizes[] = {
+    NK_INTERNAL NkSize const gl_c_VarTypeSizes[] = {
+        [NkVarTy_None]       = 0,
         [NkVarTy_Boolean]    = sizeof(NkBoolean),
         [NkVarTy_Char]       = sizeof(char),
         [NkVarTy_Int8]       = sizeof(NkInt8),
@@ -174,14 +178,18 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_VariantGetTypeSize(_In_ NkVariantType varTy
         [NkVarTy_Double]     = sizeof(NkDouble),     
         [NkVarTy_ErrorCode]  = sizeof(NkErrorCode),  
         [NkVarTy_StringView] = sizeof(NkStringView),
+        [NkVarTy_BufferView] = sizeof(NkBufferView),
         [NkVarTy_Uuid]       = sizeof(NkUuid),       
         [NkVarTy_Pointer]    = sizeof(NkVoid *),     
         [NkVarTy_Vector]     = sizeof(NkVector *),   
         [NkVarTy_Hashtable]  = sizeof(NkHashtable *),
-        [NkVarTy_Timer]      = sizeof(NkTimer *)
+        [NkVarTy_Timer]      = sizeof(NkTimer *),
+        [NkVarTy_NkOMObject] = sizeof(NkVoid *)
     };
+    NK_VERIFY_LUT(gl_c_VarTypeSizes, NkVariantType, __NkVarTy_Count__);
+    /** \endcond */
 
-    return gl_VarTypeSizes[varType];
+    return gl_c_VarTypeSizes[varType];
 }
 /** \endcond */
 
@@ -286,7 +294,7 @@ NkBoolean NK_CALL NkUuidIsEqual(_In_ NkUuid const *fUuid, _In_ NkUuid const *sUu
     );
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidAsStr, _Out_ NkUuid *uuidPtr) {
+_Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(NK_UUIDLEN) char const *uuidAsStr, _Out_ NkUuid *uuidPtr) {
     NK_ASSERT(uuidAsStr != NULL, NkErr_InParameter);
     NK_ASSERT(uuidPtr != NULL, NkErr_OutParameter);
 
@@ -295,11 +303,12 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidA
         if (*uuidAsStr == '-')
             ++uuidAsStr;
 
+        /** \cond INTERNAL */
         /**
          * \brief character to nibble conversion table
          * \note  Characters not explicitly listed map to <tt>0x0</tt>.
          */
-        NK_INTERNAL NkByte const gl_NibbleTable[0x80] = {
+        NK_INTERNAL NkByte const gl_c_NibbleTable[0x80] = {
             ['0'] = 0x0, ['1'] = 0x1, ['2'] = 0x2, ['3'] = 0x3,
             ['4'] = 0x4, ['5'] = 0x5, ['6'] = 0x6, ['7'] = 0x7,
             ['8'] = 0x8, ['9'] = 0x9, ['a'] = 0xA, ['A'] = 0xA,
@@ -307,7 +316,8 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidA
             ['d'] = 0xD, ['D'] = 0xD, ['e'] = 0xE, ['E'] = 0xE,
             ['f'] = 0xF, ['F'] = 0xF
         };
-        ((__NkInt_Uuid *)uuidPtr)->m_asByte[j] = gl_NibbleTable[*uuidAsStr] << 4 | gl_NibbleTable[*(uuidAsStr + 1)];
+        /** \endcond */
+        ((__NkInt_Uuid *)uuidPtr)->m_asByte[j] = gl_c_NibbleTable[*uuidAsStr] << 4 | gl_c_NibbleTable[*(uuidAsStr + 1)];
         uuidAsStr += 2;
     }
     if (i != 32) {
@@ -319,9 +329,12 @@ _Return_ok_ NkErrorCode NK_CALL NkUuidFromString(_I_bytes_(37) char const *uuidA
     return NkErr_Ok;
 }
 
-NkVoid NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *strBuf) {
+char *NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(NK_UUIDLEN) char *strBuf) {
     NK_ASSERT(uuidPtr != NULL, NkErr_InParameter);
     NK_ASSERT(strBuf != NULL, NkErr_OutParameter);
+
+    /* Save starting address for later return. */
+    char *startBuf = strBuf;
 
     for (NkInt32 i = 0; i < sizeof *uuidPtr; i++) {
         /* Format according to the 8-4-4-4-12 normal form. */
@@ -332,6 +345,8 @@ NkVoid NK_CALL NkUuidToString(_In_ NkUuid const *uuidPtr, _O_bytes_(37) char *st
         *strBuf++ = "0123456789abcdef"[((__NkInt_Uuid *)uuidPtr)->m_asByte[i] & 0x0F];
     }
     *strBuf = 0x00;
+
+    return startBuf;
 }
 
 NkVoid NK_CALL NkUuidCopy(_In_ NkUuid const *srcPtr, _Out_ NkUuid *resPtr) {
@@ -346,7 +361,7 @@ NkVoid NK_CALL NkVariantGet(_In_ NkVariant const *varPtr, _Out_opt_ NkVariantTyp
     NK_ASSERT(varPtr != NULL, NkErr_InParameter);
 
     __NkInt_Variant const *intVarPtr = (__NkInt_Variant const *)varPtr;
-    NK_ASSERT(NK_INRANGE_EXCL(intVarPtr->m_type, NkVarTy_None, __NkVarTy_Count__), NkErr_ObjectState);
+    NK_ASSERT(NK_INRANGE_INCL(intVarPtr->m_type, NkVarTy_None, __NkVarTy_Count__ - 1), NkErr_ObjectState);
 
     if (tyPtr != NULL) *tyPtr = intVarPtr->m_type;
     if (valPtr != NULL)
@@ -355,7 +370,7 @@ NkVoid NK_CALL NkVariantGet(_In_ NkVariant const *varPtr, _Out_opt_ NkVariantTyp
 
 NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVariantType valType, ...) {
     NK_ASSERT(varPtr != NULL, NkErr_InOutParameter);
-    NK_ASSERT(NK_INRANGE_EXCL(valType, NkVarTy_None, __NkVarTy_Count__), NkErr_InvalidRange);
+    NK_ASSERT(NK_INRANGE_INCL(valType, NkVarTy_None, __NkVarTy_Count__ - 1), NkErr_InvalidRange);
 
     __NkInt_Variant *vPtr = (__NkInt_Variant *)varPtr;
 
@@ -363,28 +378,33 @@ NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVar
     va_start(vlArg, valType);
 
     switch (valType) {
-        case NkVarTy_Boolean:    vPtr->m_val.m_boolVal = va_arg(vlArg, NkBoolean);  break;
-        case NkVarTy_Char:       vPtr->m_val.m_chVal   = va_arg(vlArg, char);       break;
-        case NkVarTy_Int8:       vPtr->m_val.m_i8Val   = va_arg(vlArg, NkInt8);     break;
-        case NkVarTy_Int16:      vPtr->m_val.m_i16Val  = va_arg(vlArg, NkInt16);    break;
-        case NkVarTy_Int32:      vPtr->m_val.m_i32Val  = va_arg(vlArg, NkInt32);    break;
-        case NkVarTy_Int64:      vPtr->m_val.m_i64Val  = va_arg(vlArg, NkInt64);    break;
-        case NkVarTy_Uint8:      vPtr->m_val.m_u8Val   = va_arg(vlArg, NkUint8);    break;
-        case NkVarTy_Uint16:     vPtr->m_val.m_u16Val  = va_arg(vlArg, NkUint16);   break;
-        case NkVarTy_Uint32:     vPtr->m_val.m_u32Val  = va_arg(vlArg, NkUint32);   break;
-        case NkVarTy_Uint64:     vPtr->m_val.m_u64Val  = va_arg(vlArg, NkUint64);   break;
-        case NkVarTy_Float:
-            /*
-             * Variadic function parameters passed as float are automatically promoted to
-             * double and thus must explicitly converted back.
-             */
-            vPtr->m_val.m_floatVal = (NkFloat)va_arg(vlArg, NkDouble);
-            
+        case NkVarTy_None:
+            memset((NkVoid *)&vPtr->m_val, 0, sizeof vPtr->m_val);
+
             break;
+        case NkVarTy_Boolean:    vPtr->m_val.m_boolVal = va_arg(vlArg, NkBoolean);   break;
+        case NkVarTy_Char:       vPtr->m_val.m_chVal   = va_arg(vlArg, char);        break;
+        case NkVarTy_Int8:       vPtr->m_val.m_i8Val   = va_arg(vlArg, NkInt8);      break;
+        case NkVarTy_Int16:      vPtr->m_val.m_i16Val  = va_arg(vlArg, NkInt16);     break;
+        case NkVarTy_Int32:      vPtr->m_val.m_i32Val  = va_arg(vlArg, NkInt32);     break;
+        case NkVarTy_Int64:      vPtr->m_val.m_i64Val  = va_arg(vlArg, NkInt64);     break;
+        case NkVarTy_Uint8:      vPtr->m_val.m_u8Val   = va_arg(vlArg, NkUint8);     break;
+        case NkVarTy_Uint16:     vPtr->m_val.m_u16Val  = va_arg(vlArg, NkUint16);    break;
+        case NkVarTy_Uint32:     vPtr->m_val.m_u32Val  = va_arg(vlArg, NkUint32);    break;
+        case NkVarTy_Uint64:     vPtr->m_val.m_u64Val  = va_arg(vlArg, NkUint64);    break;
+        case NkVarTy_Float:
         case NkVarTy_Double:     vPtr->m_val.m_dblVal  = va_arg(vlArg, NkDouble);    break;
         case NkVarTy_ErrorCode:  vPtr->m_val.m_ecVal   = va_arg(vlArg, NkErrorCode); break;
         case NkVarTy_StringView:
-            memcpy(&vPtr->m_val.m_svVal, va_arg(vlArg, NkStringView *), sizeof(NkStringView));
+        case NkVarTy_BufferView:
+            /* Differentiate to prevent issues when ABI of either type changes. */
+            memcpy(
+                (NkVoid *)&vPtr->m_val.m_svVal,
+                va_arg(vlArg, NkVoid const *),
+                valType == NkVarTy_StringView
+                    ? sizeof(NkStringView)
+                    : sizeof(NkBufferView)
+            );
 
             break;
         case NkVarTy_Uuid:
@@ -394,7 +414,8 @@ NkVoid NK_CALL NkVariantSet(_Pre_maybevalid_ _Out_ NkVariant *varPtr, _In_ NkVar
         case NkVarTy_Pointer:
         case NkVarTy_Vector:
         case NkVarTy_Hashtable:
-        case NkVarTy_Timer:      vPtr->m_val.mp_ptrVal = va_arg(vlArg, NkVoid *);    break;
+        case NkVarTy_Timer:
+        case NkVarTy_NkOMObject: vPtr->m_val.mp_ptrVal = va_arg(vlArg, NkVoid *);    break;
     }
 
     vPtr->m_type = valType;
@@ -408,6 +429,48 @@ NkVoid NK_CALL NkVariantCopy(_In_ NkVariant const *srcPtr, _Out_ NkVariant *dstP
     memcpy_s(dstPtr, sizeof *dstPtr, srcPtr, sizeof *srcPtr);
 }
 
+NkBoolean NK_CALL NkVariantIsNull(_In_ NkVariant const *varPtr) {
+    NK_ASSERT(varPtr != NULL, NkErr_InParameter);
+
+    return ((__NkInt_Variant *)varPtr)->m_type == NkVarTy_None;
+}
+
+NkStringView const *NK_CALL NkVariantQueryTypeStr(_In_ NkVariantType typeId) {
+    NK_ASSERT(typeId >= NkVarTy_None && typeId < __NkVarTy_Count__, NkErr_InParameter);
+
+    /** \cond INTERNAL */
+    /**
+     */
+    NK_INTERNAL NkStringView const gl_c_VarTypeStrs[] = {
+        [NkVarTy_None]       = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_None)),
+        [NkVarTy_Boolean]    = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Boolean)),
+        [NkVarTy_Char]       = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Char)),
+        [NkVarTy_Int8]       = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Int8)),
+        [NkVarTy_Int16]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Int16)),
+        [NkVarTy_Int32]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Int32)),
+        [NkVarTy_Int64]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Int64)),
+        [NkVarTy_Uint8]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Uint8)),
+        [NkVarTy_Uint16]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Uint16)),
+        [NkVarTy_Uint32]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Uint32)),
+        [NkVarTy_Uint64]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Uint64)),
+        [NkVarTy_Float]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Float)),
+        [NkVarTy_Double]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Double)),
+        [NkVarTy_ErrorCode]  = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_ErrorCode)),
+        [NkVarTy_StringView] = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_StringView)),
+        [NkVarTy_BufferView] = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_BufferView)),
+        [NkVarTy_Uuid]       = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Uuid)),
+        [NkVarTy_Pointer]    = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Pointer)),
+        [NkVarTy_Vector]     = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Vector)),
+        [NkVarTy_Hashtable]  = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Hashtable)),
+        [NkVarTy_Timer]      = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_Timer)),
+        [NkVarTy_NkOMObject] = NK_MAKE_STRING_VIEW(NK_ESC(NkVarTy_NkOMObject))
+    };
+    NK_VERIFY_LUT(gl_c_VarTypeStrs, NkVariantType, __NkVarTy_Count__);
+    /** \endcond */
+
+    return &gl_c_VarTypeStrs[typeId];
+}
+
 
 NkVoid NK_CALL NkRawStringTrim(
     _In_z_ char const *strPtr,
@@ -419,7 +482,7 @@ NkVoid NK_CALL NkRawStringTrim(
     NK_ASSERT(keyPtr != NULL, NkErr_InParameter);
     NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
 
-    /* Trim leading characters that are to be trimmed. */
+    /* Skip leading characters that are to be trimmed. */
     char *modPtr = (char *)strPtr;
     resPtr->mp_dataPtr = modPtr;
     while (strpbrk(resPtr->mp_dataPtr, keyPtr) == resPtr->mp_dataPtr)
@@ -440,7 +503,7 @@ lbl_NEXTCHAR:
     while (endPtr >= resPtr->mp_dataPtr) {
         /*
          * Implement a reverse 'strpbrk' clone that searches until none of the characters
-         * in *keyStr* matches the current end pointer.
+         * in *keyStr* match the current end pointer.
          */
         for (NkSize i = 0; i < keyLen; i++)
             if (*endPtr == keyPtr[i]) {

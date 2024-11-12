@@ -97,7 +97,7 @@ NK_EXTERN NK_VIRTUAL NkVoid NK_CALL __NkInt_StandardPaths_DestroyPlatformLocs(Nk
 /**
  */
 NK_INTERNAL NK_INLINE NkBoolean NK_CALL __NkInt_Path_IsSeparator(_In_ char sepCh) {
-    return sepCh == '/' || sepCh == '\\' || sepCh == ':';
+    return sepCh == '/' || sepCh == '\\';
 }
 /** \endcond */
 
@@ -170,7 +170,10 @@ _Return_ok_ NkErrorCode NK_CALL NkPathBuild(
         return errCode;
     sepCh = sepCh != NULL ? sepCh : __NkInt_StandardPaths_QueryNativeSeparator();
 
-    /* Go through stem array and append all path components. */
+    /*
+     * Go through stem array and append all path components. Stop when we arrive at a
+     * terminating NULL-pointer.
+     */
     for (NkSize i = 0; stemCompArr != NULL && stemCompArr[i] != NULL; i++) {
         if ((errCode = NkStringJoin(resStr, stemCompArr[i]->mp_dataPtr, (NkUint32)(-1))) != NkErr_Ok)
             goto lbl_ONERROR;

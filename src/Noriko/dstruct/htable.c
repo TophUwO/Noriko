@@ -653,6 +653,7 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableExtract(
     return NkErr_Ok;
 }
 
+
 NkBoolean NK_CALL NkHashtableContains(_In_ NkHashtable const *htPtr, _In_ NkHashtableKey const *keyPtr) {
     NK_ASSERT(htPtr != NULL, NkErr_InParameter);
     NK_ASSERT(keyPtr != NULL, NkErr_InParameter);
@@ -683,6 +684,12 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableForEach(_In_ NkHashtable const *htPtr
     }
 
     return errorCode;
+}
+
+NkUint32 NK_CALL NkHashtableCount(_In_ NkHashtable const *htPtr) {
+    NK_ASSERT(htPtr != NULL, NkErr_InParameter);
+
+    return htPtr->m_elemCount;
 }
 
 

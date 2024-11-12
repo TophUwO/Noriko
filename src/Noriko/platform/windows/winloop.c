@@ -26,8 +26,6 @@
 #include <include/Noriko/noriko.h>
 
 
-/**
- */
 _Return_ok_ NkErrorCode NK_CALL __NkInt_Application_PlatformLoop(
     _Out_       NkBoolean *isLeave,
     _Inout_opt_ NkVoid *extraCxt

@@ -372,3 +372,4 @@ interm/
 docs/html/
 *.i
 /res/def
+/proj/test.db

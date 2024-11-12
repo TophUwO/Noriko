@@ -95,7 +95,11 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvBitDepth)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateDDBFromDIB)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CopyDDBPixels)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_QueryStdLocation))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_QueryStdLocation)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_DatabaseOpen)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_SetDatabaseProps)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_DatabaseClose)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CompileSqlStatement))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -153,7 +157,11 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("invalid bit depth (not a power of 2 or unsupported?)"),
     NK_MAKE_STRING_VIEW("could not copy DIB pixels into DDB pixel buffer (pixel format invalid?)"),
     NK_MAKE_STRING_VIEW("could not copy pixels from DDB to DIB (pixel format/dimensions invalid?)"),
-    NK_MAKE_STRING_VIEW("failed to retrieve standard folder location")
+    NK_MAKE_STRING_VIEW("failed to retrieve standard folder location"),
+    NK_MAKE_STRING_VIEW("could not open database connection"),
+    NK_MAKE_STRING_VIEW("could not set some database connection properties"),
+    NK_MAKE_STRING_VIEW("could not close database connection"),
+    NK_MAKE_STRING_VIEW("could not successfully compile SQL statement (syntax errors? out of memory? invalid handle?)")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

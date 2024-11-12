@@ -34,8 +34,23 @@
 /* Determine build tools. */
 #if (defined _MSC_VER)
     #define NK_TOOLCHAIN_MSVC
+
+    /**
+     * \def   NK_DISABLE_WARNING(w, ...)
+     * \brief allows disabling a warning for a specific code snippet
+     * \param w warning identifier
+     */
+    #define NK_DISABLE_WARNING(w, ...) \
+            __pragma(warning (push)) __pragma(warning (disable: w)) __VA_ARGS__ __pragma(warning (pop))
+
+    /* platform-dependent warning identifiers */
+    #define NK_WARN_DIFFERENT_CONST_QUALIFIERS 4090
 #else
     #error Currently, Noriko only supports compilation via MSVC.
+
+    #define NK_DISABLE_WARNING(w, ...) __VA_ARGS__
+
+    #define NK_WARN_DIFFERENT_CONST_QUALIFIERS
 #endif
 
 /* Determine target platform. */

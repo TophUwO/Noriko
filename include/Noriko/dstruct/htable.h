@@ -12,7 +12,7 @@
 
 /**
  * \file  htable.h
- * \brief defines the public API for Noriko's internal hashtable container type
+ * \brief defines the public API for Noriko's internal hash table container type
  */
 
 
@@ -58,7 +58,7 @@ NK_NATIVE typedef _In_range_(0, __NkHtKeyTy_Count__ - 1) enum NkHashtableKeyType
 
 /**
  * \struct NkHashtable
- * \brief  represents the type for a generic hashtable implementation
+ * \brief  represents the type for a generic hash table implementation
  * 
  * This implementation works with pointers by default and implements Robin-Hood-Hashing.
  * Keys can be of a variety of primitive types.
@@ -214,6 +214,7 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableExtract(
     _In_     NkHashtableKey const *keyPtr,
     _Outptr_ NkVoid **valuePtr
 );
+
 /**
  * \brief  checks whether the hash table contains the given key
  * \param  [in] htPtr pointer to the hash table instance
@@ -237,5 +238,12 @@ NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkHashtableForEach(
     _In_ NkHashtable const *htPtr,
     _In_ NkHashtableIterFn fnIter
 );
+/**
+ * \brief  retrieves the current number of elements in the hash table
+ * \param  [in] htPtr pointer to the hash table instance of which the element count is to
+ *              be retrieved
+ * \return number of elements in the hash table
+ */
+NK_NATIVE NK_API NkUint32 NK_CALL NkHashtableCount(_In_ NkHashtable const *htPtr);
 
 

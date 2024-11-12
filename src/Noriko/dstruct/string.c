@@ -153,8 +153,8 @@ _Return_ok_ NkErrorCode NK_CALL NkStringCreate(
 
     /* Initialize string. */
     *(__NkInt_String *)resPtr = (__NkInt_String){
-        .m_currSize = bufSize,
-        .m_currLen  = fromStr != NULL ? bufSize : 0,
+        .m_currSize = (NkUint32)bufSize,
+        .m_currLen  = fromStr != NULL ? (NkUint32)bufSize : 0U,
         .mp_charBuf = charBuf
     };
     return NkErr_Ok;

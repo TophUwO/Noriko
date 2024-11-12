@@ -316,6 +316,7 @@
     <ClInclude Include="..\include\Noriko\alloc.h" />
     <ClInclude Include="..\include\Noriko\asset.h" />
     <ClInclude Include="..\include\Noriko\bmp.h" />
+    <ClInclude Include="..\include\Noriko\db.h" />
     <ClInclude Include="..\include\Noriko\dstruct\string.h" />
     <ClInclude Include="..\include\Noriko\env.h" />
     <ClInclude Include="..\include\Noriko\def.h" />
@@ -343,7 +344,9 @@
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />
     <ClCompile Include="..\src\Noriko\application.c" />
+    <ClCompile Include="..\src\Noriko\asset.c" />
     <ClCompile Include="..\src\Noriko\bmp.c" />
+    <ClCompile Include="..\src\Noriko\db.c" />
     <ClCompile Include="..\src\Noriko\dstruct\string.c" />
     <ClCompile Include="..\src\Noriko\env.c" />
     <ClCompile Include="..\src\Noriko\dstruct\htable.c" />
@@ -369,6 +372,9 @@
     <ClCompile Include="..\src\Noriko\util.c" />
     <ClCompile Include="..\src\Noriko\window.c" />
     <ClCompile Include="..\src\Noriko\world.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\res\sql\sql_assetdb.sql" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

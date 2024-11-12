@@ -93,16 +93,16 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_RendererFactory_QueryInterfa
 
 /**
  */
-NK_INTERNAL NkUuid **NK_CALL __NkInt_RendererFactory_QueryInstantiableClasses(_Inout_ NkIClassFactory *self) {
+NK_INTERNAL NkUuid const **NK_CALL __NkInt_RendererFactory_QueryInstantiableClasses(_Inout_ NkIClassFactory *self) {
     NK_ASSERT(self != NULL, NkErr_InOutParameter);
     NK_UNREFERENCED_PARAMETER(self);
 
     /**
      * \brief lists all classes instantiable by the current factory
      */
-    NK_INTERNAL NkUuid const *gl_InstClasses[] = { NKOM_CLSIDOF(NkIGdiRenderer), NULL };
+    NK_INTERNAL NkUuid const *gl_c_InstClasses[] = { NKOM_CLSIDOF(NkIGdiRenderer), NULL };
 
-    return (NkUuid **)gl_InstClasses;
+    return gl_c_InstClasses;
 }
 
 /**
@@ -179,7 +179,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_RendererFactory_CreateInstan
  *   <tt>static const</tt>. It's technically unsafe but given the circumstances, we're
  *   actually fine. Crazy world, isn't it?
  */
-NK_INTERNAL NkIClassFactory const gl_RendererFactory = {
+NK_INTERNAL NkIClassFactory const gl_c_RendererFactory = {
     .VT = &(struct __NkIClassFactory_VTable__){
         .QueryInterface           = &__NkInt_RendererFactory_QueryInterface,
         .AddRef                   = &__NkInt_RendererFactory_AddRef,
@@ -193,12 +193,12 @@ NK_INTERNAL NkIClassFactory const gl_RendererFactory = {
 
 _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid) {
     /* See comment regarding *gl_RendererFactory* above. */
-    return NkOMInstallClassFactory((NkIClassFactory *)&gl_RendererFactory);
+    return NkOMInstallClassFactory((NkIClassFactory *)&gl_c_RendererFactory);
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid) {
     /* See comment regarding *gl_RendererFactory* above. */
-    return NkOMUninstallClassFactory((NkIClassFactory *)&gl_RendererFactory);
+    return NkOMUninstallClassFactory((NkIClassFactory *)&gl_c_RendererFactory);
 }
 
 

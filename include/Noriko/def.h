@@ -176,6 +176,13 @@ NK_NATIVE typedef int64_t   NkAlign8;
 /** @} */
 
 
+/* Verify alignment type properties. */
+static_assert(alignof(NkAlign1) == 1, "Alignment of type \"NkAlign1\" must be 1.");
+static_assert(alignof(NkAlign2) == 2, "Alignment of type \"NkAlign2\" must be 2.");
+static_assert(alignof(NkAlign4) == 4, "Alignment of type \"NkAlign4\" must be 4.");
+static_assert(alignof(NkAlign8) == 8, "Alignment of type \"NkAlign8\" must be 8.");
+
+
 /**
  * \defgroup VirtFn Virtual Functions
  * 

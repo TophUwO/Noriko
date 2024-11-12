@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Noriko", "proj\Noriko.vcxproj", "{1EFE3C72-AE74-4D9E-8D3C-B8B264886CE0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0F928057-4454-48C9-9D41-9D17B01E27EA} = {0F928057-4454-48C9-9D41-9D17B01E27EA}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NorikoRt", "proj\NorikoRt.vcxproj", "{067F469A-F69A-4064-A1A6-7D2C29A08D37}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -13,8 +16,11 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NorikoEd", "proj\NorikoEd.vcxproj", "{618F2B86-8B44-4996-880C-B87537F32957}"
 	ProjectSection(ProjectDependencies) = postProject
 		{067F469A-F69A-4064-A1A6-7D2C29A08D37} = {067F469A-F69A-4064-A1A6-7D2C29A08D37}
+		{0F928057-4454-48C9-9D41-9D17B01E27EA} = {0F928057-4454-48C9-9D41-9D17B01E27EA}
 		{1EFE3C72-AE74-4D9E-8D3C-B8B264886CE0} = {1EFE3C72-AE74-4D9E-8D3C-B8B264886CE0}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NorikoSqlite3", "proj\NorikoSqlite3.vcxproj", "{0F928057-4454-48C9-9D41-9D17B01E27EA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -62,6 +68,18 @@ Global
 		{618F2B86-8B44-4996-880C-B87537F32957}.Release|x64.Build.0 = Release|x64
 		{618F2B86-8B44-4996-880C-B87537F32957}.Release|x86.ActiveCfg = Release|x64
 		{618F2B86-8B44-4996-880C-B87537F32957}.Release|x86.Build.0 = Release|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Debug|x64.ActiveCfg = Debug|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Debug|x64.Build.0 = Debug|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Debug|x86.ActiveCfg = Debug|Win32
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Debug|x86.Build.0 = Debug|Win32
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Deploy|x64.ActiveCfg = Release|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Deploy|x64.Build.0 = Release|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Deploy|x86.ActiveCfg = Debug|Win32
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Deploy|x86.Build.0 = Debug|Win32
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Release|x64.ActiveCfg = Release|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Release|x64.Build.0 = Release|x64
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Release|x86.ActiveCfg = Release|Win32
+		{0F928057-4454-48C9-9D41-9D17B01E27EA}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

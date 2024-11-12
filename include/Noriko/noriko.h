@@ -43,6 +43,7 @@
 #include <include/Noriko/world.h>
 #include <include/Noriko/input.h>
 #include <include/Noriko/path.h>
+#include <include/Noriko/db.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -113,8 +114,8 @@ NK_NATIVE NK_API NkApplicationSpecification const *NK_CALL NkApplicationQuerySpe
  *
  * \par Remarks
  *   Like all functions that query NkOM instances, it increments the reference count
- *   of the returned component. Use <tt>NkIBase::Release()</tt> on the returned instance
- *   when you are done with the component to ensure proper resource deallocation.
+ *   of the returned component. Use <tt>Release()</tt> on the returned instance when you
+ *   are done with the component to ensure proper resource deallocation.
  */
 NK_NATIVE NK_API NkVoid *NK_CALL NkApplicationQueryInstance(_In_ NkUuid const *clsId);
 

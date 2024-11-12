@@ -14,6 +14,7 @@
  * \file  util.h
  * \brief auxiliary utility functions and **static** data-structures used by many of
  *        Noriko's components
+ * \todo  Add notes for every function regarding undefined behavior.
  */
 
 
@@ -172,6 +173,14 @@
 
 
 /**
+ * \def   NK_UUIDLEN
+ * \brief minimum number of bytes required to encode a UUID as a string, incl.
+ *        <tt>NUL</tt>-terminator
+ */
+#define NK_UUIDLEN                   ((NkSize)(37))
+
+
+/**
  * \def   NK_UNREFERENCED_PARAMETER(p)
  * \brief suppress "unreferenced parameter 'x'" warnings
  * \param p name of the parameter
@@ -301,6 +310,36 @@ NK_NATIVE NK_API NK_INLINE NkInt32 NK_CALL NkStringViewCompare(
  * \note  The raw string value is not duplicated.
  */
 NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkStringViewCopy(_In_ NkStringView const *srcPtr, _Out_ NkStringView *dstPtr);
+
+
+/**
+ * \struct NkBufferView
+ * \brief  represents a view into a raw memory buffer holding any data
+ * \note   This structure is largely equivalent to <tt>NkStringView</tt>. However, it is
+ *         not safe to use <tt>NkStringView*()</tt> functions with this type. The reason
+ *         why this type exists is to clear up confusions about the relationship between
+ *         string views and raw memory ranges.
+ */
+NK_NATIVE typedef struct NkBufferView {
+    NkByte *mp_dataPtr;    /**< pointer to the first byte in the buffer */
+    NkSize  m_sizeInBytes; /**< size of the buffer view, in bytes */
+} NkBufferView;
+
+/**
+ * \def   NK_MAKE_BUFFER_VIEW(b, s)
+ * \brief generates a compile-time view to a buffer
+ * \param b pointer to the first byte of the buffer view
+ * \param s size of the buffer view, in bytes
+ */
+#define NK_MAKE_BUFFER_VIEW(b, s)     { (NkByte *)b, (NkSize)s }
+/**
+ * \def   NK_MAKE_BUFFER_VIEW_PTR(b, s)
+ * \brief like NK_MAKE_BUFFER_VIEW but it includes the code for turning the buffer view
+ *        into an inline pointer
+ * \param b pointer to the first byte of the buffer view
+ * \param s size of the buffer view, in bytes
+ */
+#define NK_MAKE_BUFFER_VIEW_PTR(b, s) &(NkBufferView)NK_MAKE_BUFFER_VIEW(b, s)
 
 
 /**
@@ -483,7 +522,6 @@ NK_NATIVE typedef struct NkUuid {
     NkUint64 m_ffBlock; /**< fourth and fifth block (4 + 12 hex digits) */
 } NkUuid;
 
-
 /**
  * \brief  generates a new UUID
  * \param  [out] uuidPtr pointer to an NkUuid instance that will receive the generated
@@ -518,8 +556,8 @@ NK_NATIVE NK_API NK_INLINE NkBoolean NK_CALL NkUuidIsEqual(_In_ NkUuid const *fU
  * \note   \li It is not required for this function to initialize the PRNG beforehand.
  */
 NK_NATIVE NK_API NK_INLINE _Return_ok_ enum NkErrorCode NK_CALL NkUuidFromString(
-    _I_bytes_(37) char const *uuidAsStr,
-    _Out_         NkUuid *uuidPtr
+    _I_bytes_(NK_UUIDLEN) char const *uuidAsStr,
+    _Out_                 NkUuid *uuidPtr
 );
 /**
  * \brief  converts a 128-bit UUID to its normalized string representation
@@ -527,15 +565,16 @@ NK_NATIVE NK_API NK_INLINE _Return_ok_ enum NkErrorCode NK_CALL NkUuidFromString
  *              string representation
  * \param  [out] strBuf pointer to a <tt>char *</tt> buffer that is to receive the result
  *               of the conversion
+ * \return \c strBuf
  * \note   \li If the function fails, the contents of \c strBuf are undefined.
  * \note   \li There is generally no validation carried out on the input UUID. If the
  *             input is invalidly encoded, the contents of \c strBuf are indeterminate.
  * \note   \li The term \e normalized refers to the usual \c 8-4-4-4-12 normal form.
  * \note   \li It is not required for this function to initialize the PRNG beforehand.
  */
-NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkUuidToString(
-    _In_          NkUuid const *uuidPtr,
-    _O_bytes_(37) char *strBuf
+NK_NATIVE NK_API NK_INLINE char *NK_CALL NkUuidToString(
+    _In_                  NkUuid const *uuidPtr,
+    _O_bytes_(NK_UUIDLEN) char *strBuf
 );
 /**
  * \brief   copies a source UUID into the destination buffer
@@ -552,8 +591,8 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkUuidCopy(_In_ NkUuid const *srcPtr, 
  * \enum  NkVariantType
  * \brief contains numeric variant type IDs
  */
-NK_NATIVE typedef _In_range_(NkVarTy_None + 1, __NkVarTy_Count__ - 1) enum NkVariantType {
-    NkVarTy_None,       /**< no type saved (= not initialized) */
+NK_NATIVE typedef _In_range_(NkVarTy_None, __NkVarTy_Count__ - 1) enum NkVariantType {
+    NkVarTy_None,       /**< no type saved (= not initialized/empty/null) */
 
     NkVarTy_Boolean,
     NkVarTy_Char,
@@ -569,11 +608,13 @@ NK_NATIVE typedef _In_range_(NkVarTy_None + 1, __NkVarTy_Count__ - 1) enum NkVar
     NkVarTy_Double,
     NkVarTy_ErrorCode,
     NkVarTy_StringView,
+    NkVarTy_BufferView,
     NkVarTy_Uuid,
     NkVarTy_Pointer,
     NkVarTy_Vector,
     NkVarTy_Hashtable,
     NkVarTy_Timer,
+    NkVarTy_NkOMObject,
 
     __NkVarTy_Count__   /**< *only used internally* */
 } NkVariantType;
@@ -584,6 +625,7 @@ NK_NATIVE typedef _In_range_(NkVarTy_None + 1, __NkVarTy_Count__ - 1) enum NkVar
  *          different types
  * \warning The state of \c m_reserved is implementation-defined. Thus, do never access
  *          or manipulate it directly.
+ * \todo    use NK_DEFINE_PROTOTYPE() macro
  */
 NK_NATIVE typedef struct NkVariant {
 #if (defined __cplusplus)
@@ -636,6 +678,16 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantSet(
  *          as the only the pointer is copied, not the memory pointed to by it.
  */
 NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantCopy(_In_ NkVariant const *srcPtr, _Out_ NkVariant *dstPtr);
+/**
+ * \brief  determines whether or not the given \c NkVariant instance is <em>empty</tt>,
+ *         that is, whether its internal type corresponds to \c NkVarTy_None
+ * \param  [in] varPtr pointer to the \c NkVariant instance which is to be examined
+ * \return \c NK_TRUE if the variant is empty, \c NK_FALSE if not
+ */
+NK_NATIVE NK_API NK_INLINE NkBoolean NK_CALL NkVariantIsNull(_In_ NkVariant const *varPtr);
+/**
+ */
+NK_NATIVE NK_API NkStringView const *NK_CALL NkVariantQueryTypeStr(_In_ NkVariantType typeId);
 
 
 /**

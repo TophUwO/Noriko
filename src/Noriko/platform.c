@@ -84,11 +84,12 @@ NkVoid NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platfor
     /* Parameter validation. */
     NK_ASSERT(platformInfoPtr != NULL && platformInfoPtr->m_structSize ^ 0, NkErr_InOutParameter);
 
+    /** \cond INTERNAL */
     /**
      * \brief represents the static platform information for the current target
      */
-    NK_INTERNAL NkPlatformInformation const gl_PlatformInfo = {
-        .m_structSize       = sizeof gl_PlatformInfo,
+    NK_INTERNAL NkPlatformInformation const gl_c_PlatformInfo = {
+        .m_structSize       = sizeof gl_c_PlatformInfo,
         .m_versionMajor     = NK_VER_MAJOR,
         .m_versionMinor     = NK_VER_MINOR,
         .m_versionPatch     = NK_VER_PATCH,
@@ -105,11 +106,12 @@ NkVoid NK_CALL NkQueryPlatformInformation(_Inout_ NkPlatformInformation *platfor
         .m_buildDate        = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDDATE),
         .m_buildTime        = NK_MAKE_STRING_VIEW(NK_PRODUCT_BUILDTIME)
     };
+    /** \endcond */
     /* Calculate actual struct size. */
     NkSize const actSize = NK_MIN(sizeof(NkPlatformInformation), platformInfoPtr->m_structSize);
 
     /* Initialize basic *buf* structure with requested target and build information. */
-    memcpy(platformInfoPtr, &gl_PlatformInfo, actSize);
+    memcpy(platformInfoPtr, &gl_c_PlatformInfo, actSize);
     platformInfoPtr->m_structSize = actSize;
 }
 

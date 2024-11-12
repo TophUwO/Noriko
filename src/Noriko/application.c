@@ -59,18 +59,19 @@ NK_NATIVE typedef struct __NkInt_ComponentInitInfo {
  *   uninitialized in the reverse order they are specified.
  */
 NK_INTERNAL __NkInt_ComponentInitInfo const gl_c_CompInitTable[] = {
-    { NK_MAKE_STRING_VIEW("allocators"),                 &NkAllocInitialize,   &NkAllocUninitialize  },
-    { NK_MAKE_STRING_VIEW("logging"),                    &NkLogStartup,        &NkLogShutdown        },
-    { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,    &NkPRNGUninitialize   },
-    { NK_MAKE_STRING_VIEW("timing devices"),             &NkTimerInitialize,   &NkTimerUninitialize  },
-    { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,        &NkEnvShutdown        },
-    { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,      &NkOMUninitialize     },
-    { NK_MAKE_STRING_VIEW("path services"),              &NkPathStartup,       &NkPathShutdown       },
-    { NK_MAKE_STRING_VIEW("input abstraction layer"),    &NkInputStartup,      &NkInputShutdown      },
-    { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,   &NkRendererShutdown   },
-    { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup, &NkLayerstackShutdown },
-    { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,     &NkWindowShutdown     },
-    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,      &NkWorldShutdown      }
+    { NK_MAKE_STRING_VIEW("logging"),                    &NkLogStartup,          &NkLogShutdown          },
+    { NK_MAKE_STRING_VIEW("allocators"),                 &NkAllocInitialize,     &NkAllocUninitialize    },
+    { NK_MAKE_STRING_VIEW("PRNG"),                       &NkPRNGInitialize,      &NkPRNGUninitialize     },
+    { NK_MAKE_STRING_VIEW("timing devices"),             &NkTimerInitialize,     &NkTimerUninitialize    },
+    { NK_MAKE_STRING_VIEW("command-line"),               &NkEnvStartup,          &NkEnvShutdown          },
+    { NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"), &NkOMInitialize,        &NkOMUninitialize       },
+    { NK_MAKE_STRING_VIEW("path services"),              &NkPathStartup,         &NkPathShutdown         },
+    { NK_MAKE_STRING_VIEW("input abstraction layer"),    &NkInputStartup,        &NkInputShutdown        },
+    { NK_MAKE_STRING_VIEW("renderer factory"),           &NkRendererStartup,     &NkRendererShutdown     },
+    { NK_MAKE_STRING_VIEW("layer stack"),                &NkLayerstackStartup,   &NkLayerstackShutdown   },
+    { NK_MAKE_STRING_VIEW("main window"),                &NkWindowStartup,       &NkWindowShutdown       },
+    { NK_MAKE_STRING_VIEW("sqlite3 database services"),  &NkDatabaseStartup,     &NkDatabaseShutdown     },
+    { NK_MAKE_STRING_VIEW("world layer"),                &NkWorldStartup,        &NkWorldShutdown        }
 };
 /**
  * \brief number of elements in the component-init table 
@@ -86,7 +87,7 @@ NK_INTERNAL NkSize const gl_c_CompInitTblSize = NK_ARRAYSIZE(gl_c_CompInitTable)
  * \param   [in,out] extraCxt pointer to a variable that contains extra context needed
  *                   for the platform
  * \return  error state of the event handling; if \c isLeave is <tt>NK_FALSE</tt>, the
- *          return value is always <tt>NkErr_Ok</tt>.
+ *          return value is always <tt>NkErr_Ok</tt>
  */
 NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Application_PlatformLoop(
     _Out_       NkBoolean *isLeave,
