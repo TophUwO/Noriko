@@ -81,13 +81,6 @@ NK_NATIVE typedef enum NkGameDirectory {
 
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid);
-
-/**
- */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkPathBuild(
     _In_opt_ NkStringView const *sepCh,
     _In_opt_ NkStringView const **stemCompArr,

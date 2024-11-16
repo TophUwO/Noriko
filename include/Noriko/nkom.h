@@ -577,26 +577,6 @@ NKOM_DECLARE_INTERFACE(NkIClassFactory) {
 
 
 /**
- * \brief  initializes the NkOM runtime
- * 
- * Before some of NkOM's public functions can be used safely, the NkOM runtime has to be
- * initialized. This happens through calling <tt>NkOMInitialize()</tt> once per process
- * at startup.
- * 
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   \li The parameters passed to this function are immutable for the duration of
- *             the session. A session is marked by a pair of
- *             <tt>NkOMInitialize()</tt>/<tt>NkOMUninitialize()</tt>. A new session can
- *             be started by calling <tt>NkOMInitialize()</tt> again after having called
- *             <tt>NkOMUninitialize()</tt>.
- * \note   \li Calling this function more than once without having called
- *             <tt>NkOMUninitialize()</tt> in between results in a no-op.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(NkVoid);
-/**
  */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
     _In_        NkUuid const *clsId,

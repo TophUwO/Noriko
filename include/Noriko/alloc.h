@@ -74,25 +74,6 @@ NK_NATIVE typedef _Struct_size_bytes_(m_structSize) struct NkAllocationContext {
 
 
 /**
- * \brief  initializes the global memory allocators
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   \li It is not safe to call any allocation functions if this function fails.
- * \note   \li This function should be run once from the main thread before worker
- *         threads that might access the shared allocators are started.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid);
-/**
- * \brief  uninitializes the global memory allocators
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   \li It is not safe to call any allocation functions after this function has
- *         returned.
- * \note   \li This function should be called once from the main thread after all worker
- *         threads that may access the shared allocators have been terminated.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkAllocUninitialize(NkVoid);
-
-
-/**
  * \brief  allocates a new block of memory on the heap
  * 
  * This general-purpose memory allocator allocates directly from the heap provided by the

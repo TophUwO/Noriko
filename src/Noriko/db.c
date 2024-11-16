@@ -31,6 +31,7 @@
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/platform.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/comp.h>
 
 #include <include/Noriko/dstruct/string.h>
 
@@ -604,7 +605,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_CreateStatem
  */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_Execute(
     _Inout_     NkIDatabase *self,
-    _In_        NkISqlStatement *stmtRef,
+    _Inout_     NkISqlStatement *stmtRef,
     _In_opt_    NkDatabaseQueryIterFn fnResIter,
     _Inout_opt_ NkVoid *extraCxtPtr
 ) {
@@ -795,20 +796,32 @@ NK_INTERNAL NkIClassFactory const gl_c_Sqlite3HdFactory = {
         .CreateInstance           = &__NkInt_Sqlite3HdFactory_CreateInstance
     }
 };
-/** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkDatabaseStartup(NkVoid) {
-    NK_LOG_INFO("startup: sqlite3 database services");
-
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(DbSrv)(NkVoid) {
     return NkOMInstallClassFactory((NkIClassFactory *)&gl_c_Sqlite3HdFactory);
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkDatabaseShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: sqlite3 database services");
-
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(DbSrv)(NkVoid) {
     return NkOMUninstallClassFactory((NkIClassFactory *)&gl_c_Sqlite3HdFactory);
 }
+
+
+/**
+ * \brief info for the <em>database services</em> component
+ */
+NK_COMPONENT_DEFINE(DbSrv) {
+    .m_compUuid     = { 0xbeb33742, 0x4074, 0x47e9, 0x9c939d4b0ca12913 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("sqlite3 database services"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(DbSrv),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(DbSrv)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

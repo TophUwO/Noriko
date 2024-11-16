@@ -156,22 +156,6 @@ NKOM_DECLARE_INTERFACE(NkILogDevice) {
 
 
 /**
- * \brief spins up the logging facility
- * \note  Call this function only once during application startup as early as possible
- *        from the main thread.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogStartup(NkVoid);
-/**
- * \brief   shuts the logging facility down, releasing all devices still installed
- * \note    Call this function only once during application shutdown as late as possible
- *          from the main thread.
- * \return  \c NkErr_Ok on success, non-zero on failure
- * \warning Calling this function without having called <tt>NkLogStartup()</tt> before is
- *          undefined behavior.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLogShutdown(NkVoid);
-
-/**
  * \brief   installs a new log device
  * \param   [in,out] devRef pointer to the device
  * \return  \c NkErr_Ok on success, non-zero on failure

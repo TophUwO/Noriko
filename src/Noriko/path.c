@@ -29,6 +29,7 @@
 #include <include/Noriko/path.h>
 #include <include/Noriko/log.h>
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/comp.h>
 
 
 /** \cond INTERNAL */
@@ -99,12 +100,10 @@ NK_EXTERN NK_VIRTUAL NkVoid NK_CALL __NkInt_StandardPaths_DestroyPlatformLocs(Nk
 NK_INTERNAL NK_INLINE NkBoolean NK_CALL __NkInt_Path_IsSeparator(_In_ char sepCh) {
     return sepCh == '/' || sepCh == '\\';
 }
-/** \endcond */
 
-
-_Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid) {
-    NK_LOG_INFO("startup: path services");
-
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(PathSrv)(NkVoid) {
     /* Query platform-dependent paths. */
     NkErrorCode errCode = __NkInt_StandardPaths_QueryPlatformLocs(gl_StandardPaths);
     if (errCode != NkErr_Ok)
@@ -116,7 +115,7 @@ _Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid) {
         NkStdLocation const currLoc = gl_c_GameLocs[i];
         if (gl_StandardPaths[currLoc].mp_dataPtr != NULL) {
 #pragma warning (suppress: 4127)
-            NK_ASSERT_EXTRA(NK_FALSE, NkErr_Unknown, "System paths initialized game paths. Unexpected behavior");
+            NK_ASSERT_EXTRA(NK_FALSE, NkErr_Unknown, "System paths initialized game paths. Unexpected behavior.");
 
             continue;
         }
@@ -136,9 +135,9 @@ _Return_ok_ NkErrorCode NK_CALL NkPathStartup(NkVoid) {
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: path services");
-
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(PathSrv)(NkVoid) {
     /* First, destroy platform-dependent paths. */
     __NkInt_StandardPaths_DestroyPlatformLocs(gl_StandardPaths);
     /* Then, destroy the ones that are game-specific. */
@@ -151,6 +150,8 @@ _Return_ok_ NkErrorCode NK_CALL NkPathShutdown(NkVoid) {
 
     return NkErr_Ok;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkPathBuild(
     _In_opt_ NkStringView const *sepCh,
@@ -216,7 +217,7 @@ NkString *NK_CALL NkPathToNativeSeparators(_Inout_ NkString *strPtr) {
     NkStringView const *nativeSep = __NkInt_StandardPaths_QueryNativeSeparator();
 
     /* Iterate over string, replacing all separators with the native one. */
-    char *currCh = NkStringAt(strPtr, 0);
+    char *currCh = (char *)NkStringAt(strPtr, 0);
     do {
         /*
          * If we found a separator, replace it with the native separator character.
@@ -298,6 +299,21 @@ NkStringView const *NK_CALL NkPathQueryStandardLocIdStr(_In_ NkStdLocation locId
 
     return &gl_c_LocIdStrReps[locId];
 }
+
+
+/**
+ */
+NK_COMPONENT_DEFINE(PathSrv) {
+    .m_compUuid     = { 0xe66604e9, 0xabd1, 0x4e6c, 0x822feb5a2b9e9624 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("path services"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(PathSrv),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(PathSrv)
+};
 
 
 #undef NK_NAMESPACE

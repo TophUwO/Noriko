@@ -316,6 +316,7 @@
     <ClInclude Include="..\include\Noriko\alloc.h" />
     <ClInclude Include="..\include\Noriko\asset.h" />
     <ClInclude Include="..\include\Noriko\bmp.h" />
+    <ClInclude Include="..\include\Noriko\comp.h" />
     <ClInclude Include="..\include\Noriko\db.h" />
     <ClInclude Include="..\include\Noriko\dstruct\string.h" />
     <ClInclude Include="..\include\Noriko\env.h" />
@@ -339,7 +340,6 @@
     </ClInclude>
     <ClInclude Include="..\include\Noriko\util.h" />
     <ClInclude Include="..\include\Noriko\window.h" />
-    <ClInclude Include="..\include\Noriko\world.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\alloc.c" />
@@ -364,6 +364,7 @@
     <ClCompile Include="..\src\Noriko\platform\windows\wininput.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winloop.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winpath.c" />
+    <ClCompile Include="..\src\Noriko\platform\windows\winrng.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\wintimer.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winwindow.c" />
     <ClCompile Include="..\src\Noriko\renderer.c" />

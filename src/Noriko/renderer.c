@@ -25,6 +25,7 @@
 /* Noriko includes */
 #include <include/Noriko/renderer.h>
 #include <include/Noriko/alloc.h>
+#include <include/Noriko/comp.h>
 
 
 /** \cond INTERNAL */
@@ -188,18 +189,32 @@ NK_INTERNAL NkIClassFactory const gl_c_RendererFactory = {
         .CreateInstance           = &__NkInt_RendererFactory_CreateInstance
     }
 };
-/** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid) {
+/**
+ * \brief  does some pre-runtime initialization of some global state associated with the
+ *         application
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   This function does not instantiate an actual renderer but rather enables the
+ *         application to instantiate the renderer of its own choice. Call this function
+ *         once per process before instantiating the first renderer.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(RdFactory)(NkVoid) {
     /* See comment regarding *gl_RendererFactory* above. */
     return NkOMInstallClassFactory((NkIClassFactory *)&gl_c_RendererFactory);
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid) {
+/**
+ * \brief  uninitializes global renderer state
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   If this function is called without a corresponding call to
+ *         <tt>NkRendererStartup()</tt>, this function does nothing.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(RdFactory)(NkVoid) {
     /* See comment regarding *gl_RendererFactory* above. */
     return NkOMUninstallClassFactory((NkIClassFactory *)&gl_c_RendererFactory);
 }
+/** \endcond */
 
 
 NkSize NK_CALL NkRendererQueryAvailablePlatformApis(_Outptr_ NkRendererApi const **resPtr) {
@@ -232,6 +247,24 @@ NkUuid const *NK_CALL NkRendererQueryCLSIDFromApi(_In_ NkRendererApi apiIdent) {
 NkBoolean NK_CALL NkRendererCompareRectangles(_In_ NkRectF const *r1Ptr, _In_ NkRectF const *r2Ptr) {
     return r1Ptr->m_width == r2Ptr->m_width && r1Ptr->m_height == r2Ptr->m_height;
 }
+
+
+/** \cond INTERNAL */
+/**
+ * \brief global renderer factory component info 
+ */
+NK_COMPONENT_DEFINE(RdFactory) {
+    .m_compUuid     = { 0xbc52618e, 0x7498, 0x4f65, 0x94db1c0a5fa1a74b },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("renderer factory"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(RdFactory),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(RdFactory)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

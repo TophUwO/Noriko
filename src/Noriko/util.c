@@ -27,6 +27,7 @@
 #include <include/Noriko/log.h>
 #include <include/Noriko/timer.h>
 #include <include/Noriko/window.h>
+#include <include/Noriko/comp.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -43,9 +44,9 @@ NK_NATIVE typedef struct __NkInt_RandomNumberGeneratorContext {
     /**
      * \brief random seed array
      * \note  This fields needs to be aligned so that its pointer can be cast to a
-     *        pointer of a type of an alignment requirement of 4 safely.
+     *        pointer of a type of an alignment requirement of 8 safely.
      */
-    _Alignas(_Alignof(NkUint64)) NkByte m_seedArr[4 * sizeof(NkUint64)];
+    alignas(NkAlign8) NkByte m_seedArr[4 * sizeof(NkUint64)];
 } __NkInt_RandomNumberGeneratorContext;
 /**
  * \brief actual instance of the random number generator context 
@@ -115,10 +116,28 @@ static_assert(
 
 
 /**
+ * \ingroup VirtFn
+ * \brief   generates a <tt>sizeInBytes</tt> byte long random seed for use in the
+ *          internal PRNG
+ * \param   [in] sizeInBytes number of bytes to initialize
+ * \param   [out] randSeedBuf pointer to a buffer that contains the random seed
+ * \return  \c NkErr_Ok on success, non-zero on failure
+ * \note    \li The memory pointed to by \c randSeedBuf is guaranteed to be aligned to an
+ *              eight-byte address.
+ * \note    \li \c sizeInBytes is guaranteed to be a multiple of four.
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkVirt_PRNG_GenerateSeed(
+    _In_                      NkSize sizeInBytes,
+    _Out_writes_(sizeInBytes) NkByte *randSeedBuf
+);
+
+
+/**
  * \brief runs the \c Xoshiro256 algorithm to generate a pseudo-random number
  * \param [out] dstPtr pointer to an NkUint64 variable that will receive the generated
  *              random number
  * \see   https://de.wikipedia.org/wiki/Xorshift#Xoroshiro_und_Xoshiro
+ * \todo  fix naming scheme of some internal functions (_ between module and fn name)
  */
 NK_INTERNAL NK_INLINE NkVoid __NkInt_PRNGXoshiro256(_Out_ NkUint64 *dstPtr) {
     NK_INTERNAL NkUint64 *const s0 = (NkUint64 *const)&gl_RandContext.m_seedArr[0 * sizeof(NkUint64)];
@@ -191,6 +210,35 @@ NK_INTERNAL NK_INLINE NkSize __NkInt_VariantGetTypeSize(_In_ NkVariantType varTy
 
     return gl_c_VarTypeSizes[varType];
 }
+
+/**
+ * \brief  initializes the random number generator
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \see    NkPRNGNext
+ * \note   This function must be run once per session before the first call to
+ *         <tt>NkPRNGNext()</tt>.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(PRNG)(NkVoid) {
+    /* Initialize mutex. */
+    NK_INITLOCK(gl_RandContext.m_mtxLock);
+
+    /* Initialize the random seed. */
+    return __NkVirt_PRNG_GenerateSeed(sizeof gl_RandContext.m_seedArr, gl_RandContext.m_seedArr);
+}
+
+/**
+ * \brief  uninitializes the random number generator
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li After this call, it is no longer safe to call <tt>NkPRNGNext()</tt>.
+ * \note   \li Call this function once from the main thread just before the application
+ *             exits.
+*/
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(PRNG)(NkVoid) {
+    /* Destroy mutex. */
+    NK_DESTROYLOCK(gl_RandContext.m_mtxLock);
+
+    return NkErr_Ok;
+}
 /** \endcond */
 
 
@@ -226,33 +274,6 @@ NkVoid NK_CALL NkStringViewCopy(_In_ NkStringView const *srcPtr, _Out_ NkStringV
     NK_ASSERT(dstPtr != NULL, NkErr_OutParameter);
 
     memcpy_s(dstPtr, sizeof *dstPtr, srcPtr, sizeof *srcPtr);
-}
-
-
-_Return_ok_ NkErrorCode NK_CALL NkPRNGInitialize(NkVoid) {
-    /* Initialize mutex. */
-    NK_INITLOCK(gl_RandContext.m_mtxLock);
-
-#if (defined NK_TARGET_WINDOWS)
-    for (NkInt32 i = 0; i < sizeof gl_RandContext.m_seedArr / sizeof(unsigned int); i++)
-        rand_s((unsigned int *)&gl_RandContext.m_seedArr + i);
-#else
-    NK_LOG_WARNING("For this platform, random number generation is not supported.");
-
-    return NkErr_NotImplemented;
-#endif
-    
-    /** \todo use exact convention of when exactly to log init/uninit infos (either before or after) */
-    NK_LOG_INFO("startup: PRNG");
-    return NkErr_Ok;
-}
-
-_Return_ok_ NkErrorCode NK_CALL NkPRNGUninitialize(NkVoid) {
-    /* Destroy mutex. */
-    NK_DESTROYLOCK(gl_RandContext.m_mtxLock);
-
-    NK_LOG_INFO("shutdown: PRNG");
-    return NkErr_Ok;
 }
 
 _Return_ok_ NkErrorCode NK_CALL NkPRNGNext(_Out_ NkUint64 *outPtr) {
@@ -516,7 +537,10 @@ lbl_NEXTCHAR:
     }
 
     /* Calculate size of string (excl. NUL). */
-    *resPtr = (NkStringView){ .mp_dataPtr = resPtr->mp_dataPtr, .m_sizeInBytes = endPtr - resPtr->mp_dataPtr };
+    *resPtr = (NkStringView){
+        .mp_dataPtr    = resPtr->mp_dataPtr,
+        .m_sizeInBytes = (NkSize)(endPtr - resPtr->mp_dataPtr)
+    };
 }
 
 NkVoid NK_CALL NkRawStringSplit(
@@ -570,6 +594,24 @@ NkPoint2D NK_CALL NkCalculateViewportOrigin(
         vpAlign & NkVpAlign_Top  ? 0 : (clExtents.m_height - vpExtPx.m_height) / (vpAlign & NkVpAlign_Bottom ? 1 : 2)
     };
 };
+
+
+/** \cond INTERNAL */
+/**
+ * \brief info for the PRNG component 
+ */
+NK_COMPONENT_DEFINE(PRNG) {
+    .m_compUuid     = { 0x151da63, 0xdb5c, 0x406d, 0x938de8c54c9e2817 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("PRNG"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(PRNG),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(PRNG)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

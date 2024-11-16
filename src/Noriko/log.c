@@ -28,6 +28,7 @@
 /* Noriko includes */
 #include <include/Noriko/platform.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/comp.h>
 
 
 /** \cond INTERNAL */
@@ -320,7 +321,7 @@ NK_INTERNAL NkVoid __NkInt_LogFormatMessageAndTimestamp(
 
 /**
  */
-NK_INTERNAL NkSize NK_CALL __NkInt_LogFindDevice(_In_ NkILogDevice *devRef) {
+NK_INTERNAL NkSize __NkInt_LogFindDevice(_In_ NkILogDevice *devRef) {
     NK_ASSERT(devRef != NULL, NkErr_InParameter);
 
     for (NkSize i = 0; i < NK_ARRAYSIZE(gl_LogContext.m_devArray); i++)
@@ -329,10 +330,10 @@ NK_INTERNAL NkSize NK_CALL __NkInt_LogFindDevice(_In_ NkILogDevice *devRef) {
 
     return SIZE_MAX;
 }
-/** \endcond */
 
-
-_Return_ok_ NkErrorCode NK_CALL NkLogStartup(NkVoid) {
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Logging)(NkVoid) {
     NK_INITLOCK(gl_LogContext.m_mtxLock);
 
     NkErrorCode errCode = NkErr_Ok;
@@ -342,13 +343,10 @@ _Return_ok_ NkErrorCode NK_CALL NkLogStartup(NkVoid) {
     errCode = NkLogInstallDevice((NkILogDevice *)&gl_ConoutDevice);
 #endif
 
-    NK_LOG_INFO("startup: logging");
     return errCode;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLogShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: logging");
-
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Logging)(NkVoid) {
     /*
      * Traverse the device array, run their 'NkILogDevice::OnUninstall()' method and
      * release them. 
@@ -371,6 +369,8 @@ _Return_ok_ NkErrorCode NK_CALL NkLogShutdown(NkVoid) {
     NK_DESTROYLOCK(gl_LogContext.m_mtxLock);
     return NkErr_Ok;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkLogInstallDevice(_Inout_ NkILogDevice *devRef) {
     NK_ASSERT(devRef != NULL, NkErr_InOutParameter);
@@ -497,6 +497,21 @@ NkVoid NK_CALL NkLogMessage(
 lbl_CLEANUP:
     NK_UNLOCK(gl_LogContext.m_mtxLock);
 }
+
+
+/**
+ */
+NK_COMPONENT_DEFINE(Logging) {
+    .m_compUuid     = { 0x9e74ec29, 0x5952, 0x456d, 0xb16efbf1c1ec0019 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("logging"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(Logging),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(Logging)
+};
 
 
 #undef NK_NAMESPACE

@@ -588,7 +588,7 @@ _Return_ok_ NkErrorCode NK_CALL NkHashtableErase(_Inout_ NkHashtable *htPtr, _In
      */
     if (htPtr->m_htProps.mp_fnElemFree != NULL) {
         /* Determine the key pointer that is to be passed. */
-        NkVoid *key2Pass = NK_INRANGE_INCL(htPtr->m_htProps.m_keyType, NkHtKeyTy_String, NkHtKeyTy_Pointer) 
+        NkVoid *key2Pass = NK_INRANGE_INCL(htPtr->m_htProps.m_keyType, NkHtKeyTy_String, NkHtKeyTy_Uuid) 
             ? &htPtr->mp_elemArray[where2Find].m_regPair.m_keyVal
             : NULL
         ;

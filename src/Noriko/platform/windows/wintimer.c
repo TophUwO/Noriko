@@ -22,14 +22,14 @@
 #include <include/Noriko/platform.h>
 
 
-NkUint64 NK_CALL NkTimerGetCurrentTicks(NkVoid) {
+NkUint64 NK_CALL __NkVirt_Timer_GetCurrentTicks(NkVoid) {
     LARGE_INTEGER currTicks;
     QueryPerformanceCounter(&currTicks);
 
     return (NkUint64)currTicks.QuadPart;
 }
 
-NkUint64 NK_CALL NkTimerGetFrequency(NkVoid) {
+NkUint64 NK_CALL __NkVirt_Timer_GetFrequency(NkVoid) {
     LARGE_INTEGER currTicks;
     QueryPerformanceFrequency(&currTicks);
 

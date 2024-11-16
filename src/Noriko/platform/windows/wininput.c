@@ -434,27 +434,22 @@ NK_INTERNAL NkIInput const gl_Win32Ial = {
 /** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkInputStartup(NkVoid) {
-    NK_LOG_INFO("startup: IAL");
-
+_Return_ok_ NkErrorCode NK_CALL __NkVirt_IAL_Startup(NkVoid) {
     /* Stub. */
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkInputShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: IAL");
-
-    /* Same as above. */
+_Return_ok_ NkErrorCode NK_CALL __NkVirt_IAL_Shutdown(NkVoid) {
+    /* Stub. */
     return NkErr_Ok;
 }
 
-
-NkIInput *NK_CALL NkInputQueryInstance(NkVoid) {
+NkIBase *NK_CALL __NkVirt_IAL_QueryInstance(NkVoid) {
     /*
      * Since this instance is static and does not have any data, we do not need to
      * increment the instance's reference count.
      */
-    return (NkIInput *)&gl_Win32Ial;
+    return (NkIBase *)&gl_Win32Ial;
 }
 
 

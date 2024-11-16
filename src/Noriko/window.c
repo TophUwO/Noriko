@@ -22,8 +22,10 @@
 /* Noriko includes */
 #include <include/Noriko/window.h>
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/comp.h>
 
 
+/** \cond INTERNAL */
 /* Define IID and CLSID. */
 // { D9DD03B3-536E-410E-8BA5-DABF915A6AB5 }
 NKOM_DEFINE_IID(NkIWindow, { 0xd9dd03b3, 0x536e, 0x410e, 0x8ba5dabf915a6ab5 });
@@ -31,14 +33,36 @@ NKOM_DEFINE_IID(NkIWindow, { 0xd9dd03b3, 0x536e, 0x410e, 0x8ba5dabf915a6ab5 });
 NKOM_DEFINE_CLSID(NkIWindow, { 0x48bef13b, 0x9de9, 0x4b23, 0xa5ecb6ad6a81431b });
 
 
-_Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid) {
-    NK_LOG_INFO("startup: window");
+/**
+ * \ingroup VirtFn 
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkVirt_Window_Startup(NkVoid);
+/**
+ * \ingroup VirtFn 
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkVirt_Window_Shutdown(NkVoid);
+/**
+ * \ingroup VirtFn
+ * \brief   queries the static window instance
+ * \return  pointer to the static window instance
+ * \note    Before using the window instance obtained by this function for the first
+ *          time, start up the window component.
+ * 
+ * \par Remarks
+ *   Like with all functions that return an NkOM object, they increment the reference
+ *   count of the returned object.
+ */
+NK_EXTERN NK_VIRTUAL NkIBase *NK_CALL __NkVirt_Window_QueryInstance(NkVoid);
 
+
+/**
+ */
+_Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Window)(NkVoid) {
     /* Query application specification for window specification. */
     NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
     
     /* Initialize the window. */
-    NkIWindow *wndRef = NkWindowQueryInstance();
+    NkIWindow *wndRef = __NkVirt_Window_QueryInstance();
     return wndRef->VT->Initialize(wndRef, &(NkWindowSpecification){
         .m_structSize      = sizeof(NkWindowSpecification),
         .m_rendererApi     = appSpecs->m_rendererApi,
@@ -55,20 +79,21 @@ _Return_ok_ NkErrorCode NK_CALL NkWindowStartup(NkVoid) {
     });
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkWindowShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: window");
-
+/**
+ */
+_Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Window)(NkVoid) {
     /*
      * The default destroy handler of the window simply hides it so that we can wait for
      * the WM_QUIT message to destroy everything. Once that message is received, we leave
      * the main loop and destroy every component in the reverse order they were
      * initialized. So we need to destroy the window here.
      */
-    NkIWindow *wndRef = NkWindowQueryInstance();
+    NkIWindow *wndRef = __NkVirt_Window_QueryInstance();
 
     DestroyWindow(wndRef->VT->QueryNativeWindowHandle(wndRef));
     return NkErr_Ok;
 }
+/** \endcond */
 
 
 NkStringView const *NK_CALL NkWindowGetModeStr(_In_ NkWindowMode wndMode) {
@@ -139,6 +164,24 @@ NkEventType NK_CALL NkWindowMapEventTypeFromWindowMode(_In_ NkWindowMode wndMode
         [NkWndMode_Fullscreen] = NkEv_WindowFullscreen
     })[wndMode];
 }
+
+
+/** \cond INTERNAL */
+/**
+ * \brief global info instance of the \c Window component
+ */
+NK_COMPONENT_DEFINE(Window) {
+    .m_compUuid     = { 0x427e1403, 0x8a3f, 0x4c77, 0x983b7ce26bb2a4f5 },
+    .mp_clsId       = NKOM_CLSIDOF(NkIWindow),
+    .m_compIdent    = NK_MAKE_STRING_VIEW("window"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_TRUE,
+
+    .mp_fnQueryInst = &__NkVirt_Window_QueryInstance,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(Window),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(Window)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

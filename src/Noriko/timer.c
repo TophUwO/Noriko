@@ -22,6 +22,7 @@
 #include <include/Noriko/platform.h>
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/comp.h>
 
 
 /** \cond INTERNAL */
@@ -80,6 +81,20 @@ NK_INTERNAL __NkInt_TimingDeviceContext gl_tdContext;
 
 
 /**
+ * \ingroup VirtFn
+ * \brief   retrieves the current tick count of the high-precision timer
+ * \return  current tick count
+ */
+NK_EXTERN NK_VIRTUAL NkUint64 NK_CALL __NkVirt_Timer_GetCurrentTicks(NkVoid);
+/**
+ * \ingroup VirtFn
+ * \brief   retrieves the frequency in 1/s of the high-precision timer
+ * \return  current timer frequency
+ */
+NK_EXTERN NK_VIRTUAL NkUint64 NK_CALL __NkVirt_Timer_GetFrequency(NkVoid);
+
+
+/**
  * \brief  retrieves the global timer overhead
  * \return overhead in the same unit as the underlying performance counter
  * \note   \li The unit this value is returned in is implementation-defined.
@@ -117,20 +132,28 @@ NK_INTERNAL NkErrorCode __NkInt_Timer_InitializeStaticContext(NkVoid) {
     gl_tdContext.m_globalBias = __NkInt_Timer_GetOverhead();
     return NkErr_Ok;
 }
-/** \endcond */
 
-
-_Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid) {
-    NK_LOG_INFO("startup: timing device context");
-
+/**
+ * \brief  initializes the global timing device context
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   This function should be run once from the main thread before any child thread
+ *         has been started.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(TimingDevCxt)(NkVoid) {
     return __NkInt_Timer_InitializeStaticContext();
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid) {
-    NK_LOG_INFO("shutdown: timing device context");
-
+/**
+ * \brief  uninitializes the global timing device context
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   This function should be run once from the main thread after all child threads
+ *         have been killed.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(TimingDevCxt)(NkVoid) {
     return NkErr_Ok;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkTimerCreate(
     _In_     NkTimerType tiType,
@@ -243,6 +266,33 @@ NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr, _In_ NkTimerPrec
     /* Convert to requested precision. */
     return timeDiff / (gl_tdContext.m_timerFrequency / (NkDouble)precId);
 }
+
+
+NkUint64 NK_CALL NkTimerGetCurrentTicks(NkVoid) {
+    return __NkVirt_Timer_GetCurrentTicks();
+}
+
+NkUint64 NK_CALL NkTimerGetFrequency(NkVoid) {
+    return __NkVirt_Timer_GetFrequency();
+}
+
+
+/** \cond INTERNAL */
+/**
+ * \brief info for the <em>timing device context</em> component 
+ */
+NK_COMPONENT_DEFINE(TimingDevCxt) {
+    .m_compUuid     = { 0x546af15e, 0x9965, 0x46e2, 0xa6d8db2ababb00eb },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("timing device context"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(TimingDevCxt),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(TimingDevCxt)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

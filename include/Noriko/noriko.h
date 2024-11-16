@@ -40,10 +40,11 @@
 #include <include/Noriko/helpers.h>
 #include <include/Noriko/renderer.h>
 #include <include/Noriko/bmp.h>
-#include <include/Noriko/world.h>
 #include <include/Noriko/input.h>
 #include <include/Noriko/path.h>
 #include <include/Noriko/db.h>
+#include <include/Noriko/asset.h>
+#include <include/Noriko/comp.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -118,6 +119,13 @@ NK_NATIVE NK_API NkApplicationSpecification const *NK_CALL NkApplicationQuerySpe
  *   are done with the component to ensure proper resource deallocation.
  */
 NK_NATIVE NK_API NkVoid *NK_CALL NkApplicationQueryInstance(_In_ NkUuid const *clsId);
+/**
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkApplicationReplaceInstance(_In_ NkUuid const *clsId, _Inout_opt_ NkIBase *newCompRef);
+
+/**
+ */
+NK_NATIVE NK_API NkBoolean NK_CALL NkApplicationIsStandalone(NkVoid);
 
 
 /**

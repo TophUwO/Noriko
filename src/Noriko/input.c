@@ -19,13 +19,60 @@
 
 /* Noriko includes */
 #include <include/Noriko/input.h>
+#include <include/Noriko/noriko.h>
+#include <include/Noriko/comp.h>
 
 
+/** \cond INTERNAL */
 /* Define IID and CLSID of the NkIInput class. */
 // { E2BF3AEB-584A-474E-A767-3B6EDD3FC3E3 }
 NKOM_DEFINE_IID(NkIInput, { 0xe2bf3aeb, 0x584a, 0x474e, 0xa7673b6edd3fc3e3 });
-// { 00000000-0000-0000-0000-000000000000 }
-NKOM_DEFINE_CLSID(NkIInput, { 0x00000000, 0x0000, 0x0000, 0x0000000000000000 });
+// { 7893DA4B-6BE0-4331-9D95-F8EDA77C497E }
+NKOM_DEFINE_CLSID(NkIInput, { 0x7893da4b, 0x6be0, 0x4331, 0x9d95f8eda77c497e });
+
+
+/**
+ * \ingroup VirtFn 
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkVirt_IAL_Startup(NkVoid);
+/**
+ * \ingroup VirtFn 
+ */
+NK_EXTERN NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL __NkVirt_IAL_Shutdown(NkVoid);
+/**
+ * \ingroup VirtFn 
+ * \brief   retrieves the platform-dependent input abstraction layer (IAL) instance
+ * \return  pointer to the instance
+ * \note    The reference count of the returned instance is incremented. Please call
+ *          <tt>Release()</tt> on the returned instance after you are done with it.
+ */
+NK_EXTERN NK_VIRTUAL NkIBase *NK_CALL __NkVirt_IAL_QueryInstance(NkVoid);
+
+
+/**
+ * \brief  runs some platform-dependent input abstraction layer (IAL) initialization
+ *         routines
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   Run this function once per process before you call <tt>NkInputQueryInstance()</tt>
+ *         for the first time.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(IAL)(NkVoid) {
+    /* Invoke platform-dependent IAL startup routine. */
+    return __NkVirt_IAL_Startup();
+}
+
+/**
+ * \brief  runs some platform-dependent input abstraction layer (IAL) uninitialization
+ *         routines
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   Do not use <tt>NkInputQueryInstance()</tt> or its return value after you run
+ *         this function. To use it again, run <tt>NkInputStartup()</tt> again first.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(IAL)(NkVoid) {
+    /* Same as above. */
+    return __NkVirt_IAL_Shutdown();
+}
+/** \endcond */
 
 
 NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode) {
@@ -166,6 +213,24 @@ NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ NkMouseButton mou
 
     return &gl_MouseBtnStrs[mouseBtn & (NK_MAX_NUM_MOUSE_BTNS - 1)];
 }
+
+
+/** \cond INTERNAL */
+/**
+ * \brief info for the \e IAL component 
+ */
+NK_COMPONENT_DEFINE(IAL) {
+    .m_compUuid     = { 0x9258f2b3, 0x55f2, 0x4eaa, 0x930b853eec2db36d },
+    .mp_clsId       = NKOM_CLSIDOF(NkIInput),
+    .m_compIdent    = NK_MAKE_STRING_VIEW("input abstraction layer (IAL)"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_TRUE,
+
+    .mp_fnQueryInst = &__NkVirt_IAL_QueryInstance,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(IAL),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(IAL)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

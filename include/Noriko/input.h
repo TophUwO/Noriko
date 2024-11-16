@@ -256,35 +256,10 @@ NKOM_DECLARE_INTERFACE(NkIInput) {
 
 
 /**
- * \brief  runs some platform-dependent input abstraction layer (IAL) initialization
- *         routines
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   Run this function once per process before you call <tt>NkInputQueryInstance()</tt>
- *         for the first time.
- */
-NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkInputStartup(NkVoid);
-/**
- * \brief  runs some platform-dependent input abstraction layer (IAL) uninitialization
- *         routines
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   Do not use <tt>NkInputQueryInstance()</tt> or its return value after you run
- *         this function. To use it again, run <tt>NkInputStartup()</tt> again first.
- */
-NK_NATIVE NK_API NK_VIRTUAL _Return_ok_ NkErrorCode NK_CALL NkInputShutdown(NkVoid);
-
-/**
  */
 NK_NATIVE NK_API NK_INLINE NkStringView const *NK_CALL NkInputQueryKeyString(_In_ NkKeyboardKey keyCode);
 /**
  */
 NK_NATIVE NK_API NK_INLINE NkStringView const *NK_CALL NkInputQueryMouseButtonString(_In_ NkMouseButton mouseBtn);
-
-/**
- * \brief  retrieves the platform-dependent input abstraction layer (IAL) instance
- * \return pointer to the instance
- * \note   The reference count of the returned instance is incremented. Please call
- *         <tt>Release()</tt> on the returned instance after you are done with it.
- */
-NK_NATIVE NK_API NK_VIRTUAL NK_INLINE NkIInput *NK_CALL NkInputQueryInstance(NkVoid);
 
 

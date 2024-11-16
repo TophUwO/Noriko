@@ -407,23 +407,6 @@ NKOM_DECLARE_INTERFACE(NkIRenderer) {
 
 
 /**
- * \brief  does some pre-runtime initialization of some global state associated with the
- *         application
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   This function does not instantiate an actual renderer but rather enables the
- *         application to instantiate the renderer of its own choice. Call this function
- *         once per process before instantiating the first renderer.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererStartup(NkVoid);
-/**
- * \brief  uninitializes global renderer state
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   If this function is called without a corresponding call to
- *         <tt>NkRendererStartup()</tt>, this function does nothing.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkRendererShutdown(NkVoid);
-
-/**
  * \brief   retrieves a list of renderer APIs of which an implementation, that is, a
  *          renderer exists
  * 

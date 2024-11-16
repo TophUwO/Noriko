@@ -58,21 +58,6 @@ NK_DEFINE_PROTOTYPE(NkTimer, NK_ALIGNOF(NkAlign8), 24);
 
 
 /**
- * \brief  initializes the global timing device context
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   This function should be run once from the main thread before any child thread
- *         has been started.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerInitialize(NkVoid);
-/**
- * \brief  uninitializes the global timing device context
- * \return \c NkErr_Ok on success, non-zero on failure
- * \note   This function should be run once from the main thread after all child threads
- *         have been killed.
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkTimerUninitialize(NkVoid);
-
-/**
  * \brief   creates a new timing device with the specified properties
  * \param   [in] tiType type ID of the new timer
  * \param   [in] isAutoStart whether or not to start the timer automatically right before
@@ -147,12 +132,12 @@ NK_NATIVE NK_API NkDouble NK_CALL NkElapsedTimerGetAs(_In_ NkTimer const *tiPtr,
  * \return numeric value of the timestamp, or \c 0 if there is no high-precision timer
  *         available on the current platform
  */
-NK_NATIVE NK_API NK_INLINE NK_VIRTUAL NkUint64 NK_CALL NkTimerGetCurrentTicks(NkVoid);
+NK_NATIVE NK_API NK_INLINE NkUint64 NK_CALL NkTimerGetCurrentTicks(NkVoid);
 /**
  * \brief  returns the timing device's frequency, that is, the number of ticks per second
  *         elapsed
  * \return timer frequency, in ticks per second, or \c 0 of this value is unavailable
  */
-NK_NATIVE NK_API NK_INLINE NK_VIRTUAL NkUint64 NK_CALL NkTimerGetFrequency(NkVoid);
+NK_NATIVE NK_API NK_INLINE NkUint64 NK_CALL NkTimerGetFrequency(NkVoid);
 
 

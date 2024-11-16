@@ -36,6 +36,7 @@
 
 /* Noriko includes */
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/comp.h>
 
 /* NkOM includes */
 #include <include/Noriko/nkom.h>
@@ -101,10 +102,19 @@ NK_INTERNAL NkVoid NK_CALL __NkOM_DestroyClsFacFn(_Inout_opt_ NkHashtableKey *ke
     if (valPtr != NULL)
         ((NkIClassFactory *)valPtr)->VT->Release((NkIClassFactory *)valPtr);
 }
-/** \endcond */
 
-
-_Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid) {
+/**
+ * \brief  initializes the NkOM runtime
+ * 
+ * Before some of NkOM's public functions can be used safely, the NkOM runtime has to be
+ * initialized. This happens through starting up the component once per process at
+ * application startup.
+ * 
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li The parameters passed to this function are immutable for the duration of
+ *             the session.
+ */
+_Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(NkOM)(NkVoid) {
     if (InterlockedExchange8((CHAR volatile *)&gl_NkOMContext.m_isInitialized, NK_TRUE) == NK_FALSE) {
         /* Query application specification for debugging flag. */
         NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
@@ -122,7 +132,7 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid) {
         /* Initialize the class registry. */
         NkErrorCode errCode = NkHashtableCreate(
             &(NkHashtableProperties const){
-                .m_structSize  = sizeof(NkHashtableProperties),
+            .m_structSize  = sizeof(NkHashtableProperties),
                 .m_initCap     = 16,
                 .m_keyType     = NkHtKeyTy_Uuid,
                 .m_minCap      = 16,
@@ -137,27 +147,28 @@ _Return_ok_ NkErrorCode NK_CALL NkOMInitialize(NkVoid) {
             return errCode;
         }
 
-        NK_LOG_INFO("startup: Noriko Object Model (NkOM)");
         return NkErr_Ok;
     }
 
     return NkErr_NoOperation;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkOMUninitialize(NkVoid) {
+/**
+ */
+_Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(NkOM)(NkVoid) {
     if (InterlockedExchange8((CHAR volatile *)&gl_NkOMContext.m_isInitialized, NK_FALSE) == NK_TRUE) {
         /* Destroy synchonization primitive for the class registry. */
         NK_DESTROYLOCK(gl_NkOMContext.m_clsRegLock);
 
         /* Destroy the class registry. */
         NkHashtableDestroy(&gl_NkOMContext.mp_classReg);
-
-        NK_LOG_INFO("shutdown: Noriko Object Model (NkOM)");
         return NkErr_Ok;
     }
 
     return NkErr_NoOperation;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkOMCreateInstance(
     _In_        NkUuid const *clsId,
@@ -361,6 +372,21 @@ NkSize NK_CALL NkOMQueryImplementationIndex(
 
     return SIZE_MAX;
 }
+
+
+/**
+ */
+NK_COMPONENT_DEFINE(NkOM) {
+    .m_compUuid     = { 0xb63776e5, 0x5fa1, 0x4d54, 0x8d833994eab26cee },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("Noriko Object Model (NkOM)"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(NkOM),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(NkOM)
+};
 
 
 #undef NK_NAMESPACE

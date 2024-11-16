@@ -53,7 +53,7 @@
     #define NK_ASSERT_EXTRA(expr, ec, extra)                         \
         do {                                                         \
             if (!(expr)) {                                           \
-                NkFatalTerminate(&(NkFatalErrorContext){             \
+                NkFatalTerminate(&(NkFatalErrorContext const){       \
                     (ec),                                            \
                     (NkUint32)__LINE__,                              \
                     (NkStringView)NK_MAKE_STRING_VIEW(#expr),        \

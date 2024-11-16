@@ -11,25 +11,39 @@
  **********************************************************************/
 
 /**
- * \file  world.h
- * \brief defines the public API for the 'world layer', that is, the layer that manages
- *        and displays the world and all in-game objects
+ * \file  winrng.c
+ * \brief implements the random seed generation for the Windows platform
  */
+#define NK_NAMESPACE "nk::prng"
 
-
-#pragma once
 
 /* Noriko includes */
 #include <include/Noriko/def.h>
-#include <include/Noriko/error.h>
+#include <include/Noriko/util.h>
 #include <include/Noriko/platform.h>
 
 
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWorldStartup(NkVoid);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkWorldShutdown(NkVoid);
+_Return_ok_ NkErrorCode NK_CALL __NkVirt_PRNG_GenerateSeed(
+    _In_                      NkSize sizeInBytes,
+    _Out_writes_(sizeInBytes) NkByte *randSeedBuf
+) {
+    NK_ASSERT(sizeInBytes > 0, NkErr_InParameter);
+    NK_ASSERT(randSeedBuf != NULL, NkErr_OutParameter);
 
+#if (defined _MSC_VER)
+    /*
+     * Use 'rand_s()' (MSVC-specific) for a cryptographically-secure pseudo-random
+     * number. Should be usable as a random seed.
+     */
+    for (NkSize i = 0; i < sizeInBytes / sizeof(unsigned int); i++)
+        rand_s(&((unsigned int *)randSeedBuf)[i]);
+#else
+    #error Need to define "__NkVirt_PRNG_GenerateSeed()" for the current compiler.
+#endif
+
+    return NkErr_Ok;
+}
+
+
+#undef NK_NAMESPACE
 

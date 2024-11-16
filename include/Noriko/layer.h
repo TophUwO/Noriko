@@ -117,12 +117,6 @@ NKOM_DECLARE_INTERFACE(NkILayer) {
 
 /**
  */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid);
-/**
- */
 NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In_ NkSize whereInd);
 /**
  */

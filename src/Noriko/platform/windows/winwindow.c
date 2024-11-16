@@ -28,6 +28,7 @@
 
 
 #if (defined NK_TARGET_WINDOWS)
+/** \cond INTERNAL */
 /**
  * \struct __NkInt_WindowsWindow
  * \brief  represents the internal state for the windows window
@@ -552,7 +553,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WindowsWindow_Initialize(
         NkUuidCopy(&wndSpecs->m_wndUuid, &wndPtr->m_wndUuid);
         wndPtr->m_allowedWndModes = wndSpecs->m_allowedWndModes & (NkWndMode_All & ~NkWndMode_Fullscreen);
         wndPtr->m_wndFlags        = wndSpecs->m_wndFlags;
-        wndPtr->mp_ialRef         = NkInputQueryInstance();
+        wndPtr->mp_ialRef         = (NkIInput *)NkApplicationQueryInstance(NKOM_CLSIDOF(NkIInput));
         wndPtr->m_lastMousePos    = (POINT){ 0, 0 };
 
         /* Send initial events. */
@@ -749,7 +750,7 @@ NKOM_DEFINE_VTABLE(NkIWindow) {
 };
 
 
-NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid) {
+NkIBase *NK_CALL __NkVirt_Window_QueryInstance(NkVoid) {
     /**
      * \brief actual instance of the windows window 
      */
@@ -757,8 +758,9 @@ NkIWindow *NK_CALL NkWindowQueryInstance(NkVoid) {
 
     /* Only for formality's sake. */
     gl_Window.NkIWindow_Iface.VT->AddRef((NkIWindow *)&gl_Window);
-    return (NkIWindow *)&gl_Window;
+    return (NkIBase *)&gl_Window;
 }
+/** \endcond */
 #endif /* NK_TARGET_WINDOWS */
 
 

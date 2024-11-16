@@ -34,6 +34,7 @@
 #include <include/Noriko/platform.h>
 #include <include/Noriko/layer.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/comp.h>
 
 #include <include/Noriko/dstruct/vector.h>
 
@@ -60,21 +61,20 @@ NK_NATIVE typedef struct __NkInt_LayerStack {
  * \brief actual instance of the global layer stack 
  */
 NK_INTERNAL __NkInt_LayerStack gl_LayerStack;
-/** \endcond */
 
 
-_Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Layerstack)(NkVoid) {
     NK_ASSERT(gl_LayerStack.mp_layerStack == NULL, NkErr_ComponentState);
-
-    NK_LOG_INFO("startup: layer stack");
 
     /* Initialize the layer vector. */
     NkErrorCode errCode = NkVectorCreate(&(NkVectorProperties) {
         .m_structSize = sizeof(NkVectorProperties),
-        .m_initialCap = 8,
-        .m_minCap     = 8,
-        .m_maxCap     = SIZE_MAX - 2,
-        .m_growFactor = 1.5f
+            .m_initialCap = 8,
+            .m_minCap     = 8,
+            .m_maxCap     = SIZE_MAX - 2,
+            .m_growFactor = 1.5f
     }, NULL, &gl_LayerStack.mp_layerStack);
     if (errCode != NkErr_Ok)
         return errCode;
@@ -88,10 +88,10 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackStartup(NkVoid) {
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid) {
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Layerstack)(NkVoid) {
     NK_ASSERT(gl_LayerStack.mp_layerStack != NULL, NkErr_ComponentState);
-
-    NK_LOG_INFO("shutdown: layer stack");
 
     /* Destroy the synchronization primitive. */
     NK_DESTROYLOCK(gl_LayerStack.m_mtxLock);
@@ -100,6 +100,8 @@ _Return_ok_ NkErrorCode NK_CALL NkLayerstackShutdown(NkVoid) {
 
     return NkErr_Ok;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkLayerstackPush(_Inout_ NkILayer *layerRef, _In_ NkSize whereInd) {
     NK_ASSERT(layerRef != NULL, NkErr_InOutParameter);
@@ -245,6 +247,24 @@ NkSize NK_CALL NkLayerstackQueryIndex(_In_ NkILayer const *layerRef) {
     /* Layer could not be found. */
     return SIZE_MAX;
 }
+
+
+/** \cond INTERNAL */
+/**
+ * \brief component instance of the global layerstack
+ */
+NK_COMPONENT_DEFINE(Layerstack) {
+    .m_compUuid     = { 0x2c7a0c9e, 0xc799, 0x4480, 0xa87760d83c8a1549 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("layerstack"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(Layerstack),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(Layerstack)
+};
+/** \endcond */
 
 
 #undef NK_NAMESPACE

@@ -36,6 +36,7 @@
 #include <include/Noriko/platform.h>
 #include <include/Noriko/util.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/comp.h>
 
 
 /** \cond INTERNAL */
@@ -515,26 +516,36 @@ lbl_FINDNEXT:
     /* Found the next free block. Scan the range from there. */
     goto lbl_FINDBLOCK;
 }
-/** \endcond */
 
-
-
-_Return_ok_ NkErrorCode NK_CALL NkAllocInitialize(NkVoid) {
-    NK_LOG_INFO("startup: allocators");
-
+/**
+ * \brief  initializes the global memory allocators
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li It is not safe to call any allocation functions if this function fails.
+ * \note   \li This function should be run once from the main thread before worker
+ *             threads that might access the shared allocators are started.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Allocators)(NkVoid) {
+    /* Initialize pool allocator lock. */
     NK_INITLOCK(gl_PoolAllocCxt.m_mtxLock);
+
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkAllocUninitialize(NkVoid) {
-    NK_LOG_INFO("shutdown: allocators");
-
+/**
+ * \brief  uninitializes the global memory allocators
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li It is not safe to call any allocation functions after this function has
+ *             returned.
+ * \note   \li This function should be called once from the main thread after all worker
+ *             threads that may access the shared allocators have been terminated.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Allocators)(NkVoid) {
     /* Free all remaining memory pools. */
     for (NkUint32 i = 0, j = 0; i < gl_MaxPools && j < gl_PoolAllocCxt.m_nAllocPools; i++) {
         /* Skip unallocated pools. */
         if (gl_PoolAllocCxt.m_memPools[i].m_blockSize == 0)
             continue;
-        
+
         /*
          * Print an error message to inform the user that there are still pending memory
          * allocations.
@@ -551,10 +562,11 @@ _Return_ok_ NkErrorCode NK_CALL NkAllocUninitialize(NkVoid) {
         ++j;
     }
 
-    /* Destroy lock. */
+    /* Destroy pool allocator lock. */
     NK_DESTROYLOCK(gl_PoolAllocCxt.m_mtxLock);
     return NkErr_Ok;
 }
+/** \endcond */
 
 
 _Return_ok_ NkErrorCode NK_CALL NkGPAlloc(
@@ -844,6 +856,21 @@ NkUint32 NK_CALL NkPoolGetAllocSize(_In_ NkVoid const *memPtr) {
     
     return res;
 }
+
+
+/**
+ */
+NK_COMPONENT_DEFINE(Allocators) {
+    .m_compUuid     = { 0x97d5fa20, 0x6bab, 0x490b, 0xa630a393a76ab0c4 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("allocators"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(Allocators),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(Allocators)
+};
 
 
 #undef NK_NAMESPACE

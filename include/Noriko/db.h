@@ -139,18 +139,10 @@ NKOM_DECLARE_INTERFACE(NkIDatabase) {
      */
     NkErrorCode (NK_CALL *Execute)(
         _Inout_     NkIDatabase *self,
-        _In_        NkISqlStatement *stmtRef,
+        _Inout_     NkISqlStatement *stmtRef,
         _In_opt_    NkDatabaseQueryIterFn fnResIter,
         _Inout_opt_ NkVoid *extraCxtPtr
     );
 };
-
-
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkDatabaseStartup(NkVoid);
-/**
- */
-NK_NATIVE NK_API _Return_ok_ NkErrorCode NK_CALL NkDatabaseShutdown(NkVoid);
 
 

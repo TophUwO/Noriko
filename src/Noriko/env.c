@@ -32,6 +32,7 @@
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/log.h>
 #include <include/Noriko/noriko.h>
+#include <include/Noriko/comp.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>
@@ -323,12 +324,28 @@ lbl_DELPAIR:
         NkPoolFree(varPtr);
     }
 }
-/** \endcond */
 
-
-_Return_ok_ NkErrorCode NK_CALL NkEnvStartup(NkVoid) {
+/**
+ * \brief  parses the command-line arguments
+ * \return \c NkErr_Ok on success, non-zero on failure
+ * \note   \li If an error occurs during initialization, calling \c NkEnvGetValue()
+ *             will *not* result in undefined behavior.
+ * \note   \li Since command-line parameters are parsed independently, an error during
+ *             parsing will not abort the entire parsing process but rather the parsing
+ *             process of that parameter.
+ * \note   \li After this function returns, the user can query and parameter that may
+ *         have been passed to the application until \c __NkInt_Env_Shutdown() is called.
+ * \note   \li This function may allocate dynamic memory. Thus, \c __NkInt_Env_Shutdown()
+ *             must be called after the application is done with the command-line
+ *             arguments.
+ * \note   \li On Windows and Linux, there is a special \c main() overload that passes
+ *             \c envp as a raw pointer.
+ * \note   \li The raw command-line arguments and environment variables are supplied by
+ *             the application specification provided at engine startup. This function
+ *             queries the information it needs automatically.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Env)(NkVoid) {
     NK_ASSERT(gl_EnvStore == NULL, NkErr_ComponentState);
-    NK_LOG_INFO("startup: command-line");
 
     /* Query the required information from the application specification. */
     NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
@@ -365,12 +382,19 @@ _Return_ok_ NkErrorCode NK_CALL NkEnvStartup(NkVoid) {
     return NkErr_Ok;
 }
 
-_Return_ok_ NkErrorCode NK_CALL NkEnvShutdown(NkVoid) {
-    NK_LOG_INFO("shutdown: command-line");
-
+/**
+ * \brief   frees all memory that may be used by the command-line arguments
+ * \return  \c NkErr_Ok on success, non-zero on failure
+ * \warning After this function returns, it is no longer safe to query command-line
+ *          arguments.
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Env)(NkVoid) {
     NkHashtableDestroy(&gl_EnvStore);
+
     return NkErr_Ok;
 }
+/** \endcond */
+
 
 _Return_ok_ NkErrorCode NK_CALL NkEnvGetValue(_In_z_ char const *keyStr, _Out_ NkVariant *valPtr) {
     NK_ASSERT(keyStr != NULL, NkErr_InParameter);
@@ -393,6 +417,21 @@ _Return_ok_ NkErrorCode NK_CALL NkEnvGetValue(_In_z_ char const *keyStr, _Out_ N
     NkVariantCopy(varPtr, valPtr);
     return NkErr_Ok;
 }
+
+
+/**
+ */
+NK_COMPONENT_DEFINE(Env) {
+    .m_compUuid     = { 0x99301b1d, 0x72e9, 0x45e0, 0xbd30245c1c5c0579 },
+    .mp_clsId       = NULL,
+    .m_compIdent    = NK_MAKE_STRING_VIEW("command-line"),
+    .m_compFlags    = 0,
+    .m_isNkOM       = NK_FALSE,
+
+    .mp_fnQueryInst = NULL,
+    .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(Env),
+    .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(Env)
+};
 
 
 #undef NK_NAMESPACE

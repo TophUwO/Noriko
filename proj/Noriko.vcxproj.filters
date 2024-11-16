@@ -87,9 +87,6 @@
     <ClInclude Include="..\include\Noriko\bmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\Noriko\world.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\include\Noriko\input.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -103,6 +100,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\Noriko\db.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\Noriko\comp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -196,6 +196,9 @@
     </ClCompile>
     <ClCompile Include="..\src\Noriko\db.c">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\winrng.c">
+      <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
