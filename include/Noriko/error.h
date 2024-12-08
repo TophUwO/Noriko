@@ -169,6 +169,14 @@ NK_NATIVE typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_SetDatabaseProps,      /**< could not set some database connection properties */
     NkErr_DatabaseClose,         /**< could not close database connection */
     NkErr_CompileSqlStatement,   /**< could not compile SQL statement */
+    NkErr_DatabaseApplySchema,   /**< failed to apply database schema (invalid?) */
+    NkErr_InvalidStreamType,     /**< invalid stream type ID */
+    NkErr_CreateDirectory,       /**< could not create directory */
+    NkErr_FindFileOrDir,         /**< could not find file and directory */
+    NkErr_InvStreamMode,         /**< inappropriate stream I/O mode for the requested operation */
+    NkErr_InvSeekOrigin,         /**< invalid seek origin identifier */
+    NkErr_StreamSeek,            /**< could not seek the given position */
+    NkErr_StreamFlush,           /**< could not flush stream */
 
     __NkErr_Count__              /**< used internally */
 } NkErrorCode;

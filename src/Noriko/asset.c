@@ -37,13 +37,20 @@
 NK_NATIVE typedef struct __NkInt_AssetManager {
     NKOM_IMPLEMENTS(NkIAssetManager);
 
-    NkBoolean    m_isStandalone; /**< whether or not the asset manager is running in standalone mode */
-    NkHashtable *mp_assetCache;  /**< asset cache, used for querying */
-    NkIDatabase *mp_dbConn;      /**< database connection handle */
-    NkString     m_dbFileName;   /**< path to the database file */
+    NkHashtable     *mp_assetCache;     /**< asset cache, used for querying */
+    NkIDatabase     *mp_dbConn;         /**< database connection handle */
+    NkString         m_dbFileName;      /**< path to the database file */
+    NkISqlStatement *mp_queryAssetStmt; /**< statement to query a single asset */
 
-    NK_DECL_LOCK(m_mtxLock);     /**< synchronization object */
+    NK_DECL_LOCK(m_mtxLock);            /**< synchronization object */
 } __NkInt_AssetManager;
+
+
+/* Define IID and CLSID of NkIAssetManager interface. */
+// { 5D1DB360-8D98-4EAA-B867-256CB2A37A05 }
+NKOM_DEFINE_IID(NkIAssetManager, { 0x5d1db360, 0x8d98, 0x4eaa, 0xb867256cb2a37a05 });
+// { CB9D5E50-DD65-4798-8D7C-110CC86C5C98 }
+NKOM_DEFINE_CLSID(NkIAssetManager, { 0xcb9d5e50, 0xdd65, 0x4798, 0x8d7c110cc86c5c98 });
 
 
 /**
@@ -69,43 +76,393 @@ NK_INTERNAL NkErrorCode NK_CALL __NkInt_AssetManager_IterPendingFn(_Inout_ struc
 
     return NkErr_Ok;
 }
-/** \endcond */
+
+/**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_QueryAssetIterFn(
+    _In_                 NkUint32 colCount,
+    _In_reads_(colCount) NkVariant const *colResArr,
+    _Inout_opt_          NkVoid *extraCxtPtr
+) {
+    NK_ASSERT(colCount > 0, NkErr_InParameter);
+    NK_ASSERT(colResArr != NULL, NkErr_InParameter);
+    NK_ASSERT(extraCxtPtr != NULL, NkErr_InOutParameter);
+
+    /** \todo IMPL */
+    return NkErr_Ok;
+}
 
 
-NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(AssetManager)(NkVoid) {
-    /* Get pointer to application startup info. */
-    NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
+/**
+ * \brief implements <tt>NkIAssetManager::AddRef()</tt> 
+ */
+NK_INTERNAL NkOMRefCount NK_CALL __NkInt_AssetManager_AddRef(_Inout_ NkIAssetManager *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+
+    /* Stub. */
+    return 1;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::Release()</tt> 
+ */
+NK_INTERNAL NkOMRefCount NK_CALL __NkInt_AssetManager_Release(_Inout_ NkIAssetManager *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(self);
+
+    /* Stub. */
+    return 1;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::QueryInterface()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_QueryInterface(
+    _Inout_  NkIAssetManager *self,
+    _In_     NkUuid const *iId,
+    _Outptr_ NkVoid **resPtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(iId != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutptrParameter);
+
+    /**
+     * \brief lists all interfaces implemented by the standard asset manager 
+     */
+    NK_INTERNAL NkOMImplementationInfo const gl_ImplIfaces[] = {
+        { NKOM_IIDOF(NkIBase)          },
+        { NKOM_IIDOF(NkIInitializable) },
+        { NKOM_IIDOF(NkIAssetManager)  },
+        { NULL                         }
+    };
+    if (NkOMQueryImplementationIndex(gl_ImplIfaces, iId) != SIZE_MAX) {
+        /* Interface is implemented. */
+        *resPtr = (NkVoid *)self;
+
+        __NkInt_AssetManager_AddRef(self);
+        return NkErr_Ok;
+    }
+
+    /* Interface is not implemented. */
+    *resPtr = NULL;
+    return NkErr_InterfaceNotImpl;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::Initialize()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_Initialize(
+    _Inout_     NkIAssetManager *self,
+    _Inout_opt_ NkVoid *initParam
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_UNREFERENCED_PARAMETER(initParam);
+
+    /* Get pointer to actual asset manager instance. */
+    __NkInt_AssetManager *actSelf = (__NkInt_AssetManager *)self;
 
     /* Initialize asset cache. */
-    NkHashtable *assetCache;
     NkErrorCode errCode = NkHashtableCreate(&(NkHashtableProperties const){
         .m_structSize  = sizeof(NkHashtableProperties),
-        .m_initCap     = 64,
-        .m_keyType     = NkHtKeyTy_Uuid,
-        .m_minCap      = 16,
-        .m_maxCap      = UINT32_MAX - 2,
-        .mp_fnElemFree = NULL
-    }, &assetCache);
+            .m_initCap     = 64,
+            .m_keyType     = NkHtKeyTy_Uuid,
+            .m_minCap      = 16,
+            .m_maxCap      = UINT32_MAX - 2,
+            .mp_fnElemFree = NULL
+    }, &actSelf->mp_assetCache);
     if (errCode != NkErr_Ok)
         return errCode;
 
     /* Initialize synchronization primitive. */
-    NK_INITLOCK(gl_AssetManager.m_mtxLock);
+    NK_INITLOCK(actSelf->m_mtxLock);
+    /* All good. */
+    return NkErr_Ok;
+}
 
-    /* Initialize data-structure. */
-    gl_AssetManager = (__NkInt_AssetManager){
-        .mp_assetCache  = assetCache,
-        .mp_dbConn      = NULL,
-        .m_isStandalone = NK_TRUE
-    };
+/**
+ * \brief implements <tt>NkIAssetManager::CreateDatabase()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_CreateDatabase(
+    _Inout_       NkIAssetManager *self,
+    _In_z_ _Utf8_ char const *dbPath
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(dbPath != NULL, NkErr_InParameter);
+
+    /**
+     * \brief pointer to current database schema 
+     */
+    NK_INTERNAL NkStringView const gl_c_CurrDbSchema = NK_MAKE_STRING_VIEW(
+        "PRAGMA foreign_keys = OFF;\n"
+        "PRAGMA user_version = 1;\n"
+
+        "/*"
+        " * table assets"
+        " * defines the assets that are part of the game"
+        " */"
+        "CREATE TABLE assets(\n"
+            "uuid BLOB,                  -- unique identifier, saved as a literal 16-byte integer\n"
+            "type INT          NOT NULL, -- type (integral)\n"
+            "name VARCHAR(128) NOT NULL, -- name, up to 128 characters\n"
+            "path TEXT         NOT NULL, -- path string, using '/' as separator\n"
+            "docs TEXT,                  -- (optional) documentation string\n"
+            ""
+            "PRIMARY KEY (uuid)"
+        ");"
+
+        "/*"
+        " * table dependencies"
+        " * defines the dependency graph"
+        " */"
+        "CREATE TABLE dependencies(\n"
+            "depender BLOB NOT NULL, -- UUID of the asset that depends on 'dependee'\n"
+            "dependee BLOB NOT NULL, -- UUID of the asset that is being depended on\n"
+
+            "FOREIGN KEY (depender) REFERENCES assets(uuid),\n"
+            "FOREIGN KEY (dependee) REFERENCES assets(uuid),\n"
+            "UNIQUE      (depender, dependee),\n"
+            "CHECK       (depender != dependee)\n"
+        ");\n"
+
+        "PRAGMA foreign_keys = ON;"
+    );
+
+    /* Create new database handle. */
+    NkIDatabase *dbHandle;
+    NkErrorCode errCode = NkOMCreateInstance(
+        NKOM_CLSIDOF(NkIDatabase),
+        NULL,
+        NKOM_IIDOF(NkIDatabase),
+        NULL,
+        (NkIBase **)&dbHandle
+    );
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /* Create the database. */
+    errCode = dbHandle->VT->Create(dbHandle, gl_c_CurrDbSchema.mp_dataPtr, dbPath, NkDbMode_ReadWrite);
+    if (errCode != NkErr_Ok) {
+        dbHandle->VT->Release(dbHandle);
+
+        return errCode;
+    }
+
+    /*
+     * Close the database again. Require a subsequent call to '::OpenDatabase()' to
+     * finish the opening procedure. Releasing it will also close it if the connection
+     * handle itself is destroyed.
+     */
+    dbHandle->VT->Release(dbHandle);
+    return NkErr_Ok;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::OpenDatabase()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_OpenDatabase(
+    _Inout_       NkIAssetManager *self,
+    _In_z_ _Utf8_ char const *dbPath
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(dbPath != NULL && *dbPath ^ '\0', NkErr_InParameter);
+
+    /* Get pointer to actual asset manager instance. */
+    __NkInt_AssetManager *actSelf = (__NkInt_AssetManager *)self;
+
+    /* Create new database handle. */
+    NkErrorCode errCode = NkOMCreateInstance(
+        NKOM_CLSIDOF(NkIDatabase),
+        NULL,
+        NKOM_IIDOF(NkIDatabase),
+        NULL,
+        (NkIBase **)&actSelf->mp_dbConn
+    );
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /*
+     * Attach the database to the handle. If the application is running in standalone
+     * mode, we assume that the application is running in a freestanding environment,
+     * that is, without the editor running. In such a case, the database is only
+     * readable; otherwise, that is, when running in 'attached' mode, the database must
+     * be opened in read-write mode.
+     */
+    errCode = actSelf->mp_dbConn->VT->Open(
+        actSelf->mp_dbConn,
+        dbPath,
+        NkApplicationIsStandalone()
+            ? NkDbMode_ReadOnly
+            : NkDbMode_ReadWrite
+    );
+    if (errCode != NkErr_Ok) {
+        /* If we failed to open the database, we destroy the handle, too. */
+        actSelf->mp_dbConn->VT->Release(actSelf->mp_dbConn);
+
+        actSelf->mp_dbConn = NULL;
+        return errCode;
+    }
+
+    /* Create the 'query asset' statement. */
+    errCode = actSelf->mp_dbConn->VT->CreateStatement(
+        actSelf->mp_dbConn,
+        "SELECT * FROM assets WHERE uuid = ?",
+        &actSelf->mp_queryAssetStmt
+    );
+    if (errCode != NkErr_Ok) {
+        /*
+         * If we could not create the statement, we shutdown the database since we cannot
+         * really use the asset manager without the statements being ready.
+         */
+        actSelf->mp_dbConn->VT->Release(actSelf->mp_dbConn);
+
+        actSelf->mp_dbConn = NULL;
+        return errCode;
+    }
+
+    /* All good. */
+    return NkErr_Ok;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::CloseDatabase()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_CloseDatabase(_Inout_ NkIAssetManager *self) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+
+    /* Get pointer to actual asset manager instance. */
+    __NkInt_AssetManager *actSelf = (__NkInt_AssetManager *)self;
+
+    /* If no database is open, fail. */
+    if (actSelf->mp_dbConn == NULL)
+        return NkErr_ComponentState;
+
+    /* Close the database and release all database-specific resources. */
+    actSelf->mp_queryAssetStmt->VT->Release(actSelf->mp_queryAssetStmt);
+    actSelf->mp_dbConn->VT->Release(actSelf->mp_dbConn);
+    actSelf->mp_dbConn         = NULL;
+    actSelf->mp_queryAssetStmt = NULL;
+
+    /* All good. */
+    return NkErr_Ok;
+}
+
+/**
+ * \brief implements <tt>NkIAssetManager::QueryAsset()</tt> 
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_AssetManager_QueryAsset(
+    _Inout_  NkIAssetManager *self,
+    _In_     NkUuid const *assetId,
+    _Outptr_ NkIAsset **resPtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(assetId != NULL, NkErr_InParameter);
+    NK_ASSERT(resPtr != NULL, NkErr_OutptrParameter);
+
+    /* Get pointer to actual asset manager instance. */
+    __NkInt_AssetManager *actSelf = (__NkInt_AssetManager *)self;
+
+    /* Check if the given asset handle is already present in the cache. */
+    NkErrorCode eCode = NkHashtableAt(
+        actSelf->mp_assetCache,
+        &(NkHashtableKey const){
+            .mp_uuidKey = (NkUuid *)assetId
+        },
+        resPtr
+    );
+    if (eCode == NkErr_Ok) {
+        /* Present in cache; add reference and return. */
+        (*resPtr)->VT->AddRef(*resPtr);
+
+        return NkErr_Ok;
+    }
+
+    /* Bind the given UUID parameter. */
+    NkVariant paramVar;
+    NkVariantSet(&paramVar, NkVarTy_Uuid, assetId);
+    actSelf->mp_queryAssetStmt->VT->Bind(actSelf->mp_queryAssetStmt, 1U, &paramVar);
+
+    /* Query the asset and add it to the cache. */
+    eCode = actSelf->mp_dbConn->VT->Execute(
+        actSelf->mp_dbConn,
+        actSelf->mp_queryAssetStmt,
+        &__NkInt_AssetManager_QueryAssetIterFn,
+        (NkVoid *)resPtr
+    );
+    if (eCode != NkErr_Ok)
+        *resPtr = NULL;
+
+    /* Unbind param and return. */
+    actSelf->mp_queryAssetStmt->VT->Unbind(actSelf->mp_queryAssetStmt, 1U);
+    return eCode;
+}
+
+
+/**
+ * \brief global asset manager instance 
+ */
+NK_INTERNAL __NkInt_AssetManager gl_AssetManager = {
+    .NkIAssetManager_Iface.VT = &(struct __NkIAssetManager_VTable__){
+        .QueryInterface = &__NkInt_AssetManager_QueryInterface,
+        .AddRef         = &__NkInt_AssetManager_AddRef,
+        .Release        = &__NkInt_AssetManager_Release,
+        .Initialize     = &__NkInt_AssetManager_Initialize,
+        .CreateDatabase = &__NkInt_AssetManager_CreateDatabase,
+        .OpenDatabase   = &__NkInt_AssetManager_OpenDatabase,
+        .CloseDatabase  = &__NkInt_AssetManager_CloseDatabase,
+        .QueryAsset     = &__NkInt_AssetManager_QueryAsset
+    }
+};
+
+/**
+ */
+NK_INTERNAL NkIBase *NK_CALL __NkInt_AssetManager_QueryInstance(NkVoid) {
+    return (NkIBase *)&gl_AssetManager;
+}
+
+
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(AssetManager)(NkVoid) {
+    NkIAssetManager *self = (NkIAssetManager *)__NkInt_AssetManager_QueryInstance();
+
+    /* Initialize the asset manager itself. */
+    NkErrorCode errCode = self->VT->Initialize(self, NULL);
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /*
+     * Try to locate the asset database, if it does not exist, create a new one. Then,
+     * open the database. Only do this if we are running in standalone mode, that is,
+     * without the editor.
+     */
+    if (NkApplicationIsStandalone()) {
+        NkIFilesystem *fileSysSrv = (NkIFilesystem *)NkApplicationQueryInstance(NKOM_CLSIDOF(NkIFilesystem));
+        if (!fileSysSrv->VT->Exists(fileSysSrv, "assets.db")) {
+            NK_LOG_WARNING("Asset database \"%s\" could not be found; creating new database.", "assets.db");
+
+            if ((errCode = self->VT->CreateDatabase(self, "assets.db")) != NkErr_Ok) {
+                NK_LOG_ERROR("Could not create database \"%s\".", "assets.db");
+
+                return errCode;
+            }
+
+            NK_LOG_INFO("Successfully created asset database \"%s\".", "assets.db");
+        }
+        fileSysSrv->VT->Release(fileSysSrv);
+
+        /* Open the database. */
+        return self->VT->OpenDatabase(self, "assets.db");
+    }
+
     /* All good. */
     return NkErr_Ok;
 }
 
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(AssetManager)(NkVoid) {
+    __NkInt_AssetManager *actSelf = (__NkInt_AssetManager *)__NkInt_AssetManager_QueryInstance();
+
     /* Asset registry should be empty by now. If it isn't, then there is an issue. */
     NkUint32 htCount;
-    if ((htCount = NkHashtableCount(gl_AssetManager.mp_assetCache)) > 0U) {
+    if ((htCount = NkHashtableCount(actSelf->mp_assetCache)) > 0U) {
         NK_LOG_CRITICAL(
             "There are still %u assets registered in the asset manager. This means that there must be resource "
             "leaks or pending asset handles.",
@@ -114,37 +471,20 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(AssetManager
 
         /* Print the IDs and names of all assets that are still registered. */
         NK_LOG_CRITICAL("The following asset handles are still pending:");
-        NK_IGNORE_RETURN_VALUE(NkHashtableForEach(gl_AssetManager.mp_assetCache, &__NkInt_AssetManager_IterPendingFn));
+        NK_IGNORE_RETURN_VALUE(NkHashtableForEach(actSelf->mp_assetCache, &__NkInt_AssetManager_IterPendingFn));
     }
     /* Destroy asset cache. */
-    NkHashtableDestroy(&gl_AssetManager.mp_assetCache);
+    NkHashtableDestroy(&actSelf->mp_assetCache);
 
     /* Close the connection. */
-    if (gl_AssetManager.m_isStandalone)
-        NK_IGNORE_RETURN_VALUE(NkAssetManagerCloseDatabase());
+    if (NkApplicationIsStandalone())
+        actSelf->NkIAssetManager_Iface.VT->CloseDatabase((NkIAssetManager *)actSelf);
     /* Destroy synchronization object. */
-    NK_DESTROYLOCK(gl_AssetManager.m_mtxLock);
+    NK_DESTROYLOCK(actSelf->m_mtxLock);
 
     return NkErr_Ok;
 }
-
-
-_Return_ok_ NkErrorCode NK_CALL NkAssetManagerCreateDatabase(_In_z_ _Utf8_ char const *dbPath) {
-    NK_ASSERT(dbPath != NULL, NkErr_InParameter);
-}
-
-_Return_ok_ NkErrorCode NK_CALL NkAssetManagerOpenDatabase(_In_z_ _Utf8_ char const *dbPath) {
-
-}
-
-_Return_ok_ NkErrorCode NK_CALL NkAssetManagerCloseDatabase(NkVoid) {
-
-}
-
-
-NkIAsset *NK_CALL NkAssetManagerQueryAsset(_In_ NkUuid const *assetId) {
-
-}
+/** \endcond */
 
 
 NkStringView const *NK_CALL NkAssetManagerQueryAssetTypeStr(_In_ NkAssetType typeId) {
@@ -168,23 +508,6 @@ NkStringView const *NK_CALL NkAssetManagerQueryAssetTypeStr(_In_ NkAssetType typ
 }
 
 
-/**
-* \brief global asset manager instance 
-*/
-NK_INTERNAL __NkInt_AssetManager gl_AssetManager = {
-    .NkIAssetManager_Iface = &(struct __NkIAssetManager_VTable__) {
-        .QueryInterface = NULL,
-        .AddRef         = NULL,
-        .Release        = NULL,
-        .Initialize     = NULL,
-        .CreateDatabase = NULL,
-        .OpenDatabase   = NULL,
-        .CloseDatabase  = NULL,
-        .QueryAsset     = NULL
-    }
-};
-
-
 /** \cond INTERNAL */
 /**
  * \brief info for the \e AssetManager component 
@@ -196,7 +519,7 @@ NK_COMPONENT_DEFINE(AssetManager) {
     .m_compFlags    = 0,
     .m_isNkOM       = NK_TRUE,
    
-    .mp_fnQueryInst = NULL,
+    .mp_fnQueryInst = &__NkInt_AssetManager_QueryInstance,
     .mp_fnStartup   = &NK_COMPONENT_STARTUPFN(AssetManager),
     .mp_fnShutdown  = &NK_COMPONENT_SHUTDOWNFN(AssetManager)
 };

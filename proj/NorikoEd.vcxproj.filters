@@ -89,5 +89,11 @@
     <QtMoc Include="..\include\NorikoEd\session.hpp">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\tsetwidget.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="..\include\NorikoEd\asset.hpp">
+      <Filter>Header Files</Filter>
+    </QtMoc>
   </ItemGroup>
 </Project>

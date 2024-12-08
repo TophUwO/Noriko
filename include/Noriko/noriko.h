@@ -45,6 +45,7 @@
 #include <include/Noriko/db.h>
 #include <include/Noriko/asset.h>
 #include <include/Noriko/comp.h>
+#include <include/Noriko/io.h>
 
 #include <include/Noriko/dstruct/vector.h>
 #include <include/Noriko/dstruct/htable.h>

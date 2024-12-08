@@ -105,6 +105,9 @@
     <ClInclude Include="..\include\Noriko\comp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\Noriko\io.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\Noriko\platform.c">
@@ -198,6 +201,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\Noriko\platform\windows\winrng.c">
+      <Filter>Source Files\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\io.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Noriko\platform\windows\winfilesys.c">
       <Filter>Source Files\platform\windows</Filter>
     </ClCompile>
   </ItemGroup>

@@ -373,3 +373,4 @@ docs/html/
 *.i
 /res/def
 /proj/test.db
+/proj/assets.db

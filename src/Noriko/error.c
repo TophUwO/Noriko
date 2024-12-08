@@ -99,7 +99,15 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_DatabaseOpen)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_SetDatabaseProps)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_DatabaseClose)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CompileSqlStatement))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CompileSqlStatement)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_DatabaseApplySchema)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvalidStreamType)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_CreateDirectory)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_FindFileOrDir)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvStreamMode)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvSeekOrigin)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_StreamSeek)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_StreamFlush))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -161,7 +169,15 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("could not open database connection"),
     NK_MAKE_STRING_VIEW("could not set some database connection properties"),
     NK_MAKE_STRING_VIEW("could not close database connection"),
-    NK_MAKE_STRING_VIEW("could not successfully compile SQL statement (syntax errors? out of memory? invalid handle?)")
+    NK_MAKE_STRING_VIEW("could not successfully compile SQL statement (syntax errors? out of memory? invalid handle?)"),
+    NK_MAKE_STRING_VIEW("failed to apply database schema (invalid syntax/schema conflicts?)"),
+    NK_MAKE_STRING_VIEW("invalid stream type ID"),
+    NK_MAKE_STRING_VIEW("could not create directory (missing permissions? invalid path encoding?"),
+    NK_MAKE_STRING_VIEW("could not find file or directory (invalid path?)"),
+    NK_MAKE_STRING_VIEW("inappropriate stream I/O mode for the requested operation"),
+    NK_MAKE_STRING_VIEW("invalid seek origin identifier"),
+    NK_MAKE_STRING_VIEW("could not seek the given position"),
+    NK_MAKE_STRING_VIEW("could not flush stream")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

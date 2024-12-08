@@ -64,19 +64,21 @@
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>..\bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <TargetName>nked_x64d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <IncludePath>$(SolutionDir);$(IncludePath)</IncludePath>
     <OutDir>..\bin\</OutDir>
     <IntDir>..\bin\interm\$(ProjectName)\$(Configuration)\</IntDir>
     <LibraryPath>..\bin;$(SolutionDir)lib;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64)</LibraryPath>
+    <TargetName>nked_x64</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
       <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>msxml6.lib;comsuppw.lib;nkmain64d.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
+      <AdditionalDependencies>msxml6.lib;comsuppw.lib;nkmain_x64d.lib;%(AdditionalDependencies);$(Qt_LIBS_)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -84,7 +86,7 @@
       <PreprocessorDefinitions>NK_IMPORT_ENGINE;$(Qt_DEFINES_);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>msxml6.lib;comsuppw.lib;nkmain64r.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>msxml6.lib;comsuppw.lib;nkmain_x64.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -148,6 +150,12 @@
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="..\include\NorikoEd\session.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\tsetwidget.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="..\include\NorikoEd\asset.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">

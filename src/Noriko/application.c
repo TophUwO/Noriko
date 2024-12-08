@@ -30,6 +30,7 @@ NK_COMPONENT_IMPORT(TimingDevCxt);
 NK_COMPONENT_IMPORT(Env);
 NK_COMPONENT_IMPORT(NkOM);
 NK_COMPONENT_IMPORT(PathSrv);
+NK_COMPONENT_IMPORT(IoSrv);
 NK_COMPONENT_IMPORT(IAL);
 NK_COMPONENT_IMPORT(RdFactory);
 NK_COMPONENT_IMPORT(Layerstack);
@@ -88,8 +89,6 @@ NK_NATIVE typedef struct __NkInt_Application {
     NkHashtable                *mp_compReg;     /**< global NkOM component registry */
     NkBoolean                   m_isStandalone; /**< whether or not the current instance runs standalone */
     __NkInt_StartupErrorInfo    m_initErrInfo;  /**< component initialization error info */
-
-    NK_DECL_LOCK(m_compRegLock);                /**< lock for component registry */
 } __NkInt_Application;
 /**
  * \brief actual instance of the global application context 
@@ -113,6 +112,7 @@ NK_INTERNAL __NkInt_ExtComponent const gl_c_CompInitTable[] = {
     { &NK_COMPONENT(Env),          NULL, &__NkInt_Env_PostStartup,  NULL,                      NULL },
     { &NK_COMPONENT(NkOM),         NULL, &__NkInt_NkOM_PostStartup, &__NkInt_NkOM_PreShutdown, NULL },
     { &NK_COMPONENT(PathSrv),      NULL, NULL,                      NULL,                      NULL },
+    { &NK_COMPONENT(IoSrv),        NULL, NULL,                      NULL,                      NULL },
     { &NK_COMPONENT(IAL),          NULL, NULL,                      NULL,                      NULL },
     { &NK_COMPONENT(RdFactory),    NULL, NULL,                      NULL,                      NULL },
     { &NK_COMPONENT(Layerstack),   NULL, NULL,                      NULL,                      NULL },
@@ -317,9 +317,6 @@ _Return_ok_ NkErrorCode NK_CALL __NkInt_Env_PostStartup(NkVoid) {
 /**
  */
 _Return_ok_ NkErrorCode NK_CALL __NkInt_NkOM_PostStartup(NkVoid) {
-    /* Initialize the static component registry. */
-    NK_INITLOCK(gl_Application.m_compRegLock);
-
     return NkHashtableCreate(&(NkHashtableProperties const){
         .m_structSize  = sizeof(NkHashtableProperties),
         .m_keyType     = NkHtKeyTy_Uuid,
@@ -333,11 +330,9 @@ _Return_ok_ NkErrorCode NK_CALL __NkInt_NkOM_PostStartup(NkVoid) {
 /**
  */
 _Return_ok_ NkErrorCode NK_CALL __NkInt_NkOM_PreShutdown(NkVoid) {
-    /* Destroy the static component registry. */
-    NK_DESTROYLOCK(gl_Application.m_compRegLock);
-
     /* Print component info of all components that are still (erroneously) registered. */
     NK_IGNORE_RETURN_VALUE(NkHashtableForEach(gl_Application.mp_compReg, &__NkInt_NkOM_CompRegIterFn));
+
     NkHashtableDestroy(&gl_Application.mp_compReg);
     return NkErr_Ok;
 }

@@ -173,7 +173,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64d.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64d.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -199,7 +199,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -228,7 +228,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -250,7 +250,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64d.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64d.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -276,7 +276,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -305,7 +305,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AssemblyDebug>true</AssemblyDebug>
-      <AdditionalDependencies>nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;nksqlite3_x64.lib;dwmapi.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Manifest>
       <EnableDpiAwareness>PerMonitorHighDPIAware</EnableDpiAwareness>
@@ -335,6 +335,7 @@
     <ClInclude Include="..\include\Noriko\platform.h" />
     <ClInclude Include="..\include\Noriko\renderer.h" />
     <ClInclude Include="..\include\Noriko\sort.h" />
+    <ClInclude Include="..\include\Noriko\io.h" />
     <ClInclude Include="..\include\Noriko\timer.h">
       <FileType>CppHeader</FileType>
     </ClInclude>
@@ -354,11 +355,13 @@
     <ClCompile Include="..\src\Noriko\error.c" />
     <ClCompile Include="..\src\Noriko\event.c" />
     <ClCompile Include="..\src\Noriko\input.c" />
+    <ClCompile Include="..\src\Noriko\io.c" />
     <ClCompile Include="..\src\Noriko\layer.c" />
     <ClCompile Include="..\src\Noriko\log.c" />
     <ClCompile Include="..\src\Noriko\nkom.c" />
     <ClCompile Include="..\src\Noriko\path.c" />
     <ClCompile Include="..\src\Noriko\platform.c" />
+    <ClCompile Include="..\src\Noriko\platform\windows\winfilesys.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\wingdi.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\winhelpers.c" />
     <ClCompile Include="..\src\Noriko\platform\windows\wininput.c" />

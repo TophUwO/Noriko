@@ -62,7 +62,7 @@ _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(Window)(NkVoid) {
     NkApplicationSpecification const *appSpecs = NkApplicationQuerySpecification();
     
     /* Initialize the window. */
-    NkIWindow *wndRef = __NkVirt_Window_QueryInstance();
+    NkIWindow *wndRef = (NkIWindow *)__NkVirt_Window_QueryInstance();
     return wndRef->VT->Initialize(wndRef, &(NkWindowSpecification){
         .m_structSize      = sizeof(NkWindowSpecification),
         .m_rendererApi     = appSpecs->m_rendererApi,
@@ -88,7 +88,7 @@ _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(Window)(NkVoid) {
      * the main loop and destroy every component in the reverse order they were
      * initialized. So we need to destroy the window here.
      */
-    NkIWindow *wndRef = __NkVirt_Window_QueryInstance();
+    NkIWindow *wndRef = (NkIWindow *)__NkVirt_Window_QueryInstance();
 
     DestroyWindow(wndRef->VT->QueryNativeWindowHandle(wndRef));
     return NkErr_Ok;

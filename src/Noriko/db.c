@@ -148,9 +148,11 @@ NK_INTERNAL _Return_ok_ NkErrorCode __NkInt_Sqlite3DbHandle_SetPragmas(
  * \return numeric sqlite3 database open mode
  */
 NK_INTERNAL int __NkInt_Sqlite3DbHandle_MapFromDbMode(NkDatabaseMode mode) {
-    switch (mode) {
-        case NkDbMode_ReadOnly:  return SQLITE_OPEN_READONLY;
-        case NkDbMode_ReadWrite: return SQLITE_OPEN_READWRITE;
+    int resMode = mode & NkDbMode_Create ? SQLITE_OPEN_CREATE : 0;
+
+    switch (mode & (NkDbMode_ReadOnly | NkDbMode_ReadWrite)) {
+        case NkDbMode_ReadOnly:  return resMode | SQLITE_OPEN_READONLY;
+        case NkDbMode_ReadWrite: return resMode | SQLITE_OPEN_READWRITE;
     }
 
     return SQLITE_OPEN_READWRITE;
@@ -508,6 +510,48 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_QueryInterfa
 }
 
 /**
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_Create(
+    _Inout_           NkIDatabase *self,
+    _In_opt_z_ _Utf8_ char const *schemaStr,
+    _In_z_ _Utf8_     char const *dbPath,
+    _In_              NkDatabaseMode mode
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(dbPath != NULL, NkErr_InParameter);
+    NK_ASSERT(mode > NkDbMode_Unknown && mode < __NkDbMode_Count__, NkErr_InParameter);
+
+    __NkInt_Sqlite3DbHandle *actSelf = (__NkInt_Sqlite3DbHandle *)self;
+
+    /*
+     * First, open the database. This will fail if a database is already opened in this
+     * handle. Regardless of connection mode, this first opening must be in read-write
+     * mode. If the database does not exist, this will fail.
+     */
+    NkErrorCode errCode = self->VT->Open(self, dbPath, NkDbMode_ReadWrite | NkDbMode_Create);
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /* Execute the schema if we have one. */
+    if (schemaStr != NULL && *schemaStr ^ '\0') {
+        int const res = sqlite3_exec(actSelf->mp_dbConn, schemaStr, NULL, NULL, NULL);
+
+        if (res != SQLITE_OK) {
+            self->VT->Close(self);
+
+            return NkErr_DatabaseApplySchema;
+        }
+    }
+
+    /*
+     * Now, after the schema has been written. Close the connection and reopen it, this
+     * time with the actual access mode.
+     */
+    self->VT->Close(self);
+    return self->VT->Open(self, dbPath, mode);
+}
+
+/**
  * \brief implements <tt>NkIDatabase::Open()</tt> 
  */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_Open(
@@ -658,18 +702,60 @@ lbl_ONFIN:
     return eCode;
 }
 
+/**
+ * \brief implements <tt>NkIDatabase::ExecuteInline()</tt>
+ */
+NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_Sqlite3DbHandle_ExecuteInline(
+    _Inout_       NkIDatabase *self,
+    _In_z_ _Utf8_ char const *sqlStr,
+    _In_opt_      NkDatabaseQueryIterFn fnResIter,
+    _Inout_opt_   NkVoid *extraCxtPtr
+) {
+    NK_ASSERT(self != NULL, NkErr_InOutParameter);
+    NK_ASSERT(sqlStr != NULL && *sqlStr != '\0', NkErr_InParameter);
+
+    /* Get pointer to actual database instance. */
+    __NkInt_Sqlite3DbHandle *actSelf = (__NkInt_Sqlite3DbHandle *)self;
+
+    /* Create inline statement. */
+    __NkInt_Sqlite3StmtInit initStruct = {
+        .mp_sqlStr     = (char *)sqlStr,
+        .mp_dbConn     = actSelf->mp_dbConn,
+        .mp_nkomDbConn = self
+    };
+    NkISqlStatement *sqlStmt;
+    NkErrorCode errCode = NkOMCreateInstance(
+        NKOM_CLSIDOF(NkISqlStatement),
+        NULL,
+        NKOM_IIDOF(NkISqlStatement),
+        (NkVoid *)&initStruct,
+        (NkIBase **)&sqlStmt
+    );
+    if (errCode != NkErr_Ok)
+        return errCode;
+
+    /* Execute the query. */
+    errCode = self->VT->Execute(self, sqlStmt, fnResIter, extraCxtPtr);
+    
+    /* Destroy statement and return. */
+    sqlStmt->VT->Release(sqlStmt);
+    return errCode;
+}
+
 
 /**
  * \brief static NkIDatabase VTable instance 
  */
 NKOM_DEFINE_VTABLE(NkIDatabase) {
+    .QueryInterface  = &__NkInt_Sqlite3DbHandle_QueryInterface,
     .AddRef          = &__NkInt_Sqlite3DbHandle_AddRef,
     .Release         = &__NkInt_Sqlite3DbHandle_Release,
-    .QueryInterface  = &__NkInt_Sqlite3DbHandle_QueryInterface,
+    .Create          = &__NkInt_Sqlite3DbHandle_Create,
     .Open            = &__NkInt_Sqlite3DbHandle_Open,
     .Close           = &__NkInt_Sqlite3DbHandle_Close,
     .CreateStatement = &__NkInt_Sqlite3DbHandle_CreateStatement,
-    .Execute         = &__NkInt_Sqlite3DbHandle_Execute
+    .Execute         = &__NkInt_Sqlite3DbHandle_Execute,
+    .ExecuteInline   = &__NkInt_Sqlite3DbHandle_ExecuteInline
 };
 
 
@@ -798,10 +884,14 @@ NK_INTERNAL NkIClassFactory const gl_c_Sqlite3HdFactory = {
 };
 
 
+/**
+ */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_STARTUPFN(DbSrv)(NkVoid) {
     return NkOMInstallClassFactory((NkIClassFactory *)&gl_c_Sqlite3HdFactory);
 }
 
+/**
+ */
 NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL NK_COMPONENT_SHUTDOWNFN(DbSrv)(NkVoid) {
     return NkOMUninstallClassFactory((NkIClassFactory *)&gl_c_Sqlite3HdFactory);
 }

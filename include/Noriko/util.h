@@ -35,6 +35,13 @@
  * \param x macro expression to escape
  */
 #define NK_MESC(x)                   NK_ESC(x)
+/**
+ * \def   NK_DONTCARE(ty)
+ * \brief allows the caller to "ignore" certain <tt>[out]</tt> parameters by passing an
+ *        unnamed dummy variable to the callee
+ * \param ty type name of the <tt>[out]</tt> parameter that is to be ignored
+ */
+#define NK_DONTCARE(ty)              &(ty){ ((ty)0) }
 
 /**
  * \def   NK_DEFINE_PROTOTYPE(t, a, s)

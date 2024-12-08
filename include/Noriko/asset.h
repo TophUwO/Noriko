@@ -170,7 +170,7 @@ NKOM_DECLARE_INTERFACE(NkIAssetManager) {
     NkErrorCode (NK_CALL *OpenDatabase)(_Inout_ NkIAssetManager *self, _In_z_ _Utf8_ char const *dbPath);
     /**
      */
-    NkErrorCode (NK_CALL *CloseDatabase)(_Inout_ NkIAssetManager *self, _In_z_ _Utf8_ char const *dbPath);
+    NkErrorCode (NK_CALL *CloseDatabase)(_Inout_ NkIAssetManager *self);
     /**
      */
     NkErrorCode (NK_CALL *QueryAsset)(

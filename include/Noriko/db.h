@@ -36,14 +36,17 @@
 /**
  * \enum  NkDatabaseMode
  * \brief lists various database connection modes
+ * \bug   Certain flag combinations don't work if __NkDbMode_Count__ is just one larger
+ *        than the highest bitflag. Maybe fix by using the next larger power of two.
  */
 NK_NATIVE typedef enum NkDatabaseMode {
-    NkDbMode_Unknown = 0, /**< unknown database mode */
+    NkDbMode_Unknown   = 0,      /**< unknown database mode */
 
-    NkDbMode_ReadOnly,    /**< read-only connection */
-    NkDbMode_ReadWrite,   /**< connection for reading and writing */
+    NkDbMode_ReadOnly  = 1 << 0, /**< read-only connection */
+    NkDbMode_ReadWrite = 1 << 1, /**< connection for reading and writing */
+    NkDbMode_Create    = 1 << 2, /**< create the database if it does not exist */
 
-    __NkDbMode_Count__    /**< *only used internally* */
+    __NkDbMode_Count__ = 1 << 3  /**< *only used internally* */
 } NkDatabaseMode;
 
 
@@ -124,6 +127,14 @@ NKOM_DECLARE_INTERFACE(NkIDatabase) {
 
     /**
      */
+    NkErrorCode (NK_CALL *Create)(
+        _Inout_           NkIDatabase *self,
+        _In_opt_z_ _Utf8_ char const *schemaStr,
+        _In_z_ _Utf8_     char const *dbPath,
+        _In_              NkDatabaseMode mode
+    );
+    /**
+     */
     NkErrorCode (NK_CALL *Open)(_Inout_ NkIDatabase *self, _In_z_ _Utf8_ char const *dbPath, _In_ NkDatabaseMode mode);
     /**
      */
@@ -142,6 +153,14 @@ NKOM_DECLARE_INTERFACE(NkIDatabase) {
         _Inout_     NkISqlStatement *stmtRef,
         _In_opt_    NkDatabaseQueryIterFn fnResIter,
         _Inout_opt_ NkVoid *extraCxtPtr
+    );
+    /**
+     */
+    NkErrorCode (NK_CALL *ExecuteInline)(
+        _Inout_       NkIDatabase *self,
+        _In_z_ _Utf8_ char const *sqlStr,
+        _In_opt_      NkDatabaseQueryIterFn fnResIter,
+        _Inout_opt_   NkVoid *extraCxtPtr
     );
 };
 
