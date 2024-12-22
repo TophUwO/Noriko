@@ -251,6 +251,7 @@ NK_INTERNAL _Return_ok_ NkErrorCode NK_CALL __NkInt_WinFilesys_Traverse(
     NK_UNREFERENCED_PARAMETER(fnTrav);
     NK_UNREFERENCED_PARAMETER(extraParam);
 
+    /** \todo IMPLEMENT */
     return NkErr_NotImplemented;
 }
 

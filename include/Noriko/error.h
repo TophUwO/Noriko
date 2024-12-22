@@ -177,6 +177,7 @@ NK_NATIVE typedef _In_range_(0, __NkErr_Count__ - 1) enum NkErrorCode {
     NkErr_InvSeekOrigin,         /**< invalid seek origin identifier */
     NkErr_StreamSeek,            /**< could not seek the given position */
     NkErr_StreamFlush,           /**< could not flush stream */
+    NkErr_AssetUUIDIntegrity,    /**< asset UUID integrity checks failed */
 
     __NkErr_Count__              /**< used internally */
 } NkErrorCode;

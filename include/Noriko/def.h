@@ -14,8 +14,8 @@
  * \file  def.h
  * \brief global definitions used by Noriko's public API
  *
- * This header defines annotation macros that can be used to modify symbols that
- * are to be exported and used by other components of the Noriko ecosystem.
+ * This header defines annotation macros that can be used to modify symbols that are to
+ * be exported and used by other components of the Noriko ecosystem.
  */
 
 
@@ -172,10 +172,10 @@ NK_NATIVE typedef uint64_t NkUint64, NkFlags;
  *           <tt>*</tt> stands for the type's alignment requirement, in bytes.
  */
 /** @{ */
-NK_NATIVE typedef int8_t    NkAlign1;
-NK_NATIVE typedef int16_t   NkAlign2;
-NK_NATIVE typedef int32_t   NkAlign4;
-NK_NATIVE typedef int64_t   NkAlign8;
+NK_NATIVE typedef int8_t  NkAlign1;
+NK_NATIVE typedef int16_t NkAlign2;
+NK_NATIVE typedef int32_t NkAlign4;
+NK_NATIVE typedef int64_t NkAlign8;
 /** @} */
 /** @} */
 

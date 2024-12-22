@@ -107,7 +107,8 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeStringTable[] = {
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvStreamMode)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_InvSeekOrigin)),
     NK_MAKE_STRING_VIEW(NK_ESC(NkErr_StreamSeek)),
-    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_StreamFlush))
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_StreamFlush)),
+    NK_MAKE_STRING_VIEW(NK_ESC(NkErr_AssetUUIDIntegrity))
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeStringTable) == __NkErr_Count__, "Error code string array mismatch!");
 
@@ -177,7 +178,8 @@ NK_INTERNAL NkStringView const gl_c_ErrorCodeDescriptionTable[] = {
     NK_MAKE_STRING_VIEW("inappropriate stream I/O mode for the requested operation"),
     NK_MAKE_STRING_VIEW("invalid seek origin identifier"),
     NK_MAKE_STRING_VIEW("could not seek the given position"),
-    NK_MAKE_STRING_VIEW("could not flush stream")
+    NK_MAKE_STRING_VIEW("could not flush stream"),
+    NK_MAKE_STRING_VIEW("asset UUID integrity checks failed (more than one asset with the same UUID?)")
 };
 static_assert(NK_ARRAYSIZE(gl_c_ErrorCodeDescriptionTable) == __NkErr_Count__, "Error code desc array mismatch!");
 

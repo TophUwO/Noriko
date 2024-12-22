@@ -35,6 +35,7 @@
 NK_NATIVE typedef enum NkAssetType {
     NkAsTy_Unknown = 0,
 
+    NkAsTy_Generic,
     NkAsTy_World,
     NkAsTy_TextureAtlas,
     NkAsTy_Level,
@@ -45,14 +46,13 @@ NK_NATIVE typedef enum NkAssetType {
 /**
  */
 NK_NATIVE typedef enum NkAssetState {
-    NkAsSt_Unspecified = 0,
+    NkAsSt_Unspecified = 0, /**< unspecified/invalid asset state */
 
-    NkAsSt_Ready,
-    NkAsSt_Loading,
-    NkAsSt_Invalid,
-    NkAsSt_ReadyForLoading,
+    NkAsSt_Ready,           /**< ready for use */
+    NkAsSt_Loading,         /**< currently loading */
+    NkAsSt_Invalid,         /**< asset has been invalidated */
 
-    __NkAsSt_Count__
+    __NkAsSt_Count__        /**< *only used internally* */
 } NkAssetState;
 
 
@@ -69,31 +69,6 @@ NK_NATIVE typedef struct NkAssetSpecification {
 
 /**
  */
-NKOM_DECLARE_INTERFACE(NkIAssetTree) {
-    /**
-     * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
-     */
-    NkErrorCode (NK_CALL *QueryInterface)(_Inout_ NkIAssetTree *self, _In_ NkUuid const *iId, _Outptr_ NkVoid **resPtr);
-    /**
-     * \brief reimplements <tt>NkIBase::AddRef()</tt> 
-     */
-    NkOMRefCount (NK_CALL *AddRef)(_Inout_ NkIAssetTree *self);
-    /**
-     * \brief reimplements <tt>NkIBase::Release()</tt> 
-     */
-    NkOMRefCount (NK_CALL *Release)(_Inout_ NkIAssetTree *self);
-
-    /**
-     */
-    NkErrorCode (NK_CALL *Traverse)(
-        _Inout_     NkIAssetTree *self,
-        _In_        NkBoolean (NK_CALL *fnIter)(NkIAssetTree *self, struct NkIAsset *currAsset, NkVoid *extraCxt),
-        _Inout_opt_ NkVoid *extraCxtPtr
-    );
-};
-
-/**
- */
 NKOM_DECLARE_INTERFACE(NkIAsset) {
     /**
      * \brief reimplements <tt>NkIBase::QueryInterface()</tt>
@@ -107,6 +82,11 @@ NKOM_DECLARE_INTERFACE(NkIAsset) {
      * \brief reimplements <tt>NkIBase::Release()</tt> 
      */
     NkOMRefCount (NK_CALL *Release)(_Inout_ NkIAsset *self);
+
+    /**
+     * \brief reimplements <tt>NkIInitializable::Initialize()</tt> 
+     */
+    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIAsset *self, _Inout_opt_ NkVoid *initParam);
     
     /**
      */
@@ -116,6 +96,9 @@ NKOM_DECLARE_INTERFACE(NkIAsset) {
     NkAssetType (NK_CALL *GetType)(_Inout_ NkIAsset *self);
     /**
      */
+    NkAssetState (NK_CALL *GetState)(_Inout_ NkIAsset *self);
+    /**
+     */
     char const *(NK_CALL *GetName)(_Inout_ NkIAsset *self);
     /**
      */
@@ -123,19 +106,13 @@ NKOM_DECLARE_INTERFACE(NkIAsset) {
     /**
      */
     char const *(NK_CALL *GetPath)(_Inout_ NkIAsset *self);
-    /**
-     */
-    NkIAssetTree *(NK_CALL *GetDependencyTree)(_Inout_ NkIAsset *self);
-    /**
-     */
-    NkAssetState (NK_CALL *GetAssetState)(_Inout_ NkIAsset *self);
 
     /**
      */
-    NkErrorCode (NK_CALL *Load)(_Inout_ NkIAsset *self, _Inout_opt_ NkVoid *extraCxtPtr);
+    NkErrorCode (NK_CALL *Load)(_Inout_ NkIAsset *self, _Inout_opt_ NkVoid *extraCxtPtr) NKOM_PURE;
     /**
      */
-    NkErrorCode (NK_CALL *Unload)(_Inout_ NkIAsset *self, _Inout_opt_ NkVoid *extraCxtPtr);
+    NkErrorCode (NK_CALL *Unload)(_Inout_ NkIAsset *self, _Inout_opt_ NkVoid *extraCxtPtr) NKOM_PURE;
 };
 
 /**
@@ -157,10 +134,6 @@ NKOM_DECLARE_INTERFACE(NkIAssetManager) {
      * \brief reimplements <tt>NkIBase::Release()</tt> 
      */
     NkOMRefCount (NK_CALL *Release)(_Inout_ NkIAssetManager *self);
-
-    /**
-     */
-    NkErrorCode (NK_CALL *Initialize)(_Inout_ NkIAssetManager *self, _Inout_opt_ NkVoid *initParam);
 
     /**
      */

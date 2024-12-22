@@ -216,6 +216,13 @@ NK_NATIVE typedef struct NkOMImplementationInfo {
  */
 #define NKOM_DEFINE_CLSID(className, ...) NK_NATIVE NkUuid const __##className##_CLSID__ = __VA_ARGS__
 
+/**
+ * \def   NKOM_PURE
+ * \brief annotation used for methods that canonically do nothing in the standard
+ *        implementation of the interface the method belongs to
+ */
+#define NKOM_PURE
+
 
 /**
  * \interface NkIBase

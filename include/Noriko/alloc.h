@@ -197,4 +197,14 @@ NK_NATIVE NK_API NkUint32 NK_CALL NkPoolGetBlockSize(_In_ NkVoid const *memPtr);
  */
 NK_NATIVE NK_API NkUint32 NK_CALL NkPoolGetAllocSize(_In_ NkVoid const *memPtr);
 
+/**
+ */
+NK_NATIVE NK_API char *NK_CALL NkAllocString(
+    _In_opt_      NkAllocationContext const *allocCxt,
+    _In_z_ _Utf8_ char const *strPtr
+);
+/**
+ */
+NK_NATIVE NK_API NkVoid NK_CALL NkFreeString(_Inout_opt_ char const *strPtr);
+
 

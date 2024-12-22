@@ -215,11 +215,10 @@ NK_INTERNAL NkVoid __NkInt_Sqlite3DbHandle_PrepareResultArray(
 
                 break;
             case NkVarTy_BufferView:
-                NkVariantSet(
-                    &colResArr[i],
-                    varTy,
-                    NK_MAKE_BUFFER_VIEW_PTR(sqlite3_column_blob(stmtRef, i), sqlite3_column_bytes(stmtRef, i))
-                );
+                NkVariantSet(&colResArr[i], varTy, &(NkBufferView){
+                    .mp_dataPtr    = (NkByte *)sqlite3_column_blob(stmtRef, i),
+                    .m_sizeInBytes = (NkSize)sqlite3_column_bytes(stmtRef, i)
+                });
 
                 break;
         }

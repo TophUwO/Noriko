@@ -195,7 +195,7 @@
 #define NK_UNREFERENCED_PARAMETER(p) ((NkVoid)(p))
 /**
  * \def   NK_IGNORE_RETURN_VALUE(e)
- * \brief macro to wrap function calls in of which the return value is intentionally not
+ * \brief macro to wrap function calls of which the return value is intentionally not
  *        examined
  * \param e expression to ignore return value of
  */
@@ -670,7 +670,7 @@ NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantSet(
  */
 NK_NATIVE NK_API NK_INLINE NkVoid NK_CALL NkVariantCopy(_In_ NkVariant const *srcPtr, _Out_ NkVariant *dstPtr);
 /**
- * \brief  determines whether or not the given \c NkVariant instance is <em>empty</tt>,
+ * \brief  determines whether or not the given \c NkVariant instance is <em>empty</em>,
  *         that is, whether its internal type corresponds to \c NkVarTy_None
  * \param  [in] varPtr pointer to the \c NkVariant instance which is to be examined
  * \return \c NK_TRUE if the variant is empty, \c NK_FALSE if not

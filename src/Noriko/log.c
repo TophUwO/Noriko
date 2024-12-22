@@ -293,6 +293,7 @@ NK_INTERNAL NkILogDevice const gl_ConoutDevice = {
  *              <tt>NUL</tt>-terminator) of the message buffer
  * \param [out] tsSzPtr variable that will receive the size in bytes (that is, incl.
  *              <tt>NUL</tt>-terminator) of the timestamp buffer
+ * \param [out] currTimePtr pointer to a structure that will receive the native time info
  * \note  This function never writes beyond the hard boundaries of the buffers.
  */
 NK_INTERNAL NkVoid __NkInt_LogFormatMessageAndTimestamp(
@@ -500,6 +501,7 @@ lbl_CLEANUP:
 
 
 /**
+ * \brief defines the global component info for the startup/shutdown mechanism
  */
 NK_COMPONENT_DEFINE(Logging) {
     .m_compUuid     = { 0x9e74ec29, 0x5952, 0x456d, 0xb16efbf1c1ec0019 },

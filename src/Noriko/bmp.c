@@ -26,13 +26,14 @@
 
 /* stdlib includes */
 #include <string.h>
-#include <stdio.h>
 
 /* Noriko includes */
 #include <include/Noriko/bmp.h>
 #include <include/Noriko/alloc.h>
 #include <include/Noriko/platform.h>
 #include <include/Noriko/log.h>
+#include <include/Noriko/io.h>
+#include <include/Noriko/noriko.h>
 
 
 /** \cond INTERNAL */
@@ -280,28 +281,38 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapLoad(_In_z_ char const *filePath, _Out
     NK_ASSERT(resPtr != NULL, NkErr_OutParameter);
 
     /* Open the file for reading. */
-    FILE *fStream;
-    if (fopen_s(&fStream, filePath, "rb") != 0)
-        return NkErr_OpenFile;
+    NkIFile *inFile;
+    NkIFilesystem *fsSrv = NkApplicationQueryInstance(NKOM_CLSIDOF(NkIFilesystem));
+    NkErrorCode errCode = fsSrv->VT->Create(fsSrv, NkStrTy_DiskFile, filePath, NkStrMd_Read | NkStrMd_Binary, &inFile);
+    fsSrv->VT->Release(fsSrv);
+    if (errCode != NkErr_Ok)
+        return errCode;
 
     /* Read the headers to get the information on the pixel buffer. */
-    __NkInt_BitmapFileHeader   fileHead;
-    __NkInt_BitmapV4InfoHeader dibHead;
-    fread_s(&fileHead, sizeof fileHead, sizeof fileHead, 1, fStream);
-    fread_s(&dibHead.m_biSize, sizeof dibHead.m_biSize, sizeof dibHead.m_biSize, 1, fStream);
-    fseek(fStream, (long)sizeof fileHead, SEEK_SET);
+    NkSize br;
+    __NkInt_BitmapFileHeader   fileHead = { 0 };
+    __NkInt_BitmapV4InfoHeader dibHead  = { 0 };
+           (errCode = inFile->VT->Read(inFile, sizeof fileHead, &fileHead, &br))                 != NkErr_Ok
+        || (errCode = inFile->VT->Read(inFile, sizeof dibHead.m_biSize, &dibHead.m_biSize, &br)) != NkErr_Ok
+        || (errCode = inFile->VT->Seek(inFile, NkSeekOri_Set, (NkOffset)sizeof fileHead))        != NkErr_Ok;
+    if (errCode != NkErr_Ok)
+        goto lbl_ONERROR;
+
     /* Check if the header is supported. */
     if (dibHead.m_biSize == sizeof(__NkInt_BitmapInfoHeader) || dibHead.m_biSize == sizeof(__NkInt_BitmapV4InfoHeader)) {
         /* Header is supported. */
-        fread_s(&dibHead, sizeof dibHead, sizeof dibHead, 1, fStream);
+        errCode = inFile->VT->Read(inFile, sizeof dibHead, &dibHead, &br);
     } else {
         /* Header is not supported. */
         NK_LOG_ERROR("DIB headers of size %u are currently not supported.", dibHead.m_biSize);
 
-        fclose(fStream);
+        /* Releasing closes the file if it's open. */
+        inFile->VT->Release(inFile);
         return NkErr_UnsupportedFileFormat;
     }
-    fseek(fStream, (long)fileHead.m_bfOffBytes, SEEK_SET);
+    (NkVoid)(errCode == NkErr_Ok && (errCode = inFile->VT->Seek(inFile, NkSeekOri_Set, (NkOffset)fileHead.m_bfOffBytes)));
+    if (errCode != NkErr_Ok)
+        goto lbl_ONERROR;
 
     /* Allocate memory for the pixel buffer. */
     NkByte *pxBuf;
@@ -309,18 +320,17 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapLoad(_In_z_ char const *filePath, _Out
         ? dibHead.m_biSizeImage
         : __NkInt_DIBitmap_CalculateRawArraySize(dibHead.m_biWidth, dibHead.m_biHeight, dibHead.m_biBitCount)
     ;
-    NkErrorCode errCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), (NkSize)pxBufSize, 0, NK_FALSE, &pxBuf);
-    if (errCode != NkErr_Ok) {
-        fclose(fStream);
-
-        return errCode;
-    }
+    errCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), (NkSize)pxBufSize, 0, NK_FALSE, &pxBuf);
+    if (errCode != NkErr_Ok)
+        goto lbl_ONERROR;
 
     /* Read the pixel buffer directly into the allocated memory. */
-    fread_s(pxBuf, pxBufSize, pxBufSize, 1, fStream);
+    (NkVoid)(errCode == NkErr_Ok && (errCode = inFile->VT->Read(inFile, pxBufSize, pxBuf, &br)));
+    if (errCode != NkErr_Ok)
+        goto lbl_ONERROR;
 
     /* Cleanup and initialize bitmap structure. */
-    fclose(fStream);
+    inFile->VT->Release(inFile);
     *(__NkInt_DIBitmap *)resPtr = (__NkInt_DIBitmap){
         .m_bSpec = {
             .m_structSize = sizeof(NkBitmapSpecification),
@@ -348,6 +358,12 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapLoad(_In_z_ char const *filePath, _Out
 
     /* All good. */
     return NkErr_Ok;
+
+lbl_ONERROR:
+    /* Releasing closes the file if it's open. */
+    inFile->VT->Release(inFile);
+
+    return errCode;
 }
 
 NkVoid NK_CALL NkDIBitmapDestroy(_Inout_ NkDIBitmap *bmpPtr) {
@@ -408,19 +424,24 @@ _Return_ok_ NkErrorCode NK_CALL NkDIBitmapSave(_In_ NkDIBitmap const *bmpPtr, _I
         .m_gammaBlue       = 0
     };
 
-    /* Open the file stream. */
-    FILE *fStream;
-    if (fopen_s(&fStream, filePath, "wb") != 0)
-        return NkErr_OpenFile;
+    /* Open the file stream for writing. */
+    NkSize bw;
+    NkErrorCode errCode;
+    NkIFile *outFile;
+    NkIFilesystem *fsSrv = NkApplicationQueryInstance(NKOM_CLSIDOF(NkIFilesystem));
+    errCode = fsSrv->VT->Create(fsSrv, NkStrTy_DiskFile, filePath, NkStrMd_Write | NkStrMd_Binary, &outFile);
+    fsSrv->VT->Release(fsSrv);
+    if (errCode != NkErr_Ok)
+        return errCode;
+
     /* Write file- and DIB header. */
-    fwrite((NkVoid const *)&fileHead, sizeof fileHead, 1, fStream);
-    fwrite((NkVoid const *)&infoHead, sizeof infoHead, 1, fStream);
-    /* Write buffer. */
-    fwrite((NkVoid const *)actBmpPtr->mp_pxArray, infoHead.m_biSizeImage, 1, fStream);
+           (errCode = outFile->VT->Write(outFile, sizeof fileHead, &fileHead, &bw))                    != NkErr_Ok
+        || (errCode = outFile->VT->Write(outFile, sizeof fileHead, &infoHead, &bw))                    != NkErr_Ok
+        || (errCode = outFile->VT->Write(outFile, infoHead.m_biSizeImage, actBmpPtr->mp_pxArray, &bw)) != NkErr_Ok;
 
     /* All good. */
-    fclose(fStream);
-    return NkErr_Ok;
+    outFile->VT->Release(outFile);
+    return errCode;
 }
 
 NkBitmapSpecification const *NK_CALL NkDIBitmapGetSpecification(_In_ NkDIBitmap const *bmpPtr) {

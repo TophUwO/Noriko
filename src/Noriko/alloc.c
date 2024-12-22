@@ -858,6 +858,32 @@ NkUint32 NK_CALL NkPoolGetAllocSize(_In_ NkVoid const *memPtr) {
 }
 
 
+char *NK_CALL NkAllocString(_In_opt_ NkAllocationContext const *allocCxt, _In_z_ char const *strPtr) {
+    NK_ASSERT(strPtr != NULL, NkErr_InParameter);
+    NK_UNREFERENCED_PARAMETER(allocCxt);
+
+    /* Determine size. */
+    NkSize const strSi = strlen(strPtr) + 1;
+    /* Allocate the string. */
+    char *newStr;
+    NkErrorCode errCode = NkGPAlloc(NK_MAKE_ALLOCATION_CONTEXT(), strSi, 0, NK_FALSE, &newStr);
+    if (errCode != NkErr_Ok)
+        return NULL;
+    /* Copy the given string over. */
+    memcpy((NkVoid *)newStr, (NkVoid const *)strPtr, strSi);
+
+    /* All good. */
+    return newStr;
+}
+
+NkVoid NK_CALL NkFreeString(_Inout_opt_ char const *strPtr) {
+    if (strPtr == NULL)
+        return;
+
+    NkGPFree(strPtr);
+}
+
+
 /**
  */
 NK_COMPONENT_DEFINE(Allocators) {
